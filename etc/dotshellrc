@@ -38,7 +38,12 @@ alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias h="history"
 alias ls="ls -G"
-alias vi="nvim --clean -c 'colorscheme lunaperche' -c 'set number' -c 'set ts=2 sw=2 sts=2  et'  "
+
+vi() {
+  nvim --clean -c 'colorscheme slate' \
+               -c 'set number' \
+               -c 'set ts=2 sw=2 sts=2  et'  $*
+}
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 export PATH="$PWD:/opt/homebrew/bin:$PATH"
