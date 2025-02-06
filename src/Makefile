@@ -26,16 +26,17 @@ push: ## commit to main
 sh: ## run my shell
 	bash --init-file  ../etc/dotshellrc -i
 
-../docs/%.html : %.lua
+
+../docs/%.html : %.py
 	pycco -d ../docs  $^
-	echo "p { text-align: right;  }  " >> ../docs/pycco.css
+	echo "p { text-align:right; }" >> ../docs/pycco.css
 	gawk '/<h1>/ {print "<div class=docs>";                       \
                 while(getline x < "../etc/head.html") {print x}; \
                 print "<h1>'$^'</h1></div>";                  \
                 next} 1' $@ > tmp.tmp
 	mv tmp.tmp $@
 
-$(Tmp)/%.pdf: %.py  ## make doco: .py ==> .pdf
+~/tmp/%.pdf: %.py  ## make doco: .py ==> .pdf
 	mkdir -p ~/tmp
 	echo "pdf-ing $@ ... "
 	a2ps                 \
