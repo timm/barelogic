@@ -1,4 +1,4 @@
-<img src="/etc/img/barelogic.png" width="300" align="right">
+<img src="/etc/img/barelogic.png" width="300" 
 
 <a href="http://github.com/timm/barelogic">
     <img src="https://img.shields.io/badge/GitHub-src-yellow?logo=github&style=flat-square">
