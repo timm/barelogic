@@ -40,5 +40,5 @@ Too long-winded for you? Well how about:
 Still too long? Then:
 
 
-> 💬 Less is More.💬 
+> 💬 Less is More.💬 <br>
 ― Dieter Rams
