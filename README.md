@@ -11,7 +11,9 @@
 
 
 
-Why BareLogic? Why reivent a minimal version of many useful AI mdeling tools? Well, lets as Richard Hipp, the author SQLite 
+Why BareLogic? Why reivent a minimal version of useful AI tools? Well, lets ask 
+[Richard Hipp](https://corecursive.com/066-sqlite-with-richard-hipp/)
+the author SQLite, 
 who is famous for (re)building the tools he  uses day to day.
 
  > 💬 People go backpacking,
@@ -19,7 +21,7 @@ who is famous for (re)building the tools he  uses day to day.
  everything they need on their back and they talk about how freeing
  that is because they are taking care of themselves.💬
 
-> 💬 ... (Packbacking)  involves doing without. ....
+> 💬 ... (Packbacking)  **involves doing without**. ....
 Whenever a politician comes to you and says, “Oh, we’re
 going to take care of this problem for you.” What they’re really
 saying is, we’re going to take away some of your freedoms. The
@@ -28,5 +30,15 @@ to take away in order to solve this problem, and they’re often
 well-disguised, but yeah, if you want to be free, that means doing
 things yourself.💬
 
--- From [The Untold Story of SQLite](https://corecursive.com/066-sqlite-with-richard-hipp/)
+Too long-winded for you? Well how about:
 
+<img src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/authors/1330853515i/1020792._UX200_CR0,11,200,200_.jpg" align=right>
+
+> 💬 Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.💬 
+― Antoine de Saint-Exupéry, Airman's Odyssey
+
+Still too long? Then:
+
+
+> 💬 Less is More.💬 
+― Dieter Rams
