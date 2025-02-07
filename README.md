@@ -32,9 +32,9 @@ things yourself.💬
 
 Too long-winded for you? Well how about:
 
-<img src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/authors/1330853515i/1020792._UX200_CR0,11,200,200_.jpg" align=right>
+<img wdth=100 src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/authors/1330853515i/1020792._UX200_CR0,11,200,200_.jpg" align=right>
 
-> 💬 Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.💬 
+> 💬 Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.💬 <br>
 ― Antoine de Saint-Exupéry, Airman's Odyssey
 
 Still too long? Then:
