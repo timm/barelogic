@@ -26,14 +26,15 @@ push: ## commit to main
 sh: ## run my shell
 	bash --init-file  $(Top)/etc/dotshellrc -i
 
-lint:
+lint: ## lint all python in this directory
+	export PYTHONPATH="..:$$PYTHONPATH"; \
 	pylint --disable=W0311,C0303,C0116,C0321,C0103 \
 		     --disable=C0410,C0115,C3001,R0903,E1101 \
 				 --disable=W0108,W0106,W0718   *.py
 
-$(Top)/docs/%.html : %.py
+../docs/%.html : %.py
 	pycco -d $(Top)/docs  $^
-	echo "p { text-align:right; }" >> $(Top)/docs/pycco.css
+	echo "pre { font-size: small;} p { text-align:right; }" >> $(Top)/docs/pycco.css
 	gawk '/<h1>/ {print "<div class=docs>";                       \
                 while(getline x < "../etc/head.html") {print x}; \
                 print "<h1>'$^'</h1></div>";                  \

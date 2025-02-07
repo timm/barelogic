@@ -1,20 +1,21 @@
 #!/usr/bin/env python3 -B
 """
-nb.py : Naive Bayes
-(c) 2025, Tim Menzies <timm@ieee.org>, MIT License
+nb.py : Naive Bayes  
+(c) 2025, Tim Menzies <timm@ieee.org>, MIT License  
+  
+OPTIONS:  
 
-OPTIONS:
-   -a acg    xploit or xplore or adapt   = xploit
-   -d decs   decimap places for printing = 3
-   -f file   training csv file           = ../../moot/optimize/misc/auto93.csv
-   -g guess  size of guess               = 0.5
-   -G Guesses max number of guesses      = 100
-   -k k      low frequency Bayes hack    = 1
-   -m m      low frequency Bayes hack    = 2
-   -p p      distance formula exponent   = 2
-   -r rseed  random number seed          = 1234567891
-   -s start  where to begin              = 4
-   -S Stop   where to end                = 32
+      -a acg    xploit or xplore or adapt   = xploit  
+      -d decs   decimap places for printing = 3  
+      -f file   training csv file           = ../../moot/optimize/misc/auto93.csv  
+      -g guess  size of guess               = 0.5  
+      -G Guesses max number of guesses      = 100  
+      -k k      low frequency Bayes hack    = 1  
+      -m m      low frequency Bayes hack    = 2  
+      -p p      distance formula exponent   = 2  
+      -r rseed  random number seed          = 1234567891  
+      -s start  where to begin              = 4  
+      -S Stop   where to end                = 32  
 """
 import re,ast,sys,math,random
 rand = random.random
@@ -26,8 +27,8 @@ class o:
    __repr__ = lambda i: i.__class__.__name__ + show(i.__dict__)
 
 #----------------------------------------------------------------------------------------
-#  _  _|_  ._        _  _|_   _ 
-# _>   |_  |   |_|  (_   |_  _> 
+#      _  _|_  ._        _  _|_   _    
+#     _>   |_  |   |_|  (_   |_  _>    
 
 def Num(txt=" ", at=0):
    return o(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG,
@@ -53,10 +54,12 @@ def clone(data,src=[],rank=False):
                Data([data.cols.names]))
 
 #----------------------------------------------------------------------------------------
-#      ._    _|   _.  _|_   _  
-# |_|  |_)  (_|  (_|   |_  (/_ 
-#      |                       
+#          ._    _|   _.  _|_   _  
+#     |_|  |_)  (_|  (_|   |_  (/_ 
+#          |                       
 
+# Return a summary of the items in `src`.    
+# If `i` not given, infer it from the first items.
 def adds(src, i=None):
    for x in src:
       out = i or (Num() if isinstance(x[0],(int,float)) else Sym())
@@ -83,9 +86,9 @@ def add(v,i):
    return v
 
 #----------------------------------------------------------------------------------------
-#   _.        _   ._     
-#  (_|  |_|  (/_  |   \/ 
-#    |                /  
+#      _.        _   ._     
+#     (_|  |_|  (/_  |   \/ 
+#       |                /  
 
 def norm(v,col):
    return v if (v=="?" or col.it is Sym) else (v - col.lo) /   (col.hi - col.lo + 1/BIG)
@@ -103,8 +106,8 @@ def eg__data(_):
    showd({col.txt : spread(col) for col in d.cols.all})
 
 #----------------------------------------------------------------------------------------
-#     _|  o   _  _|_ 
-#    (_|  |  _>   |_ 
+#       _|  o   _  _|_ 
+#      (_|  |  _>   |_ 
 
 def ydist(row, data):
    return (sum(abs(norm(row[col.at], col) - col.goal)**the.p for col in data.cols.y) 
@@ -127,9 +130,9 @@ def eg_y(_):
       if j<10 or j % 50 == 0: print(j,row,round(ydist(row,d),2))
 
 #----------------------------------------------------------------------------------------
-#    |_    _.       _    _ 
-#    |_)  (_|  \/  (/_  _> 
-#              /           
+#      |_    _.       _    _ 
+#      |_)  (_|  \/  (/_  _> 
+#                /           
 
 def like(lst, data, nall=100, nh=2):
    def _col(v,col): 
@@ -139,30 +142,28 @@ def like(lst, data, nall=100, nh=2):
       nom   = math.exp(-1*(v - col.mu)**2/(2*sd*sd))
       denom = (2*math.pi*sd*sd) ** 0.5
       return max(0, min(1, nom/denom))
-   #-----------------------------------
    prior = (data.n + the.k) / (nall + the.k*nh)
    likes = [_col(lst[x.at], x) for x in data.cols.x if lst[x.at] != "?"]
    return sum(math.log(l) for l in likes + [prior] if l>0)
 
 def acting(data):
-   def _rank(rows): return clone(data,rows,rank=True).rows
-
    def _acquire(p, b,r):
       b,r = math.e**b, math.e**r
       q = 0 if the.acq=="xploit" else (1 if the.acq=="xplore" else 1-p)
       return (b + r*q) / abs(b*q - r + 1/BIG) 
 
    def _guess(todo,done, cut):
-      best = clone(data, done[:cut])
-      rest = clone(data, done[cut:])
       def _score(row):
          n = len(done)
-         return _acquire(n/the.Stop, like(row,best,n,2),
-                                     like(row,rest,n,2))
-      top,*others = sorted(todo[:the.Guesses], key=_score,reverse=True)
+         return _acquire(n/the.Stop, like(row,best,n,2), like(row,rest,n,2))
+      best = clone(data, done[:cut])
+      rest = clone(data, done[cut:])
+      top,*others = sorted(todo[:the.Guesses], key=_score, reverse=True)
       return top, todo[the.Guesses:] + others
 
-   todo,done = data.rows[:the.start], _rank(data.rows[:the.start])
+   _rank = lambda rows: clone(data,rows,rank=True).rows
+   done  = _rank(data.rows[:the.start])
+   todo  = shuffle(data.rows[the.start:])
    while len(todo) > 2  and len(done) < the.Stop :
       top,todo = _guess(todo, done, round(len(done) ** the.guess))
       done    += [top]
@@ -170,8 +171,10 @@ def acting(data):
    return done
 
 #----------------------------------------------------------------------------------------
-#    |  o  |_  
-#    |  |  |_) 
+#      |  o  |_  
+#      |  |  |_) 
+
+def shuffle(lst): random.shuffle(lst); return lst
 
 def ent(d):
    N = sum(n for n in d.values())
@@ -190,23 +193,28 @@ def csv(file):
 def eg__csv(_):
    [print(row) for row in list(csv(the.file))[::50]]
 
+# For command like flags that match the first letter of key, update that value. 
+# For boolean values, flags need no arguments (we just negate the default)
 def cli(d):
    for k,v in d.items():
       for c,arg in enumerate(sys.argv):
          if arg == "-"+k[0]:
             d[k] = coerce("False" if str(v) == "True"   else (
-                                 "True"   if str(v) == "False" else (
-                                 sys.argv[c+1] if c < len(sys.argv) - 1 else str(v))))
+                          "True"   if str(v) == "False" else (
+                          sys.argv[c+1] if c < len(sys.argv) - 1 else str(v))))
 
+# Pretty print
 def showd(x): print(show(x)); return x
 
+# Convert `x` to a pretty string.
 def show(x):
    it = type(x)
-   if   it is float : x = str(round(x,the.decs))
-   elif it is list  : x = '['+', '.join([show(v) for v in x])+']'
-   elif it is dict  : x = "("+' '.join([f":{k} {show(v)}" for k,v in x.items()])+")"
-   elif it is str   : x = f'"{x}"'
+   if   it is str   : x = f'"{x}"'
    elif callable(x) : x = x.__name__ + '()'
+   elif it is float : x = str(round(x,the.decs))
+   elif it is list  : x = '['+', '.join([show(v) for v in x])+']'
+   elif it is dict  : x = "("+' '.join([f":{k} {show(v)}" for k,v in x.items() 
+                                                          if k[0] !="_"])+")"
    return str(x)
 
 def eg__the(_): 
@@ -220,10 +228,8 @@ def eg_h(_):
     for k,fun in globals().items() if k[:3] == "eg_"]
 
 #----------------------------------------------------------------------------------------
-#    ._ _    _.  o  ._  
-#    | | |  (_|  |  | | 
-
-the= o(**{m[1]:coerce(m[2]) for m in re.finditer(r"-\w+\s*(\w+).*=\s*(\S+)",__doc__)})
+#      ._ _    _.  o  ._  
+#      | | |  (_|  |  | | 
 
 def main():
    cli(the.__dict__)
@@ -232,5 +238,7 @@ def main():
          arg = None if i==len(sys.argv) - 1 else sys.argv[i+1]
          random.seed(the.rseed)
          fun(coerce(arg))
+
+the= o(**{m[1]:coerce(m[2]) for m in re.finditer(r"-\w+\s*(\w+).*=\s*(\S+)",__doc__)})
 
 if __name__ == "__main__":  main()
