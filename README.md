@@ -16,29 +16,27 @@ Why BareLogic? Why reivent a minimal version of useful AI tools? Well, lets ask
 the author SQLite, 
 who is famous for (re)building the tools he  uses day to day.
 
- > 💬 People go backpacking,
+ >  People go backpacking,
  long hikes, where they carry
  everything they need on their back and they talk about how freeing
- that is because they are taking care of themselves.💬
+ that is because they are taking care of themselves.
 
-> 💬 ... (Packbacking)  **involves doing without**. ....
+>  ... (Packbacking)  **involves doing without**. ....
 Whenever a politician comes to you and says, “Oh, we’re
 going to take care of this problem for you.” What they’re really
 saying is, we’re going to take away some of your freedoms. The
 exercise for you, here, is to figure out what freedoms they’re going
 to take away in order to solve this problem, and they’re often
 well-disguised, but yeah, if you want to be free, that means doing
-things yourself.💬
+things yourself.
 
 Too long-winded for you? Well how about:
 
-<img width=50 src="https://i.gr-assets.com/images/S/compressed.photo.goodreads.com/authors/1330853515i/1020792._UX200_CR0,11,200,200_.jpg" align=right>
-
-> 💬 Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.💬 <br>
+>  Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away. <br>
 ― Antoine de Saint-Exupéry, Airman's Odyssey
 
 Still too long? Then:
 
 
-> 💬 Less is More.💬 <br>
+>  Less is More. <br>
 ― Dieter Rams
