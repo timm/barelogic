@@ -1,13 +1,15 @@
 <p align=center>
 <img src="/docs/img/barelogic.png"  width="250">
 <br>
-<a href="http://github.com/timm/barelogic"><img src="https://img.shields.io/badge/GitHub-src-yellow?logo=github&style=flat-square"></a> <img alt="language" src="https://img.shields.io/badge/language-python-blue.svg?logo=python&style=flat-square"> <a href="https://github.com/timm/barelogic/blob/main/LICENSE.md"><img alt="license" src="https://img.shields.io/badge/license-MIT-brightgreen?logo=open-source-initiative&logoColor=white&style=flat-square"></a><br>
-    <a href="https://github.com/timm/barelogic/blob/main/README.md">docs</a> |
-    <a href="http://github.com/timm/barelogic/issues">issues</a> 
+<a href="http://github.com/timm/barelogic"><img src="https://img.shields.io/badge/GitHub-src-yellow?logo=github&style=flat-square"></a> 
+<img alt="language" src="https://img.shields.io/badge/language-python-blue.svg?logo=python&logoColor=white&style=flat-square"> 
+<a href="https://github.com/timm/barelogic/blob/main/LICENSE.md"><img alt="license" src="https://img.shields.io/badge/license-MIT-brightgreen?logo=open-source-initiative&logoColor=white&style=flat-square"></a>
+<a href="https://github.com/timm/barelogic/blob/main/README.md"><img alt="docs" src="https://img.shields.io/badge/docs-available-orange?logo=readthedocs&logoColor=white&style=flat-square"></a>
+<a href="http://github.com/timm/barelogic/issues"><img alt="issues" src="https://img.shields.io/badge/issues-track-red?logo=github&style=flat-square"></a>
 </p>
+
 <h1> Bare Logic </h1>
 <h3> Think Fast. Learn Smart. Stay Wild.</h3>
-
 
 
 Why BareLogic? Why reivent a minimal version of useful AI tools? Well, lets ask 
@@ -40,7 +42,7 @@ supposedly sophisticated methods should be benchmarked
 against seemingly stupider ones (the so-called “straw man”
 approach). I can attest that when ever I checked a supposedly sophisticated method against
 a simpler one, there was always something useful in the
-simpler. And more often than not, a year later, I have
+simpler. More often than not, a year later, I have
 switched to the simpler approach.
 
-Repeat that for 30 years of programming, and you get BareLogic.
+And if you repeat that "switch to the simpler"  stuff for 40 years of AI programming, you get BareLogic.
