@@ -14,10 +14,10 @@
 Why BareLogic? Why reivent a minimal version of many useful AI mdeling tools? Well, lets as Richard Hipp, the author SQLite 
 who is famous for (re)building the tools he  uses day to day.
 
- > 💬 People go backpacking or
- stuff, they go on these long hikes, backpacking, where they carry
+ > 💬 People go backpacking,
+ long hikes, where they carry
  everything they need on their back and they talk about how freeing
- that is because they are taking care of themselves...💬
+ that is because they are taking care of themselves.💬
 
 > 💬 ... (Packbacking)  involves doing without. ....
 Whenever a politician comes to you and says, “Oh, we’re
