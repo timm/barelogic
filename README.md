@@ -21,6 +21,10 @@ who is famous for (re)building the tools he  uses day to day.
  everything they need on their back and they talk about how freeing
  that is because they are taking care of themselves.
 
+> You’re not dependent on different vendors providing you something. Suppose I had elected to go with Berkeley DB as the storage engine for SQLite version two.
+Well, at that time Berkeley DB was open source, but then later it was sold off to Oracle, and it became a duel source proprietary model and you can’t get hold of the source code to the later versions without paying license fees, yada, yada, yada, so, suddenly it becomes a problem.
+
+
 >  ... (Packbacking)  **involves doing without**. ....
 Whenever a politician comes to you and says, “Oh, we’re
 going to take care of this problem for you.” What they’re really
