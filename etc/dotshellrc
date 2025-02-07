@@ -47,6 +47,7 @@ vi() {
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 export PATH="$PWD:/opt/homebrew/bin:$PATH"
+export PATH="$PWD:/Library/Frameworks/Python.framework/Versions/3.13/bin:$PATH"
 
 here() { cd $1; basename `pwd`; }
 PROMPT_COMMAND='echo -ne "🐻 $(git branch 2>/dev/null | grep '^*' | colrm 1 2):";PS1="$(here ..)/$(here .):\!\e[m ▶ "'
