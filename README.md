@@ -35,8 +35,13 @@ Too long-winded for you? Well how about:
 >  Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away. <br>
 ― Antoine de Saint-Exupéry, Airman's Odyssey
 
-Still too long? Then:
+In his book [Empirical Methods for AI](https://www.eecs.harvard.edu/cs286r/courses/spring08/reading6/CohenTutorial.pdf), 
+William Cohen argues that
+supposedly sophisticated methods should be benchmarked
+against seemingly stupider ones (the so-called “straw man”
+approach). I can attest that when ever I checked a supposedly sophisticated method against
+a simpler one, there was always something useful in the
+simpler. And more often than not, a year later, I have
+switched to the simpler approach.
 
-
->  Less is More. <br>
-― Dieter Rams
+Repeat that for 30 years of programming, and you get BareLogic.
