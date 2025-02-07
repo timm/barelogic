@@ -17,7 +17,7 @@ who is famous for (re)building the tools he  uses day to day.
  > 💬 People go backpacking or
  stuff, they go on these long hikes, backpacking, where they carry
  everything they need on their back and they talk about how freeing
- that is because they are taking care of themselves... 💬
+ that is because they are taking care of themselves...💬
 
 > 💬 ... (Packbacking)  involves doing without. ....
 Whenever a politician comes to you and says, “Oh, we’re
@@ -26,7 +26,7 @@ saying is, we’re going to take away some of your freedoms. The
 exercise for you, here, is to figure out what freedoms they’re going
 to take away in order to solve this problem, and they’re often
 well-disguised, but yeah, if you want to be free, that means doing
-things yourself. 💬
+things yourself.💬
 
 -- From [The Untold Story of SQLite](https://corecursive.com/066-sqlite-with-richard-hipp/)
 
