@@ -1,4 +1,6 @@
-<p align=center>
+<h1> Bare Logic </h1>
+<h3> Think Fast. Learn Smart. Stay Wild.</h3>
+<p>
 <img src="/docs/img/barelogic.png"  width="250">
 <br>
 <a href="http://github.com/timm/barelogic"><img src="https://img.shields.io/badge/GitHub-src-yellow?logo=github&style=flat-square"></a> 
@@ -7,9 +9,6 @@
 <a href="https://github.com/timm/barelogic/blob/main/README.md"><img alt="docs" src="https://img.shields.io/badge/docs-available-orange?logo=readthedocs&logoColor=white&style=flat-square"></a>
 <a href="http://github.com/timm/barelogic/issues"><img alt="issues" src="https://img.shields.io/badge/issues-track-red?logo=github&style=flat-square"></a>
 </p>
-
-<h1> Bare Logic </h1>
-<h3> Think Fast. Learn Smart. Stay Wild.</h3>
 
 
 Why BareLogic? Why reivent a minimal version of useful AI tools? Well, lets ask 
