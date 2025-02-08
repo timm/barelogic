@@ -38,11 +38,12 @@ things yourself.
 
 It turns out that "doing without" is an important principles:
 
-- Aristotle told us _"Nature operates in the shortest way possible."_ and
 - Williman of Occum warned that
  _"Frustra fit per plura quod potest fieri per pauciora"_  (It is futile to do with more things that which can be done with fewer).
-- Mathematically, simpler models (with less dimensions) allow for more repeated events (since   "similarity" means checker for fewer things).
-And more complex models (higher dimensions) struggle to generalize because any two points, even those from the same class, tend to be further  apart.
+- Aristotle told us _"Nature operates in the shortest way possible."_. And the maths suports him.
+ Nature optimize towards some goal (e.g. surival) and that means testing out different ways of doing things.
+  Mathematically, simpler ways (with less decision) allow for more repeated events (since   "similarity" means checker for fewer things).
+And more complex ways (that rely on more decisions ) struggle to generalize because any two decisions, even those from some same class, tend to be further  apart.
 
 Is all that too long-winded for you? Well how about:
 
