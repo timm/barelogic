@@ -38,7 +38,7 @@ things yourself.
 
 It turns out that "doing without" is an important principles:
 
-- Williman of Occum warned that
+- William of Occum warned that
  _"Frustra fit per plura quod potest fieri per pauciora"_  (It is futile to do with more things that which can be done with fewer).
 - Aristotle told us _""Ἡ φύσις τῇ ἐλαχίστῃ ὁδῷ ἐργάζεται"_ (Nature operates in the shortest way possible). And the maths suports him.
  Nature optimize towards some goal (e.g. surival) and that means testing out different ways of doing things.
@@ -47,7 +47,8 @@ And more complex ways (that rely on more decisions ) struggle to generalize beca
 
 Is all that too long-winded for you? Well how about:
 
->  Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away. <br>
+> La perfection est atteinte, non pas lorsqu’il n’y a plus rien à ajouter, mais lorsqu’il n’y a plus rien à enlever
+(Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away). <br>
 ― Antoine de Saint-Exupéry, Airman's Odyssey
 
 In his book [Empirical Methods for AI](https://www.eecs.harvard.edu/cs286r/courses/spring08/reading6/CohenTutorial.pdf), 
