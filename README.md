@@ -27,7 +27,7 @@ who is famous for (re)building the tools he  uses day to day.
 Well, at that time Berkeley DB was open source, but then later it was sold off to Oracle, and it became a duel source proprietary model and you can’t get hold of the source code to the later versions without paying license fees, yada, yada, yada, so, suddenly it becomes a problem.
 
 
-<img src="/docs/img/backpack.png" width=300> 
+<img src="/docs/img/backpack.png" align=right width=300> 
 
 >  ... (Packbacking)  **involves doing without**. ....
 Whenever a politician comes to you and says, “Oh, we’re
