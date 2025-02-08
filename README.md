@@ -1,5 +1,5 @@
 <h1> Bare Logic </h1>
-<h3>Think Fast. Learn Smart. Stay Wil. <br>(Case studies in simpler AI,  elegance, and the wisdom of reduction).</h3>
+<h3>Think Fast. Learn Smart. Stay Wild. <br>(Case studies in simpler AI,  elegance, and the wisdom of reduction).</h3>
 <p>
 <img src="/docs/img/barelogic.png"  width="250">
 <br>
