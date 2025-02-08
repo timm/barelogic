@@ -36,7 +36,15 @@ to take away in order to solve this problem, and they’re often
 well-disguised, but yeah, if you want to be free, that means doing
 things yourself.
 
-Too long-winded for you? Well how about:
+It turns out that "doing without" is an important principles:
+
+- Aristotle told us _"Nature operates in the shortest way possible."_ and
+- Williman of Occum warned that
+ _"Frustra fit per plura quod potest fieri per pauciora"_  (It is futile to do with more things that which can be done with fewer).
+- Mathematically, simpler models (with less dimensions) allow for more repeated events (since   "similarity" means checker for fewer things).
+And more complex models (higher dimensions) struggle to generalize because any two points, even those from the same class, tend to be further  apart.
+
+Is all that too long-winded for you? Well how about:
 
 >  Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away. <br>
 ― Antoine de Saint-Exupéry, Airman's Odyssey
