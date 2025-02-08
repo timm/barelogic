@@ -18,12 +18,13 @@ Well, lets ask
 the author SQLite, 
 who is famous for (re)building the tools he  uses day to day.
 
+<img src="/docs/img/backpack.png" align=right width=300> 
+
  >  People go backpacking,
  long hikes, where they carry
  everything they need on their back and they talk about how freeing
  that is because they are taking care of themselves.
 
-<img src="/docs/img/backpack.png" align=right width=300> 
 
 > You’re not dependent on different vendors providing you something. Suppose I had elected to go with Berkeley DB as the storage engine for SQLite version two.
 Well, at that time Berkeley DB was open source, but then later it was sold off to Oracle, and it became a duel source proprietary model and you can’t get hold of the source code to the later versions without paying license fees, yada, yada, yada, so, suddenly it becomes a problem.
@@ -49,9 +50,10 @@ It turns out that "doing without" is an important principles:
    since they allow for more repeated events (because "similarity" means checker for fewer things).
 And more complex ways (that rely on more decisions ) struggle to generalize because any two decisions, even those from some same class, tend to be further  apart.
 
+<img src="/docs/img/song.png" align=right width=300> 
+
 Is all that too long-winded for you? Well how about:
 
-<img src="/docs/img/song.png" align=right width=300> 
 
 > La perfection est atteinte, non pas lorsqu’il n’y a plus rien à ajouter, mais lorsqu’il n’y a plus rien à enlever
 (Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away). <br>
