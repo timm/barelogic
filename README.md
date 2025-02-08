@@ -40,7 +40,7 @@ It turns out that "doing without" is an important principles:
 
 - Williman of Occum warned that
  _"Frustra fit per plura quod potest fieri per pauciora"_  (It is futile to do with more things that which can be done with fewer).
-- Aristotle told us _"Nature operates in the shortest way possible."_. And the maths suports him.
+- Aristotle told us _""Ἡ φύσις τῇ ἐλαχίστῃ ὁδῷ ἐργάζεται"_ (Nature operates in the shortest way possible). And the maths suports him.
  Nature optimize towards some goal (e.g. surival) and that means testing out different ways of doing things.
   Mathematically, simpler ways (with less decision) allow for more repeated events (since   "similarity" means checker for fewer things).
 And more complex ways (that rely on more decisions ) struggle to generalize because any two decisions, even those from some same class, tend to be further  apart.
