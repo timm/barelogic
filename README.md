@@ -54,6 +54,8 @@ Is all that too long-winded for you? Well how about:
 (Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away). <br>
 ― Antoine de Saint-Exupéry, Airman's Odyssey
 
+<img src="/docs/img/song.png" align=right width=300> 
+
 In his book [Empirical Methods for AI](https://www.eecs.harvard.edu/cs286r/courses/spring08/reading6/CohenTutorial.pdf), 
 William Cohen argues that
 supposedly sophisticated methods should be benchmarked
