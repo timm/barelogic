@@ -70,7 +70,7 @@ def adds(src, i=None):
       add(x,out)
    return out
 
-# Add a value to a numerical or symbolic structure.
+# Add a value to a numerical or symbolic or data structure.
 def add(v,i):
    def _data():
       if i.cols: i.rows += [ [add( v[col.at], col) for col in i.cols.all] ]
@@ -85,11 +85,22 @@ def add(v,i):
       i.mu += d / i.n
       i.m2 += d * (v -   i.mu)
       i.sd  = 0 if i.n <2 else (i.m2/(i.n-1))**.5
-   # Add ==>
+   # Add ==>s
    if v != "?":
       i.n += 1
       _sym() if i.it is Sym else (_num() if i.it is Num else _data())
    return v
+
+# Add a value to a numerical or symbolic structure.
+def sub(v,i):
+   if v != "?":
+      i.n -= 1
+      if i.it is Sym: i.has[v] -= 1
+      else:
+         d     = v - i.mu
+         i.mu -= d / i.n
+         i.m2 -= d * (v - i.mu)
+         i.sd  = 0 if i.n <2 else (i.m2/(i.n-1))**.5
 
 #----------------------------------------------------------------------------------------
 #      _.        _   ._     
@@ -108,11 +119,10 @@ def mid(col):
 def spread(col): 
    return col.sd if col.it is Num else ent(col.has)
 
-def eg__data(_):
-   d=Data(csv(the.file))
-   print("klass ", d.cols.klass or "none")
-   showd({col.txt : mid(col) for col in d.cols.all})
-   showd({col.txt : spread(col) for col in d.cols.all})
+# Report distance between two Nums, modulated in terms of the standard deviation."
+def delta(i,j):
+   return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + I/BIG)
+
 
 #----------------------------------------------------------------------------------------
 #       _|  o   _  _|_ 
@@ -135,12 +145,6 @@ def xdist(row1,row2,data):
    # Xdist ==>
    return (sum(_col(row1[col.at], row2[col.at],col)**the.p for col in data.cols.x)
           / len(data.cols.x))**(1/the.p)
-
-def eg_y(_):
-   d=Data(csv(the.file))
-   for j,row in enumerate(sorted(d.rows,key=lambda row: ydist(row,d))):
-      if j<10 or j % 50 == 0: print(j,row,round(ydist(row,d),2))
-
 
 #----------------------------------------------------------------------------------------
 #      |_    _.       _    _ 
@@ -185,6 +189,29 @@ def acting(data):
       done     = _rank(done)
    return done
 
+# Non-parametric effect size. threshold is border between small=.11 and medium=.28 
+# from Table1 of  https://doi.org/10.3102/10769986025002101
+def cliffs(xs,ys):
+   n,lt,gt = 0,0,0
+   for x in xs:
+     for y in ys:
+        n += 1
+        if x > y: gt += 1
+        if x < y: lt += 1 
+   return abs(lt - gt)/n  < the.Cliffs # 0.197) 
+
+# non-parametric significance test From Introduction to Bootstrap, 
+# Efron and Tibshirani, 1993, chapter 20. https://doi.org/10.1201/9780429246593"""
+ def bootstrap(ys,zs,confidence=None,bootstraps=None):
+    y0,z0  = ys, zs
+    x,y,z  = adds(y0+z0), adds(y0), adds(z0)
+    delta0 = delta(y,z)
+    yhat   = [y1 - mid(y) + mid(x) for y1 in y0]
+    zhat   = [z1 - mid(z) + mid(x) for z1 in z0] 
+    _some  = lambda lst: adds(random.choices(lst, k=len(lst))) 
+    s      = the.stats.bootstraps
+    n      = sum(delta(_some(yhat), _some(zhat))  > delta(y,z) for _ in range(ss)) 
+    return n / s >= the.confidence
 
 #----------------------------------------------------------------------------------------
 #      |  o  |_  
@@ -237,15 +264,8 @@ def show(x):
                                                           if k[0] !="_"])+")"
    return str(x)
 
-def eg__the(_): 
-   "show settings"
-   print(the)
-
-def eg_h(_): 
-   "show help"
-   print(__doc__)
-   [print(f"    {re.sub('^eg','',k).replace('_','-'):9s} {fun.__doc__}") 
-    for k,fun in globals().items() if k[:3] == "eg_"]
+def eg__the(_): print(the)
+def eg_h(_): print(__doc__)
 
 #----------------------------------------------------------------------------------------
 #      ._ _    _.  o  ._  
