@@ -70,7 +70,7 @@ a simpler one, there was always something useful in the
 simpler. More often than not, a year later, I have
 switched to the simpler approach.
 
-So take every you know about AI then see what you can "do witout"
+So take every you know about AI then see what you can "do without"
 and what can you "take away".
 Repeat that for 40 years of AI programming 
 and  arrive at BareLogic.
