@@ -51,12 +51,12 @@ It turns out that "doing without" is an important principles:
   it must test  many different ways of doing things. 
   Simpler ways (with less decisions) are more likely to 
       apply to more future similar problems
-      (because "similarity" means checking for fewer things)[^apply].
+      (because "similarity" means checking for fewer things) [^apply].
   Also, simpler things are easier to test if, for no other reason,
       it will be easier to find or make repeated similar events (again, since the fewer the
       choices, the easier it to find something like those choices)
   On the other hand, more complex ways (that rely on more decisions ) struggle to
-  generalize because any two decisions, even those from some same class, tend to be further  apart[^dist].
+  generalize because any two decisions, even those from some same class, tend to be further  apart [^dist].
 
 [^apply]: In Euclidean geometry, decisions partition space into
 regions. Simpler methods, with fewer decisions, create larger
@@ -99,7 +99,7 @@ and what can you "take away".
 Repeat that for decades of AI programming,
  and will be on your way to building  your  own BareLogic.
 
-Of course if you can't wait that long, you could just look over my stuff. 
+(And if you can't wait for decades, you could just look over my stuff.)
 
 Share and enjoy [^hhgth].
 
