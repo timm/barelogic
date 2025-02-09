@@ -55,8 +55,8 @@ Is all that too long-winded for you? Well how about:
 
 <img src="/docs/img/song.png" align=right width=300> 
 
-> La perfection est atteinte, non pas lorsqu’il n’y a plus rien à ajouter, mais lorsqu’il n’y a plus rien à enlever
-(Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away). <br>
+> "La perfection est atteinte, non pas lorsqu’il n’y a plus rien à ajouter, mais lorsqu’il n’y a plus rien à enlever."
+(Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away/). <br>
 ― Antoine de Saint-Exupéry, Airman's Odyssey
 
 
