@@ -96,7 +96,13 @@ switched to the simpler approach.
 
 So take every you know about AI. Then see what you can "do without"
 and what can you "take away".
-Then if, repeat that decades of AI programming,
-then you will invent your own a BareLogic approach.
+Then if your repeat that for decades of AI programming,
+ you to will be building  your  own BareLogic.
 
-Of course if you can't wait that long, you could just look over my BareLogic. Share and enjoy.
+Of course if you can't wait that long, you could just look over my BareLogic. 
+
+Share and enjoy [^hhgth].
+
+
+[hhgth]: From the Hitchikers Guide to the Galaxy by Douglas Adams. “'Share and Enjoy' is the company motto of the hugely successful Sirius Cybernetics Corporation Complaints Division, which now covers the major land masses of three medium-sized planets and is the only part of the Corporation to have shown a consistent profit in recent years. The motto stands-- or rather stood-- in three mile high illuminated letters near the Complaints Department spaceport on Eadrax. Unfortunately its weight was such that shortly after it was erected, the ground beneath the letters caved in and they dropped for nearly half their length through the offices of many talented young Complaints executives-- now deceased. The protruding upper halves of the letters now appear, in the local language, to read 'Go stick your head in a pig,' and are no longer illuminated, except at times of special celebration.”
+
