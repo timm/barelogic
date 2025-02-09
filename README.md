@@ -45,10 +45,40 @@ It turns out that "doing without" is an important principles:
 - William of Occum warned that
  _"Frustra fit per plura quod potest fieri per pauciora"_  (It is futile to do with more things that which can be done with fewer).
 - Aristotle told us _"Ἡ φύσις τῇ ἐλαχίστῃ ὁδῷ ἐργάζεται"_ (Nature operates in the shortest way possible). And the maths suports him.
- Nature optimize towards some goal (e.g. surival) and that means it must try  many different ways of doing things.
-  Mathematically, simpler ways (with less decision) are easier to test and apply to future similar problems
-   since they allow for more repeated events (because "similarity" means checker for fewer things).
-And more complex ways (that rely on more decisions ) struggle to generalize because any two decisions, even those from some same class, tend to be further  apart.
+ Nature optimize towards some goal (e.g. survival) and that means it must try  many different ways of doing things.
+  Mathematically, this must be trie:
+    - Simpler ways (with less decision) will
+      apply to more future similar problems
+      (because "similarity" means checker for fewer things).
+    - Simpler things are easier to test if, for no other reason,
+      there will be easier to find or make repeated similar events (again, since the fewer the
+      choices, the easier it to find something like those choices)
+    - On the other hand, more complex ways (that rely on more decisions ) struggle to
+      generalize because any two decisions, even those from some same class, tend to be further  apart[^dist].
+
+[^dist]:
+Consider two points in an n-dimensional space:
+     `A = (x₁, x₂, ..., xₙ)` and  `B = (y₁, y₂, ..., yₙ)`
+The Euclidean distance between them is
+`dₙ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)²)**
+
+### Step 1: Adding Another Dimension
+
+If we extend these points into (n+1)-dimensional space by adding new coordinates xₙ₊₁ and yₙ₊₁, the distance becomes:
+
+**dₙ₊₁ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)² + (xₙ₊₁ - yₙ₊₁)²)**
+
+Since (xₙ₊₁ - yₙ₊₁)² is always non-negative, we get:
+
+**dₙ₊₁ ≥ dₙ**
+
+### Conclusion
+
+As dimensions increase, distances between points **cannot decrease** and generally **increase**. This proves that items are further apart in higher dimensions.
+
+### Conclusion
+
+As the number of dimensions increases, the distance between points **cannot decrease** and generally **increases**. This proves that items are further apart in higher dimensions.
 
 
 Is all that too long-winded for you? Well how about:
