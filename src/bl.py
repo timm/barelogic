@@ -24,7 +24,8 @@ one   = random.choice
 some  = random.choices
 BIG   = 1E32
 
-class o:
+# `Obj` allows for easy initialization and have a built-in pretty print.
+class Obj:
    __init__ = lambda i,**d: i.__dict__.update(**d)
    __repr__ = lambda i: i.__class__.__name__ + show(i.__dict__)
 
@@ -34,12 +35,12 @@ class o:
 
 # Define a numerical column with statistics.
 def Num(txt=" ", at=0):
-   return o(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG,
+   return Obj(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG,
             goal = 0 if txt[-1]=="-" else 1)
 
 # Define a symbolic column with frequency counts.
 def Sym(txt=" ", at=0):
-   return o(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
+   return Obj(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
 
 # Define a collection of columns with metadata.
 def Cols(names):
@@ -49,11 +50,11 @@ def Cols(names):
       if col.txt[-1] != "X":
          (y if col.txt[-1] in "+-!" else x).append(col)
          if col.txt[-1] == "!": klass=col
-   return o(it=Cols, names=names, all=cols, x=x, y=y, klass=klass)
+   return Obj(it=Cols, names=names, all=cols, x=x, y=y, klass=klass)
 
 # Define a dataset with rows and columns.
 def Data(src, txt=""):
-   return adds(src, o(it=Data, txt=txt or "", n=0, rows=[], cols=None))
+   return adds(src, Obj(it=Data, txt=txt or "", n=0, rows=[], cols=None))
 
 # Return a dataset with the same structure as `data`. Optionally, rank rows.
 def clone(data,src=[],rank=False):
@@ -72,7 +73,7 @@ def adds(src, i=None):
       add(x,i)
    return i
 
-# Add a value to a numerical or symbolic or data structure.
+# Add a value to a sstruct (Num or Sym or Data).
 def add(v,i):
    def _data():
       if i.cols: i.rows += [ [add( v[col.at], col) for col in i.cols.all] ]
@@ -93,16 +94,22 @@ def add(v,i):
       _sym() if i.it is Sym else (_num() if i.it is Num else _data())
    return v
 
-# Add a value to a numerical or symbolic structure.
+# Remove value from a sstruct. Warnong: row remove slow for large lists.
 def sub(v,i):
+   def _data():
+      i.rows.remove( [sub(v[col.at],col) for col in i.cols.all] ) 
+   def _sym():
+      i.has[v] -= 1
+   def _num():
+      d     = v - i.mu
+      i.mu -= d / i.n
+      i.m2 -= d * (v - i.mu)
+      i.sd  = 0 if i.n <2 else (i.m2/(i.n-1))**.5
+   # Sub ==>
    if v != "?":
       i.n -= 1
-      if i.it is Sym: i.has[v] -= 1
-      else:
-         d     = v - i.mu
-         i.mu -= d / i.n
-         i.m2 -= d * (v - i.mu)
-         i.sd  = 0 if i.n <2 else (i.m2/(i.n-1))**.5
+      _sym() if i.it is Sym else (_num() if i.it is Num else _data())
+   return v
 
 #----------------------------------------------------------------------------------------
 #      _.        _   ._     
@@ -156,23 +163,23 @@ def neighbors(row1, rows, data):
    return sorted(rows, key=lambda row2: xdist(row1,row2,data))
 
 
-def kcentroids(data,k=24,rows=None,samples=32):
-  rows = rows or data.rows
-  out  = [one(rows)]
-  for _ in range(1,k):
-    all,u = 0,[]
-    for _ = ranges(samples):
-      row = one(rows)
-      near = neighbors(row, out)[2]
-      all = all + push(u, {row=row, d=self:xdist(row,closest)^2}).d end 
-    local i,r = 1,all * math.random()
-    for j,x in pairs(u) do
-      r = r - x.d
-      if r <= 0 then i=j; break end end 
-    push(out, u[i].row)
-  end
-  return out end
-
+# def kcentroids(data,k=24,rows=None,samples=32):
+#   rows = rows or data.rows
+#   out  = [one(rows)]
+#   for _ in range(1,k):
+#     all,u = 0,[]
+#     for _ = ranges(samples):
+#       row = one(rows)
+#       near = neighbors(row, out)[2]
+#       all = all + push(u, {row=row, d=self:xdist(row,closest)^2}).d end 
+#     local i,r = 1,all * math.random()
+#     for j,x in pairs(u) do
+#       r = r - x.d
+#       if r <= 0 then i=j; break end end 
+#     push(out, u[i].row)
+#   end
+#   return out end
+# 
 # function Data:centroids(k, rows,
 # col = col or (type(x) == "number" and Num:new() or Sym:new())
 # 198 rows = rows or self.rows
@@ -339,7 +346,7 @@ def main():
          random.seed(the.rseed)
          fun(coerce(arg))
 
-the= o(**{m[1]:coerce(m[2]) for m in re.finditer(r"-\w+\s*(\w+).*=\s*(\S+)",__doc__)})
+the= Obj(**{m[1]:coerce(m[2]) for m in re.finditer(r"-\w+\s*(\w+).*=\s*(\S+)",__doc__)})
 random.seed(the.rseed)
 
 if __name__ == "__main__":  main()
