@@ -96,10 +96,10 @@ switched to the simpler approach.
 
 So take every you know about AI. Then see what you can "do without"
 and what can you "take away".
-Then if your repeat that for decades of AI programming,
- you to will be building  your  own BareLogic.
+Repeat that for decades of AI programming,
+ and will be on your way to building  your  own BareLogic.
 
-Of course if you can't wait that long, you could just look over my BareLogic. 
+Of course if you can't wait that long, you could just look over my stuff. 
 
 Share and enjoy [^hhgth].
 
