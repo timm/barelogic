@@ -94,7 +94,9 @@ a simpler one, there was always something useful in the
 simpler. More often than not, a year later, I have
 switched to the simpler approach.
 
-So take every you know about AI then see what you can "do without"
+So take every you know about AI. Then see what you can "do without"
 and what can you "take away".
-Repeat that for 40 years of AI programming 
-and  arrive at BareLogic.
+Then if, repeat that decades of AI programming,
+then you will invent your own a BareLogic approach.
+
+Of course if you can't wait that long, you could just look over my BareLogic. Share and enjoy.
