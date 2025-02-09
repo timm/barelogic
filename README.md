@@ -50,10 +50,10 @@ It turns out that "doing without" is an important principles:
    since they allow for more repeated events (because "similarity" means checker for fewer things).
 And more complex ways (that rely on more decisions ) struggle to generalize because any two decisions, even those from some same class, tend to be further  apart.
 
-<img src="/docs/img/song.png" align=right width=300> 
 
 Is all that too long-winded for you? Well how about:
 
+<img src="/docs/img/song.png" align=right width=300> 
 
 > La perfection est atteinte, non pas lorsqu’il n’y a plus rien à ajouter, mais lorsqu’il n’y a plus rien à enlever
 (Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away). <br>
