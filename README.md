@@ -92,7 +92,7 @@ supposedly sophisticated methods should be benchmarked
 against seemingly stupider ones (the so-called “straw man”
 approach). I can attest that when ever I checked a supposedly sophisticated method against
 a simpler one, there was always something useful in the
-simpler. More often than not, a year later, I have
+simpler. More often than not, a year later, I had
 switched to the simpler approach.
 
 So take every you know about AI. Then see what you can "do without"
