@@ -56,29 +56,17 @@ It turns out that "doing without" is an important principles:
     - On the other hand, more complex ways (that rely on more decisions ) struggle to
       generalize because any two decisions, even those from some same class, tend to be further  apart[^dist].
 
-[^dist]:
+[^dist]: As dimensions increase, distances between points **cannot decrease** and generally **increase**;
+i.e. items are further apart in higher dimensions. 
 Consider two points in an n-dimensional space:
      `A = (x₁, x₂, ..., xₙ)` and  `B = (y₁, y₂, ..., yₙ)`
 The Euclidean distance between them is
 `dₙ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)²)**
-
-### Step 1: Adding Another Dimension
-
 If we extend these points into (n+1)-dimensional space by adding new coordinates xₙ₊₁ and yₙ₊₁, the distance becomes:
-
-**dₙ₊₁ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)² + (xₙ₊₁ - yₙ₊₁)²)**
-
+`dₙ₊₁ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)² + (xₙ₊₁ - yₙ₊₁)²)`.
 Since (xₙ₊₁ - yₙ₊₁)² is always non-negative, we get:
+`dₙ₊₁ ≥ dₙ`.  Q.E,D.
 
-**dₙ₊₁ ≥ dₙ**
-
-### Conclusion
-
-As dimensions increase, distances between points **cannot decrease** and generally **increase**. This proves that items are further apart in higher dimensions.
-
-### Conclusion
-
-As the number of dimensions increases, the distance between points **cannot decrease** and generally **increases**. This proves that items are further apart in higher dimensions.
 
 
 Is all that too long-winded for you? Well how about:
