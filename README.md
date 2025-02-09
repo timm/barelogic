@@ -44,16 +44,16 @@ It turns out that "doing without" is an important principles:
 
 - William of Occum warned that
  _"Frustra fit per plura quod potest fieri per pauciora"_  (It is futile to do with more things that which can be done with fewer).
-- Aristotle told us _"Ἡ φύσις τῇ ἐλαχίστῃ ὁδῷ ἐργάζεται"_ (Nature operates in the shortest way possible). And the maths suports him.
- Nature optimize towards some goal (e.g. survival) and that means it must try  many different ways of doing things.
-  Mathematically, this must be true:
-    - Simpler ways (with less decision) will
+- Aristotle told us _"Ἡ φύσις τῇ ἐλαχίστῃ ὁδῷ ἐργάζεται"_ (Nature operates in the shortest way possible). And the maths supports him.
+ Nature optimizes towards some goal (specifically, survival) and that means 
+  it must try  many different ways of doing things.
+  Simpler ways (with less decisions) are more likely to 
       apply to more future similar problems
-      (because "similarity" means checker for fewer things)[^apply].
-    - Simpler things are easier to test if, for no other reason,
+      (because "similarity" means checking for fewer things)[^apply].
+  Also, simpler things are easier to test if, for no other reason,
       it will be easier to find or make repeated similar events (again, since the fewer the
       choices, the easier it to find something like those choices)
-    - On the other hand, more complex ways (that rely on more decisions ) struggle to
+  On the other hand, more complex ways (that rely on more decisions ) struggle to
       generalize because any two decisions, even those from some same class, tend to be further  apart[^dist].
 
 [^apply]: In Euclidean geometry, decisions partition space into
