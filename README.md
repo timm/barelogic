@@ -100,8 +100,7 @@ and what can you can "take away".
 Repeat that for decades of AI programming,
  and will be on your way to building  your  own BareLogic.
 
-(And if you can't wait for decades, you could just look over my stuff.)
-
+And if you can't wait for decades, you could just look over my stuff.
 Share and enjoy [^hhgth].
 
 
