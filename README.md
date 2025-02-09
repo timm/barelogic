@@ -11,7 +11,7 @@
 </p>
 
 
-Why BareLogic? Why reivent a minimal version of useful AI tools?
+Why BareLogic? Why reinvent a minimal version of useful AI tools?
 
 Well, lets ask 
 [Richard Hipp](https://corecursive.com/066-sqlite-with-richard-hipp/)
