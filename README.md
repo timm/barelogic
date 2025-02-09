@@ -61,7 +61,7 @@ i.e. items are further apart in higher dimensions.
 Consider two points in an n-dimensional space:
      `A = (x₁, x₂, ..., xₙ)` and  `B = (y₁, y₂, ..., yₙ)`
 The Euclidean distance between them is
-`dₙ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)²)**
+`dₙ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)²)`.
 If we extend these points into (n+1)-dimensional space by adding new coordinates xₙ₊₁ and yₙ₊₁, the distance becomes:
 `dₙ₊₁ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)² + (xₙ₊₁ - yₙ₊₁)²)`.
 Since (xₙ₊₁ - yₙ₊₁)² is always non-negative, we get:
