@@ -36,7 +36,7 @@ class Obj:
 # Define a numerical column with statistics.
 def Num(txt=" ", at=0):
    return Obj(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG,
-            goal = 0 if txt[-1]=="-" else 1)
+             goal = 0 if txt[-1]=="-" else 1)
 
 # Define a symbolic column with frequency counts.
 def Sym(txt=" ", at=0):
@@ -66,14 +66,14 @@ def clone(data,src=[],rank=False):
 #     |_|  |_)  (_|  (_|   |_  (/_ 
 #          |                       
 
-# Add multiple values to a structure.
+# Return a summary filled with `src`. If no summary supplied, assume one based on src[0].
 def adds(src, i=None):
    for x in src:
-      i = i or (Num() if isinstance(x[0],(int,float)) else Sym())
+      i = i or (Num() if isinstance(x,(int,float)) else Sym())
       add(x,i)
    return i
 
-# Add a value to a sstruct (Num or Sym or Data).
+# Add a value to a struct (Num or Sym or Data).
 def add(v,i):
    def _data():
       if i.cols: i.rows += [ [add( v[col.at], col) for col in i.cols.all] ]
@@ -94,10 +94,11 @@ def add(v,i):
       _sym() if i.it is Sym else (_num() if i.it is Num else _data())
    return v
 
-# Remove value from a sstruct. Warnong: row remove slow for large lists.
+# Remove value from a struct.
 def sub(v,i):
    def _data():
-      i.rows.remove( [sub(v[col.at],col) for col in i.cols.all] ) 
+      row = i.rows.pop(v)
+      [sub(row[col.at],col) for col in i.cols.all]  
    def _sym():
       i.has[v] -= 1
    def _num():
@@ -319,15 +320,15 @@ def cli(d):
 # Pretty print
 def showd(x): print(show(x)); return x
 
-# Convert `x` to a pretty string.
+# Convert `x` to a pretty string. Round floats. For dicts, hide slots starting with "_".
 def show(x):
    it = type(x)
    if   it is str   : x = f'"{x}"'
    elif callable(x) : x = x.__name__ + '()'
    elif it is float : x = str(round(x,the.decs))
    elif it is list  : x = '['+', '.join([show(v) for v in x])+']'
-   elif it is dict  : x = "("+' '.join([f":{k} {show(v)}" for k,v in x.items() 
-                                                          if k[0] !="_"])+")"
+   elif it is dict  : 
+      x = "{"+' '.join([f":{k} {show(v)}" for k,v in x.items() if k[0] !="_"])+"}"
    return str(x)
 
 def eg__the(_): print(the)

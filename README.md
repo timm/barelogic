@@ -20,25 +20,25 @@ who is famous for (re)building the tools he  uses day to day.
 
 <img src="/docs/img/backpack.png" align=right width=300> 
 
- >  People go backpacking,
+ >  "People go backpacking,
  long hikes, where they carry
  everything they need on their back and they talk about how freeing
- that is because they are taking care of themselves.
+ that is because they are taking care of themselves."
 
 
-> You’re not dependent on different vendors providing you something. Suppose I had elected to go with Berkeley DB as the storage engine for SQLite version two.
-Well, at that time Berkeley DB was open source, but then later it was sold off to Oracle, and it became a duel source proprietary model and you can’t get hold of the source code to the later versions without paying license fees, yada, yada, yada, so, suddenly it becomes a problem.
+> "You’re not dependent on different vendors providing you something. Suppose I had elected to go with Berkeley DB as the storage engine for SQLite version two.
+Well, at that time Berkeley DB was open source, but then later it was sold off to Oracle, and it became a duel source proprietary model and you can’t get hold of the source code to the later versions without paying license fees, yada, yada, yada, so, suddenly it becomes a problem."
 
 
 
->  ... (Packbacking)  **involves doing without**. ....
+>  "... (Packbacking)  **involves doing without**. ....
 Whenever a politician comes to you and says, “Oh, we’re
 going to take care of this problem for you.” What they’re really
 saying is, we’re going to take away some of your freedoms. The
 exercise for you, here, is to figure out what freedoms they’re going
 to take away in order to solve this problem, and they’re often
 well-disguised, but yeah, if you want to be free, that means doing
-things yourself.
+things yourself."
 
 It turns out that "doing without" is an important principles:
 
@@ -60,7 +60,8 @@ Is all that too long-winded for you? Well how about:
 ― Antoine de Saint-Exupéry, Airman's Odyssey
 
 
-In his book [Empirical Methods for AI](https://www.eecs.harvard.edu/cs286r/courses/spring08/reading6/CohenTutorial.pdf), 
+"Taking away" things is another important
+principle. In his book [Empirical Methods for AI](https://www.eecs.harvard.edu/cs286r/courses/spring08/reading6/CohenTutorial.pdf), 
 William Cohen argues that
 supposedly sophisticated methods should be benchmarked
 against seemingly stupider ones (the so-called “straw man”
@@ -69,4 +70,7 @@ a simpler one, there was always something useful in the
 simpler. More often than not, a year later, I have
 switched to the simpler approach.
 
-And if you repeat that "switch to the simpler"  stuff for 40 years of AI programming, you get BareLogic.
+So take every you know about AI then see what you can "do witout"
+and what can you "take away".
+Repeat that for 40 years of AI programming 
+and  arrive at BareLogic.
