@@ -46,15 +46,19 @@ It turns out that "doing without" is an important principles:
  _"Frustra fit per plura quod potest fieri per pauciora"_  (It is futile to do with more things that which can be done with fewer).
 - Aristotle told us _"Ἡ φύσις τῇ ἐλαχίστῃ ὁδῷ ἐργάζεται"_ (Nature operates in the shortest way possible). And the maths suports him.
  Nature optimize towards some goal (e.g. survival) and that means it must try  many different ways of doing things.
-  Mathematically, this must be trie:
+  Mathematically, this must be true:
     - Simpler ways (with less decision) will
       apply to more future similar problems
-      (because "similarity" means checker for fewer things).
+      (because "similarity" means checker for fewer things)[^apply].
     - Simpler things are easier to test if, for no other reason,
-      there will be easier to find or make repeated similar events (again, since the fewer the
+      it will be easier to find or make repeated similar events (again, since the fewer the
       choices, the easier it to find something like those choices)
     - On the other hand, more complex ways (that rely on more decisions ) struggle to
       generalize because any two decisions, even those from some same class, tend to be further  apart[^dist].
+
+[^apply]: In Euclidean geometry, decisions partition space into
+regions. Simpler methods, with fewer decisions, create larger
+regions, covering more cases (past and present and future). 
 
 [^dist]: As dimensions increase, distances between points **cannot decrease** and generally **increase**;
 i.e. items are further apart in higher dimensions. 
@@ -65,7 +69,7 @@ The Euclidean distance between them is
 If we extend these points into (n+1)-dimensional space by adding new coordinates xₙ₊₁ and yₙ₊₁, the distance becomes:
 `dₙ₊₁ = sqrt((x₁ - y₁)² + (x₂ - y₂)² + ... + (xₙ - yₙ)² + (xₙ₊₁ - yₙ₊₁)²)`.
 Since (xₙ₊₁ - yₙ₊₁)² is always non-negative, we get:
-`dₙ₊₁ ≥ dₙ`.  Q.E,D.
+`dₙ₊₁ ≥ dₙ`.  Q.E.D.
 
 
 
