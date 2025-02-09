@@ -1,9 +1,17 @@
 -include ../src/Makefile
 
 p=export PYTHONPATH="..:$$PYTHONPATH"; python3 -B
-	
-tests:
+
+all: lib data nb kmeans
+
+lib:
 	$p lib.py
+
+data:
 	$p data.py
+
+nb:
 	$p nb.py
-	$p kmeans.py | sort -n -k 3
+
+kmeans:
+	$p kmeans.py 

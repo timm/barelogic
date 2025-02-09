@@ -18,9 +18,11 @@ def kmeans(data,k=10,r=10):
       centroids = [mids(data) for data in datas.values()]
    return adds([num.mu for num in errs.values()])
 
-print("# k    r     mu     sd")
-print("#--   --   ----   ----")
-for k in [2,4,8,16,32]:
-   for r in [5,10,15]:
-      nums = kmeans(Data(csv("data/soybean.csv")),k=k,r=r)
-      print(f"{k:3}  {r:3}   {nums.mu:.2f}   {nums.sd:.2f}")
+for file in ["soybean", "diabetes"]:
+   print("\n"+file)
+   print("# k    r     mu     sd")
+   print("#--   --   ----   ----")
+   for k in [2,4,8,16,32]:
+     for r in [5,10,20,40]:
+        nums = kmeans(Data(csv("data/"+file+".csv")),k=k,r=r)
+        print(f"{k:3}  {r:3}   {nums.mu:.2f}   {nums.sd:.2f}")
