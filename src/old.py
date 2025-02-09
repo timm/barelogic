@@ -30,16 +30,13 @@ class o:
 #      _  _|_  ._        _  _|_   _    
 #     _>   |_  |   |_|  (_   |_  _>    
 
-# Define a numerical column with statistics.
 def Num(txt=" ", at=0):
    return o(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG,
-            goal = 0 if txt[-1]=="-" else 1)
+                goal = 0 if txt[-1]=="-" else 1)
 
-# Define a symbolic column with frequency counts.
 def Sym(txt=" ", at=0):
    return o(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
 
-# Define a collection of columns with metadata.
 def Cols(names):
    x,y,cols,klass = [], [], [], None
    for col in [(Num if s[0].isupper() else Sym)(s,n) for n,s in enumerate(names)]:
@@ -49,11 +46,9 @@ def Cols(names):
          if col.txt[-1] == "!": klass=col
    return o(it=Cols, names=names, all=cols, x=x, y=y, klass=klass)
 
-# Define a dataset with rows and columns.
 def Data(src):
    return adds(src, o(it=Data, n=0, rows=[], cols=None))
 
-# Return a dataset with the same structure as `data`. Optionally, rank rows.
 def clone(data,src=[],rank=False):
    return adds(src.sort(key=lambda row: ydist(row,data)) if rank else src,
                Data([data.cols.names]))
@@ -63,14 +58,14 @@ def clone(data,src=[],rank=False):
 #     |_|  |_)  (_|  (_|   |_  (/_ 
 #          |                       
 
-# Add multiple values to a structure.
+# Return a summary of the items in `src`.    
+# If `i` not given, infer it from the first items.
 def adds(src, i=None):
    for x in src:
       out = i or (Num() if isinstance(x[0],(int,float)) else Sym())
       add(x,out)
    return out
 
-# Add a value to a numerical or symbolic or data structure.
 def add(v,i):
    def _data():
       if i.cols: i.rows += [ [add( v[col.at], col) for col in i.cols.all] ]
@@ -85,55 +80,39 @@ def add(v,i):
       i.mu += d / i.n
       i.m2 += d * (v -   i.mu)
       i.sd  = 0 if i.n <2 else (i.m2/(i.n-1))**.5
-   # Add ==>s
    if v != "?":
       i.n += 1
       _sym() if i.it is Sym else (_num() if i.it is Num else _data())
    return v
-
-# Add a value to a numerical or symbolic structure.
-def sub(v,i):
-   if v != "?":
-      i.n -= 1
-      if i.it is Sym: i.has[v] -= 1
-      else:
-         d     = v - i.mu
-         i.mu -= d / i.n
-         i.m2 -= d * (v - i.mu)
-         i.sd  = 0 if i.n <2 else (i.m2/(i.n-1))**.5
 
 #----------------------------------------------------------------------------------------
 #      _.        _   ._     
 #     (_|  |_|  (/_  |   \/ 
 #       |                /  
 
-# Normalize a value based on column statistics.
 def norm(v,col):
    return v if (v=="?" or col.it is Sym) else (v - col.lo) /   (col.hi - col.lo + 1/BIG)
 
-# Return the central tendency of a column.
 def mid(col): 
    return col.mu if col.it is Num else col.mode
 
-# Return the dispersion of a column.
 def spread(col): 
    return col.sd if col.it is Num else ent(col.has)
 
-# Report distance between two Nums, modulated in terms of the standard deviation."
-def delta(i,j):
-   return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + I/BIG)
-
+def eg__data(_):
+   d=Data(csv(the.file))
+   print("klass ", d.cols.klass or "none")
+   showd({col.txt : mid(col) for col in d.cols.all})
+   showd({col.txt : spread(col) for col in d.cols.all})
 
 #----------------------------------------------------------------------------------------
 #       _|  o   _  _|_ 
 #      (_|  |  _>   |_ 
 
-# Compute the y-distance of a row from dataset.
 def ydist(row, data):
    return (sum(abs(norm(row[col.at], col) - col.goal)**the.p for col in data.cols.y) 
           / len(data.cols.y)) ** (1/the.p)
 
-# Compute the x-distance between two rows.
 def xdist(row1,row2,data):
    def _num(p,q,num):
       p, q = norm(p,num), norm(q,num)
@@ -142,16 +121,19 @@ def xdist(row1,row2,data):
       return abs(p-q)
    def _col(p,q,col):
       return 1 if p==q=="?" else (p != q if col.it is Sym else _num(p,q,col))
-   # Xdist ==>
    return (sum(_col(row1[col.at], row2[col.at],col)**the.p for col in data.cols.x)
           / len(data.cols.x))**(1/the.p)
+
+def eg_y(_):
+   d=Data(csv(the.file))
+   for j,row in enumerate(sorted(d.rows,key=lambda row: ydist(row,d))):
+      if j<10 or j % 50 == 0: print(j,row,round(ydist(row,d),2))
 
 #----------------------------------------------------------------------------------------
 #      |_    _.       _    _ 
 #      |_)  (_|  \/  (/_  _> 
 #                /           
 
-# Compute the likelihood of a list belonging to a dataset.
 def like(lst, data, nall=100, nh=2):
    def _col(v,col): 
       if col.it is Sym: 
@@ -160,7 +142,6 @@ def like(lst, data, nall=100, nh=2):
       nom   = math.exp(-1*(v - col.mu)**2/(2*sd*sd))
       denom = (2*math.pi*sd*sd) ** 0.5
       return max(0, min(1, nom/denom))
-   # Like ==>
    prior = (data.n + the.k) / (nall + the.k*nh)
    likes = [_col(lst[x.at], x) for x in data.cols.x if lst[x.at] != "?"]
    return sum(math.log(l) for l in likes + [prior] if l>0)
@@ -179,7 +160,7 @@ def acting(data):
       rest = clone(data, done[cut:])
       top,*others = sorted(todo[:the.Guesses], key=_score, reverse=True)
       return top, todo[the.Guesses:] + others
-   # Acting ==>
+
    _rank = lambda rows: clone(data,rows,rank=True).rows
    done  = _rank(data.rows[:the.start])
    todo  = shuffle(data.rows[the.start:])
@@ -189,48 +170,20 @@ def acting(data):
       done     = _rank(done)
    return done
 
-# Non-parametric effect size. threshold is border between small=.11 and medium=.28 
-# from Table1 of  https://doi.org/10.3102/10769986025002101
-def cliffs(xs,ys):
-   n,lt,gt = 0,0,0
-   for x in xs:
-     for y in ys:
-        n += 1
-        if x > y: gt += 1
-        if x < y: lt += 1 
-   return abs(lt - gt)/n  < the.Cliffs # 0.197) 
-
-# non-parametric significance test From Introduction to Bootstrap, 
-# Efron and Tibshirani, 1993, chapter 20. https://doi.org/10.1201/9780429246593"""
- def bootstrap(ys,zs,confidence=None,bootstraps=None):
-    y0,z0  = ys, zs
-    x,y,z  = adds(y0+z0), adds(y0), adds(z0)
-    delta0 = delta(y,z)
-    yhat   = [y1 - mid(y) + mid(x) for y1 in y0]
-    zhat   = [z1 - mid(z) + mid(x) for z1 in z0] 
-    _some  = lambda lst: adds(random.choices(lst, k=len(lst))) 
-    s      = the.stats.bootstraps
-    n      = sum(delta(_some(yhat), _some(zhat))  > delta(y,z) for _ in range(ss)) 
-    return n / s >= the.confidence
-
 #----------------------------------------------------------------------------------------
 #      |  o  |_  
 #      |  |  |_) 
 
-# Shuffle a list in place.
 def shuffle(lst): random.shuffle(lst); return lst
 
-# Compute entropy of a dictionary.
 def ent(d):
    N = sum(n for n in d.values())
    return -sum(n/N * math.log(n/N,2) for n in d.values())
 
-# Convert a string to a Python literal.
 def coerce(s):
    try: return ast.literal_eval(s)
    except Exception: return s
 
-# Parse a CSV file and yield rows.
 def csv(file):
    with open(sys.stdin if file=="-" else file, encoding="utf-8") as src:
       for line in src:
@@ -264,14 +217,20 @@ def show(x):
                                                           if k[0] !="_"])+")"
    return str(x)
 
-def eg__the(_): print(the)
-def eg_h(_): print(__doc__)
+def eg__the(_): 
+   "show settings"
+   print(the)
+
+def eg_h(_): 
+   "show help"
+   print(__doc__)
+   [print(f"    {re.sub('^eg','',k).replace('_','-'):9s} {fun.__doc__}") 
+    for k,fun in globals().items() if k[:3] == "eg_"]
 
 #----------------------------------------------------------------------------------------
 #      ._ _    _.  o  ._  
 #      | | |  (_|  |  | | 
 
-# Main function to parse command-line arguments and run tests.
 def main():
    cli(the.__dict__)
    for i,s in enumerate(sys.argv):
@@ -281,7 +240,5 @@ def main():
          fun(coerce(arg))
 
 the= o(**{m[1]:coerce(m[2]) for m in re.finditer(r"-\w+\s*(\w+).*=\s*(\S+)",__doc__)})
-random.seed(the.rseed)
 
 if __name__ == "__main__":  main()
-

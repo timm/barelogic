@@ -4,22 +4,22 @@ hi() {
   clear
   echo -ne "\033[1;33m"
   cat<<-'EOF'
-
-   .--.              .--.
-   : (\ ". _......_ ." /) :
-    '.    `        `    .'  
-     /'   _        _   `\   Think Fast. 
-    /     0}      {0     \    Learn Smart.
-   |       /      \       |     Stay Wild.
-   |     /'        `\     |
-    \   | .  .==.  . |   /
-     '._ \.' \__/ './ _.'
-jgs  /  ``'._-''-_.'``  \
-    /                    \
-
+  
+     .--.              .--.
+     : (\ ". _......_ ." /) :
+      '.    `        `    .'  
+       /'   _        _   `\  Think Fast. 
+      /     0}      {0     \  Learn Smart.
+     |       /      \       |  Stay Wild.
+     |     /'        `\     |
+      \   | .  .==.  . |   /
+       '._ \.' \__/ './ _.'
+  jgs  /  ``'._-''-_.'``  \
+      /                    \
+  
 EOF
-  echo -ne "\033[0m"
-  echo "Short cuts:"
+  tput sgr0 bold
+  echo "Short cuts:"; tput setaf 4
   alias | sed 's/alias /  /'
   echo ""
   tput sgr0
@@ -34,12 +34,8 @@ alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
 alias h="history"
 alias ls="ls -G"
-
-vi() {
-  nvim --clean -c 'colorscheme slate' \
-               -c 'set number' \
-               -c 'set ts=3 sw=3 sts=3  et'  $*
-}
+alias vi='nvim --clean -c "colorscheme slate|set number|set ts=3 sw=3 sts=3 et"'
+alias py="python3 -B "
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 export PATH="$PWD:/opt/homebrew/bin:$PATH"
