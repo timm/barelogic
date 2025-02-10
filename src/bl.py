@@ -18,8 +18,8 @@ OPTIONS:
       -S Stop   where to end                = 32  
 """
 import re,ast,sys,math,random
-from typing import List, Dict, Type, Callable, Generator, Self
-from typing import Any as any
+from typing import List, Dict, Generator
+from typing import Any
 
 rand    = random.random
 one     = random.choice
@@ -36,40 +36,41 @@ atom      = number | bool | str # and sometimes "?"
 row       = list[atom]
 rows      = list[row]
 classes   = dict[str,rows] # `str` is the class name
-Num,Sym   = Obj,Obj
-Cols,Data = Obj,Obj
+num,sym   = Obj,Obj
+cols,data = Obj,Obj
 
 #----------------------------------------------------------------------------------------
 #      _  _|_  ._        _  _|_   _    
 #     _>   |_  |   |_|  (_   |_  _>    
 
 # Define a numerical column with statistics.
-def Num(txt: str = " ", at: int = 0) -> Num:
+def Num(txt: str = " ", at: int = 0) -> num:
    return Obj(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG,
              goal = 0 if txt[-1]=="-" else 1)
 
 # Define a symbolic column with frequency counts.
-def Sym(txt: str = " ", at: int = 0) -> Sym:
+def Sym(txt: str = " ", at: int = 0) -> sym:
    return Obj(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
 
 # Define a collection of columns with metadata.
-def Cols(names: List[str]) -> Cols:
-   x,y,cols,klass = [], [], [], None
+def Cols(names: List[str]) -> cols:
+   x,y,lst,klass = [], [], [], None
    for col in [(Num if s[0].isupper() else Sym)(s,n) for n,s in enumerate(names)]:
-      cols.append(col)
+      lst.append(col)
       if col.txt[-1] != "X":
          (y if col.txt[-1] in "+-!" else x).append(col)
          if col.txt[-1] == "!": klass=col
-   return Obj(it=Cols, names=names, all=cols, x=x, y=y, klass=klass)
+   return Obj(it=Cols, names=names, all=lst, x=x, y=y, klass=klass)
 
 # Define a dataset with rows and columns.
-def Data(src: List[row], txt: str = "") -> Data:
+def Data(src: List[row], txt: str = "") -> data:
    return adds(src, Obj(it=Data, txt=txt or "", n=0, rows=[], cols=None))
 
 # Return a dataset with the same structure as `data`. Optionally, rank rows.
-def clone(data: Obj, src: List[rows] = [], rank: bool = False) -> Obj:
-   return adds(src.sort(key=lambda row: ydist(row,data)) if rank else src,
-               Data([data.cols.names]))
+def clone(data1: Obj, src: List[rows] = None, rank: bool = False) -> Obj:
+   src = src or []
+   return adds(src.sort(key=lambda row: ydist(row,data1)) if rank else src,
+               Data([data1.cols.names]))
 
 #----------------------------------------------------------------------------------------
 #          ._    _|   _.  _|_   _  
@@ -77,14 +78,14 @@ def clone(data: Obj, src: List[rows] = [], rank: bool = False) -> Obj:
 #          |                       
 
 # Return a summary filled with `src`. If no summary supplied, assume one based on src[0].
-def adds(src: List[any], i: any = None) -> any:
+def adds(src: List[Any], i: Any = None) -> Obj:
    for x in src:
       i = i or (Num() if isinstance(x,(int,float)) else Sym())
       add(x,i)
    return i
 
 # Add a value to a struct (Num or Sym or Data).
-def add(v: any, i: Obj) -> any:
+def add(v: Any, i: Obj) -> Any:
    def _data():
       if i.cols: i.rows += [ [add( v[col.at], col) for col in i.cols.all] ]
       else: i.cols = Cols(v)
@@ -105,10 +106,10 @@ def add(v: any, i: Obj) -> any:
    return v
 
 # Remove value from a struct.
-def sub(v: any, i: Obj) -> any:
+def sub(v: Any, i: Obj) -> Any:
    def _data():
-      row = i.rows.pop(v)
-      [sub(row[col.at],col) for col in i.cols.all]  
+      dead = i.rows.pop(v)
+      [sub(dead[col.at],col) for col in i.cols.all]  
    def _sym():
       i.has[v] -= 1
    def _num():
@@ -128,24 +129,24 @@ def sub(v: any, i: Obj) -> any:
 #       |                /  
 
 # Normalize a value based on column statistics.
-def norm(v: any, col: Obj) -> any:
+def norm(v: Any, col: Obj) -> Any:
    return v if (v=="?" or col.it is Sym) else (v - col.lo) /   (col.hi - col.lo + 1/BIG)
 
 # Return the middle of a data.
-def mids(data: Obj) -> List[any]:
-  return [mid(col) for col in data.cols.all]
+def mids(data1: Obj) -> row:
+  return [mid(col) for col in data1.cols.all]
 
 # Return the central tendency of a column.
-def mid(col: Obj) -> any: 
+def mid(col: Obj) -> Any: 
    return col.mu if col.it is Num else col.mode
 
 # Return the dispersion of a column.
-def spread(col: Obj) -> any: 
+def spread(col: Obj) -> float: 
    return col.sd if col.it is Num else ent(col.has)
 
 # Report distance between two Nums, modulated in terms of the standard deviation."
-def delta(i: Obj, j: Obj) -> float:
-   return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + I/BIG)
+def delta(i: Num, j: Num) -> float:
+   return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
 
 
 #----------------------------------------------------------------------------------------
@@ -153,25 +154,25 @@ def delta(i: Obj, j: Obj) -> float:
 #      (_|  |  _>   |_ 
 
 # Compute the y-distance of a row from dataset.
-def ydist(row: List[any], data: Obj) -> float:
-   return (sum(abs(norm(row[col.at], col) - col.goal)**the.p for col in data.cols.y) 
-          / len(data.cols.y)) ** (1/the.p)
+def ydist(row1: row,  data1: data) -> float:
+   return (sum(abs(norm(row1[col.at], col) - col.goal)**the.p for col in data1.cols.y) 
+          / len(data1.cols.y)) ** (1/the.p)
 
 # Compute the x-distance between two rows.
-def xdist(row1: List[any], row2: List[any], data: Obj) -> float:
-   def _num(p,q,num):
-      p, q = norm(p,num), norm(q,num)
+def xdist(row1: row, row2: row, data1: data) -> float:
+   def _num(p,q,num1):
+      p, q = norm(p,num1), norm(q,num1)
       p = p if p !="?" else (1 if q<0.5 else 0)
       q = q if q !="?" else (1 if p<0.5 else 0)
       return abs(p-q)
    def _col(p,q,col):
       return 1 if p==q=="?" else (p != q if col.it is Sym else _num(p,q,col))
    # Xdist ==>
-   return (sum(_col(row1[col.at], row2[col.at],col)**the.p for col in data.cols.x)
-          / len(data.cols.x))**(1/the.p)
+   return (sum(_col(row1[col.at], row2[col.at],col)**the.p for col in data1.cols.x)
+          / len(data1.cols.x))**(1/the.p)
 
-def neighbors(row1: List[any], rows: List[row], data: Obj) -> List[row]:
-   return sorted(rows, key=lambda row2: xdist(row1,row2,data))
+def neighbors(row1: row, rows1: rows, data1: data) -> List[row]:
+   return sorted(rows1, key=lambda row2: xdist(row1,row2,data1))
 
 # def kcentroids(data,k=24,rows=None,samples=32):
 #   rows = rows or data.rows
@@ -195,12 +196,12 @@ def neighbors(row1: List[any], rows: List[row], data: Obj) -> List[row]:
 #      |_)  (_|  \/  (/_  _> 
 #                /           
 
-def likes(lst: List[any], datas: List[Obj]) -> Obj:
+def likes(lst: List[Any], datas: List[Obj]) -> Obj:
    nall = sum(data.n for data in datas)
    return max(datas, key=lambda data: like(lst,data,nall,len(datas)))
 
 # Compute the likelihood of a list belonging to a dataset.
-def like(lst: List[any], data: Obj, nall: int = 100, nh: int = 2) -> float:
+def like(lst: List[Any], data1: Obj, nall: int = 100, nh: int = 2) -> float:
    def _col(v,col): 
       if col.it is Sym: 
          return (col.has.get(v,0) + the.m*prior) / (col.n + the.m + 1/BIG)
@@ -209,28 +210,28 @@ def like(lst: List[any], data: Obj, nall: int = 100, nh: int = 2) -> float:
       denom = (2*math.pi*sd*sd) ** 0.5
       return max(0, min(1, nom/denom))
    # Like ==>
-   prior = (data.n + the.k) / (nall + the.k*nh)
-   likes = [_col(lst[x.at], x) for x in data.cols.x if lst[x.at] != "?"]
-   return sum(math.log(l) for l in likes + [prior] if l>0)
+   prior = (data1.n + the.k) / (nall + the.k*nh)
+   tmp = [_col(lst[x.at], x) for x in data1.cols.x if lst[x.at] != "?"]
+   return sum(math.log(l) for l in tmp + [prior] if l>0)
 
-def acting(data : Data):
+def acting(data1 : data):
    def _acquire(p, b,r):
       b,r = math.e**b, math.e**r
       q = 0 if the.acq=="xploit" else (1 if the.acq=="xplore" else 1-p)
       return (b + r*q) / abs(b*q - r + 1/BIG) 
 
    def _guess(todo,done, cut):
-      def _score(row):
+      def _score(row1):
          n = len(done)
-         return _acquire(n/the.Stop, like(row,best,n,2), like(row,rest,n,2))
-      best = clone(data, done[:cut])
-      rest = clone(data, done[cut:])
+         return _acquire(n/the.Stop, like(row1,best,n,2), like(row1,rest,n,2))
+      best = clone(data1, done[:cut])
+      rest = clone(data1, done[cut:])
       top,*others = sorted(todo[:the.Guesses], key=_score, reverse=True)
       return top, todo[the.Guesses:] + others
    # Acting ==>
-   _rank = lambda rows: clone(data,rows,rank=True).rows
-   done  = _rank(data.rows[:the.start])
-   todo  = shuffle(data.rows[the.start:])
+   _rank = lambda rows: clone(data1,rows,rank=True).rows
+   done  = _rank(data1.rows[:the.start])
+   todo  = shuffle(data1.rows[the.start:])
    while len(todo) > 2  and len(done) < the.Stop :
       top,todo = _guess(todo, done, round(len(done) ** the.guess))
       done    += [top]
@@ -249,45 +250,36 @@ def cliffs(xs: List[float], ys: List[float]) -> bool:
    return abs(lt - gt)/n  < the.Cliffs # 0.197) 
 
 # non-parametric significance test From Introduction to Bootstrap, 
-# Efron and Tibshirani, 1993, chapter 20. https://doi.org/10.1201/9780429246593"""
-def bootstrap(ys: List[float], zs: List[float], confidence: float = None, bootstraps: int = None) -> bool:
+# Efron and Tibshirani, 1993, chapter 20. https://doi.org/10.1201/9780429246593
+def bootstrap(ys: List[number], zs: List[number] )  -> bool:
     y0,z0  = ys, zs
     x,y,z  = adds(y0+z0), adds(y0), adds(z0)
-    delta0 = delta(y,z)
     yhat   = [y1 - mid(y) + mid(x) for y1 in y0]
     zhat   = [z1 - mid(z) + mid(x) for z1 in z0] 
     _some  = lambda lst: adds(random.choices(lst, k=len(lst))) 
     s      = the.stats.bootstraps
-    n      = sum(delta(_some(yhat), _some(zhat))  > delta(y,z) for _ in range(ss)) 
+    n      = sum(delta(_some(yhat), _some(zhat))  > delta(y,z) for _ in range(the.boots)) 
     return n / s >= the.confidence
 
 #----------------------------------------------------------------------------------------
 #      |  o  |_  
 #      |  |  |_) 
 
-# Return a summary of the items in `src`.    
-# If `i` not given, infer it from the first items.
-def adds(src: List[any], i: any = None) -> any:
-   for x in src:
-      i = i or (Num() if isinstance(src[0],(int,float)) else Sym())
-      add(x,i)
-   return i
-
 # Shuffle a list in place.
-def shuffle(lst: List[any]) -> List[any]: random.shuffle(lst); return lst
+def shuffle(lst: List[Any]) -> List[Any]: random.shuffle(lst); return lst
 
 # Compute entropy of a dictionary.
-def ent(d: Dict[any, int]) -> float:
+def ent(d: Dict[Any, int]) -> float:
    N = sum(n for n in d.values())
    return -sum(n/N * math.log(n/N,2) for n in d.values())
 
 # Convert a string to a Python literal.
-def coerce(s: str) -> any:
+def coerce(s: str) -> Any:
    try: return ast.literal_eval(s)
    except Exception: return s
 
 # Parse a CSV file and yield rows.
-def csv(file: str) -> Generator[List[any], None, None]:
+def csv(file: str) -> Generator[List[Any], None, None]:
    with open(sys.stdin if file=="-" else file, encoding="utf-8") as src:
       for line in src:
          line = re.sub(r'([\n\t\r ]|#.*)', '', line)
@@ -295,7 +287,7 @@ def csv(file: str) -> Generator[List[any], None, None]:
 
 # For command like flags that match the first letter of key, update that value. 
 # For boolean values, flags need no arguments (we just negate the default)
-def cli(d: Dict[str, any]) -> None:
+def cli(d: Dict[str, Any]) -> None:
    for k,v in d.items():
       for c,arg in enumerate(sys.argv):
          if arg == "-"+k[0]:
@@ -304,10 +296,10 @@ def cli(d: Dict[str, any]) -> None:
                           sys.argv[c+1] if c < len(sys.argv) - 1 else str(v))))
 
 # Pretty print
-def showd(x: any) -> any: print(show(x)); return x
+def showd(x: Any) -> Any: print(show(x)); return x
 
 # Convert `x` to a pretty string. Round floats. For dicts, hide slots starting with "_".
-def show(x: any) -> str:
+def show(x: Any) -> str:
    it = type(x)
    if   it is str   : x = f'"{x}"'
    elif callable(x) : x = x.__name__ + '()'
@@ -337,4 +329,3 @@ the= Obj(**{m[1]:coerce(m[2]) for m in re.finditer(r"-\w+\s*(\w+).*=\s*(\S+)",__
 random.seed(the.rseed)
 
 if __name__ == "__main__":  main()
-
