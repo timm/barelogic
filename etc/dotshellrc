@@ -35,7 +35,7 @@ alias fgrep='fgrep --color=auto'
 alias h="history"
 alias ls="ls -G"
 #alias vi='nvim --clean -c "colorscheme slate|set number|set ts=3 sw=3 sts=3 et" -c "setlocal spell spelllang=en_us" -c "set spellsuggest=fast,1"  -p '
-alias vi='nvim --clean -c "colorscheme habamax | set number | set ts=3 sw=3 sts=3 et" -c "setlocal spell spelllang=en_us"  -p '
+alias vi='nvim --clean -c "colorscheme habamax | set number | set ts=3 sw=3 sts=3 et" -c "setlocal spell spelllang=en_us"  '
 alias py="python3 -B "
 
 export BASH_SILENCE_DEPRECATION_WARNING=1

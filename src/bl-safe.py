@@ -18,11 +18,20 @@ OPTIONS:
       -S Stop   where to end                = 32  
 """
 import re,ast,sys,math,random
+from typing import List, Dict, Type, Callable, Generator, Self
+from typing import Any as any
 
-rand = random.random
-one   = random.choice
-some  = random.choices
-BIG   = 1E32
+rand    = random.random
+one     = random.choice
+some    = random.choices
+BIG     = 1E32
+
+number  = float  | int   #
+atom    = number | bool | str # and sometimes "?"
+row     = list[atom]
+rows    = list[row]
+classes = dict[str,rows] # `str` is the class name
+
 
 # `Obj` allows for easy initialization and have a built-in pretty print.
 class Obj:
