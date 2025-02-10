@@ -33,27 +33,24 @@ class Obj:
 
 number    = float  | int   #
 atom      = number | bool | str # and sometimes "?"
-row       = list[atom]
-rows      = list[row]
-classes   = dict[str,rows] # `str` is the class name
-num,sym   = Obj,Obj
-cols,data = Obj,Obj
+row       = List[atom]
+classes   = dict[str,List[row]] # `str` is the class name
 
 #----------------------------------------------------------------------------------------
 #      _  _|_  ._        _  _|_   _    
 #     _>   |_  |   |_|  (_   |_  _>    
 
 # Define a numerical column with statistics.
-def Num(txt: str = " ", at: int = 0) -> num:
+def Num(txt: str = " ", at: int = 0) -> Obj:
    return Obj(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG,
              goal = 0 if txt[-1]=="-" else 1)
 
 # Define a symbolic column with frequency counts.
-def Sym(txt: str = " ", at: int = 0) -> sym:
+def Sym(txt: str = " ", at: int = 0) -> Obj:
    return Obj(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
 
 # Define a collection of columns with metadata.
-def Cols(names: List[str]) -> cols:
+def Cols(names: List[str]) -> Obj:
    x,y,lst,klass = [], [], [], None
    for col in [(Num if s[0].isupper() else Sym)(s,n) for n,s in enumerate(names)]:
       lst.append(col)
@@ -63,14 +60,17 @@ def Cols(names: List[str]) -> cols:
    return Obj(it=Cols, names=names, all=lst, x=x, y=y, klass=klass)
 
 # Define a dataset with rows and columns.
-def Data(src: List[row], txt: str = "") -> data:
+def Data(src: List[row], txt: str = "") -> Obj:
    return adds(src, Obj(it=Data, txt=txt or "", n=0, rows=[], cols=None))
 
 # Return a dataset with the same structure as `data`. Optionally, rank rows.
-def clone(data1: Obj, src: List[rows] = None, rank: bool = False) -> Obj:
+def clone(data: Obj, src: List[rows] = None, rank: bool = False) -> Obj:
    src = src or []
-   return adds(src.sort(key=lambda row: ydist(row,data1)) if rank else src,
-               Data([data1.cols.names]))
+   return adds(src.sort(key=lambda row: ydist(row,data)) if rank else src,
+               Data([data.cols.names]))
+
+def Span(at, lo, hi=None):
+   return Obj(it=Span, lo=lo, hi=hi or lo)
 
 #----------------------------------------------------------------------------------------
 #          ._    _|   _.  _|_   _  
@@ -108,8 +108,7 @@ def add(v: Any, i: Obj) -> Any:
 # Remove value from a struct.
 def sub(v: Any, i: Obj) -> Any:
    def _data():
-      dead = i.rows.pop(v)
-      [sub(dead[col.at],col) for col in i.cols.all]  
+      [sub(v[col.at],col) for col in i.cols.all]  
    def _sym():
       i.has[v] -= 1
    def _num():
@@ -148,31 +147,30 @@ def spread(col: Obj) -> float:
 def delta(i: Num, j: Num) -> float:
    return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
 
-
 #----------------------------------------------------------------------------------------
 #       _|  o   _  _|_ 
 #      (_|  |  _>   |_ 
 
 # Compute the y-distance of a row from dataset.
-def ydist(row1: row,  data1: data) -> float:
-   return (sum(abs(norm(row1[col.at], col) - col.goal)**the.p for col in data1.cols.y) 
-          / len(data1.cols.y)) ** (1/the.p)
+def ydist(row1: row,  data: Obj) -> float:
+   return (sum(abs(norm(row1[col.at], col) - col.goal)**the.p for col in data.cols.y) 
+          / len(data.cols.y)) ** (1/the.p)
 
 # Compute the x-distance between two rows.
-def xdist(row1: row, row2: row, data1: data) -> float:
-   def _num(p,q,num1):
-      p, q = norm(p,num1), norm(q,num1)
+def xdist(row1: row, row2: row, data: Obj) -> float:
+   def _num(p,q,num):
+      p, q = norm(p,num), norm(q,num)
       p = p if p !="?" else (1 if q<0.5 else 0)
       q = q if q !="?" else (1 if p<0.5 else 0)
       return abs(p-q)
    def _col(p,q,col):
       return 1 if p==q=="?" else (p != q if col.it is Sym else _num(p,q,col))
    # Xdist ==>
-   return (sum(_col(row1[col.at], row2[col.at],col)**the.p for col in data1.cols.x)
-          / len(data1.cols.x))**(1/the.p)
+   return (sum(_col(row1[col.at], row2[col.at],col)**the.p for col in data.cols.x)
+          / len(data.cols.x))**(1/the.p)
 
-def neighbors(row1: row, rows1: rows, data1: data) -> List[row]:
-   return sorted(rows1, key=lambda row2: xdist(row1,row2,data1))
+def neighbors(row1: row, rows: List[row], data: Obj) -> List[row]:
+   return sorted(rows, key=lambda row2: xdist(row1,row2,data))
 
 # def kcentroids(data,k=24,rows=None,samples=32):
 #   rows = rows or data.rows
@@ -201,7 +199,7 @@ def likes(lst: List[Any], datas: List[Obj]) -> Obj:
    return max(datas, key=lambda data: like(lst,data,nall,len(datas)))
 
 # Compute the likelihood of a list belonging to a dataset.
-def like(lst: List[Any], data1: Obj, nall: int = 100, nh: int = 2) -> float:
+def like(lst: List[Any], data: Obj, nall: int = 100, nh: int = 2) -> float:
    def _col(v,col): 
       if col.it is Sym: 
          return (col.has.get(v,0) + the.m*prior) / (col.n + the.m + 1/BIG)
@@ -210,57 +208,63 @@ def like(lst: List[Any], data1: Obj, nall: int = 100, nh: int = 2) -> float:
       denom = (2*math.pi*sd*sd) ** 0.5
       return max(0, min(1, nom/denom))
    # Like ==>
-   prior = (data1.n + the.k) / (nall + the.k*nh)
-   tmp = [_col(lst[x.at], x) for x in data1.cols.x if lst[x.at] != "?"]
+   prior = (data.n + the.k) / (nall + the.k*nh)
+   tmp = [_col(lst[x.at], x) for x in data.cols.x if lst[x.at] != "?"]
    return sum(math.log(l) for l in tmp + [prior] if l>0)
 
-def acting(data1 : data):
-   def _acquire(p, b,r):
+def acting(data : Obj):
+   def _rank(rows): 
+      return sorted(rows, key=lambda row1: ydist(row1,data))
+
+   def _score(row1) : 
+      return _want(n/the.Stop, like(row1,best,n,2), like(row1,rest,n,2))
+
+   def _want(p, b,r): 
       b,r = math.e**b, math.e**r
       q = 0 if the.acq=="xploit" else (1 if the.acq=="xplore" else 1-p)
       return (b + r*q) / abs(b*q - r + 1/BIG) 
 
-   def _guess(todo,done, cut):
-      def _score(row1):
-         n = len(done)
-         return _acquire(n/the.Stop, like(row1,best,n,2), like(row1,rest,n,2))
-      best = clone(data1, done[:cut])
-      rest = clone(data1, done[cut:])
-      top,*others = sorted(todo[:the.Guesses], key=_score, reverse=True)
-      return top, todo[the.Guesses:] + others
    # Acting ==>
-   _rank = lambda rows: clone(data1,rows,rank=True).rows
-   done  = _rank(data1.rows[:the.start])
-   todo  = shuffle(data1.rows[the.start:])
-   while len(todo) > 2  and len(done) < the.Stop :
-      top,todo = _guess(todo, done, round(len(done) ** the.guess))
-      done    += [top]
-      done     = _rank(done)
-   return done
+   n     = the.start
+   todo  = shuffle(data.rows[n:])
+   done  = _rank(data.rows[:n])
+   cut   = round(n**the.guess)
+   best  = clone(data, done[:cut])
+   rest  = clone(data, done[cut:])
+   while len(todo) > 2  and n < the.Stop :
+      top,*others = sorted(todo[:the.Guesses], key=_score, reverse=True)
+      todo = todo[the.Guesses:] + others
+      add(top, best)
+      n += 1
+      best.rows = _rank(best.rows)
+      if len(best.rows) > n**0.5:
+         add( sub(best.rows.pop(-1), best), rest)
+   return best.rows
 
-# Non-parametric effect size. threshold is border between small=.11 and medium=.28 
-# from Table1 of  https://doi.org/10.3102/10769986025002101
-def cliffs(xs: List[float], ys: List[float]) -> bool:
-   n,lt,gt = 0,0,0
-   for x in xs:
-     for y in ys:
-        n += 1
-        if x > y: gt += 1
-        if x < y: lt += 1 
-   return abs(lt - gt)/n  < the.Cliffs # 0.197) 
+def bestSymbol(rows, sym,data):
+    y= {id(row): ydist(row,data) for row in rows: y[id(row)}
+    def _sym(sym):
+      nums={}
+      for row in rows:
+         v= row[sym.at]
+         if v !="?": 
+            nums[v] = ys.get(v) or Num(txt=v)
+            add( y[id(row)], nums[v])
+      tmp =  max(nums.values(), key=  lambda num1: sum1.sd)
+      return _score(tmp), Span(sym.at, tmp.txt)
 
-# non-parametric significance test From Introduction to Bootstrap, 
-# Efron and Tibshirani, 1993, chapter 20. https://doi.org/10.1201/9780429246593
-def bootstrap(ys: List[number], zs: List[number] )  -> bool:
-    y0,z0  = ys, zs
-    x,y,z  = adds(y0+z0), adds(y0), adds(z0)
-    yhat   = [y1 - mid(y) + mid(x) for y1 in y0]
-    zhat   = [z1 - mid(z) + mid(x) for z1 in z0] 
-    _some  = lambda lst: adds(random.choices(lst, k=len(lst))) 
-    s      = the.stats.bootstraps
-    n      = sum(delta(_some(yhat), _some(zhat))  > delta(y,z) for _ in range(the.boots)) 
-    return n / s >= the.confidence
-
+   def _num(num):
+      xy = sorted([(r[num.at],y[r]) for r in rows if r[num.at] != "?"], key=lambda v:v[0])
+      lhs,rhs = Num(), adds([v[1] for v in xy])
+      lo = BIG
+      cut = None
+      for j,(x,y) in enumerate(xy):
+        add( sub(y, rhs), lhs)
+        if j < len(xy) - 1 and x != xy[j+1][0]:
+          xpect = (lhs.n * spread(lhs) + rhs.n * spread(rhs) ) / len(xy)
+          if xpect < lo:
+            lo, cut = xpect,x
+      return 
 #----------------------------------------------------------------------------------------
 #      |  o  |_  
 #      |  |  |_) 
