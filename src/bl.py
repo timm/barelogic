@@ -17,7 +17,7 @@ OPTIONS:
       -s start  where to begin              = 4  
       -S Stop   where to end                = 32  
 """
-import re,ast,sys,math,random
+import re,sys,math,random
 from typing import List, Dict, Generator
 from typing import Any
 
@@ -64,7 +64,7 @@ def Data(src: List[row], txt: str = "") -> Obj:
    return adds(src, Obj(it=Data, txt=txt or "", n=0, rows=[], cols=None))
 
 # Return a dataset with the same structure as `data`. Optionally, rank rows.
-def clone(data: Obj, src: List[rows] = None, rank: bool = False) -> Obj:
+def clone(data: Obj, src: List[row] = None, rank: bool = False) -> Obj:
    src = src or []
    return adds(src.sort(key=lambda row: ydist(row,data)) if rank else src,
                Data([data.cols.names]))
@@ -242,8 +242,8 @@ def acting(data : Obj):
    return best.rows
 
 def bestSymbol(rows, sym,data):
-    y= {id(row): ydist(row,data) for row in rows: y[id(row)}
-    def _sym(sym):
+   y= {id(row): ydist(row,data) for row in rows}
+   def _sym(sym):
       nums={}
       for row in rows:
          v= row[sym.at]
@@ -264,7 +264,7 @@ def bestSymbol(rows, sym,data):
           xpect = (lhs.n * spread(lhs) + rhs.n * spread(rhs) ) / len(xy)
           if xpect < lo:
             lo, cut = xpect,x
-      return 
+   return 
 #----------------------------------------------------------------------------------------
 #      |  o  |_  
 #      |  |  |_) 
@@ -277,17 +277,21 @@ def ent(d: Dict[Any, int]) -> float:
    N = sum(n for n in d.values())
    return -sum(n/N * math.log(n/N,2) for n in d.values())
 
-# Convert a string to a Python literal.
-def coerce(s: str) -> Any:
-   try: return ast.literal_eval(s)
-   except Exception: return s
+
+def coerce(s: str):
+   try: return int(s)
+   except Exception:
+      try: return float(s)
+      except Exception:
+         s = s.strip()
+         return True if s=="True" else (False if s=="False" else s)
 
 # Parse a CSV file and yield rows.
 def csv(file: str) -> Generator[List[Any], None, None]:
    with open(sys.stdin if file=="-" else file, encoding="utf-8") as src:
       for line in src:
          line = re.sub(r'([\n\t\r ]|#.*)', '', line)
-         if line: yield [coerce(s.strip()) for s in line.split(",")]
+         if line: yield [coerce(s) for s in line.split(",")]
 
 # For command like flags that match the first letter of key, update that value. 
 # For boolean values, flags need no arguments (we just negate the default)

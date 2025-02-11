@@ -4,6 +4,9 @@ p=export PYTHONPATH="..:$$PYTHONPATH"; python3 -B
 
 all: lib data nb kmeans
 
+load:
+		$p load.py
+:
 lib:
 	$p lib.py
 
