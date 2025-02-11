@@ -8,7 +8,7 @@
 <a href="https://github.com/timm/barelogic/blob/main/LICENSE.md"><img alt="license" src="https://img.shields.io/badge/license-MIT-brightgreen?logo=open-source-initiative&logoColor=white&style=flat-square"></a>
 <a href="https://github.com/timm/barelogic/blob/main/README.md"><img alt="docs" src="https://img.shields.io/badge/docs-available-orange?logo=readthedocs&logoColor=white&style=flat-square"></a>
 <a href="http://github.com/timm/barelogic/issues"><img alt="issues" src="https://img.shields.io/badge/issues-track-red?logo=github&style=flat-square"></a>
-<a href="src/Makefile"><img src="/docs/img/pyling.svg"></a>
+<a href="src/Makefile"><img src="docs/img/pyling.svg"></a>
 
 </p>
 
