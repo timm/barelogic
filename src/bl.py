@@ -69,8 +69,8 @@ def clone(data: Obj, src: List[row] = None, rank: bool = False) -> Obj:
    return adds(src.sort(key=lambda row: ydist(row,data)) if rank else src,
                Data([data.cols.names]))
 
-def Span(at, lo, hi=None):
-   return Obj(it=Span, lo=lo, hi=hi or lo)
+def Span(col, lo, hi=None):
+   return Obj(it=Span, at=col.at, txt=col.txt, lo=lo, hi=hi or lo)
 
 #----------------------------------------------------------------------------------------
 #          ._    _|   _.  _|_   _  
@@ -242,20 +242,23 @@ def acting(data : Obj):
    return best.rows
 
 def bestSymbol(rows, sym,data):
-   y= {id(row): ydist(row,data) for row in rows}
+   dist = {id(row): ydist(row,data) for row in rows}
    def _sym(sym):
-      nums={}
+      n,ys= 0,{}
       for row in rows:
          v= row[sym.at]
          if v !="?": 
-            nums[v] = ys.get(v) or Num(txt=v)
-            add( y[id(row)], nums[v])
-      tmp =  max(nums.values(), key=  lambda num1: sum1.sd)
-      return _score(tmp), Span(sym.at, tmp.txt)
+            n += 1
+            ys[v] = ys.get(v) or Num(txt=v)
+            add( dist[id(row)], ys[v])
+      return (sum(ys.values(), key= lambda num1: num1.n*num1.sd/n),
+              [Span(sym,num.txt) for num in ys.values()])
 
    def _num(num):
-      xy = sorted([(r[num.at],y[r]) for r in rows if r[num.at] != "?"], key=lambda v:v[0])
+      xy = sorted([(r[num.at],y[id(r)]) for r in rows if r[num.at] != "?"], key=first)
       lhs,rhs = Num(), adds([v[1] for v in xy])
+      small = rhs.sd * 0.34
+      few = rhs.n**0.5
       lo = BIG
       cut = None
       for j,(x,y) in enumerate(xy):
@@ -268,6 +271,10 @@ def bestSymbol(rows, sym,data):
 #----------------------------------------------------------------------------------------
 #      |  o  |_  
 #      |  |  |_) 
+
+# Return first item in a list
+def first(lst:List) -> Any:
+   return lst[0]
 
 # Shuffle a list in place.
 def shuffle(lst: List[Any]) -> List[Any]: random.shuffle(lst); return lst
