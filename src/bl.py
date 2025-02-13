@@ -241,32 +241,33 @@ def acting(data : Obj):
          add( sub(best.rows.pop(-1), best), rest)
    return best.rows
 
-def bestSymbol(rows, sym,data):
-   dist = {id(row): ydist(row,data) for row in rows}
-   def _sym(sym):
-      n,ys= 0,{}
-      for row in rows:
-         v= row[sym.at]
-         if v !="?": 
-            n += 1
-            ys[v] = ys.get(v) or Num(txt=v)
-            add( dist[id(row)], ys[v])
-      return (sum(ys.values(), key= lambda num1: num1.n*num1.sd/n),
-              [Span(sym,num.txt) for num in ys.values()])
+def cuts(rows, data, Y=ydist, collect=Num):
+   def _sym(sym,xys):
+      ys= {}
+      for x,y in xys:
+          ys[x] = ys.get(x) or collect(txt=txt)
+          add(y, ys[x])
+      return (sum(ys.values(), key= lambda col1: col1.n*spred(col1)/len(xys)),
+             [Span(col,txt) for col in ys.values()])
 
-   def _num(num):
-      xy = sorted([(r[num.at],y[id(r)]) for r in rows if r[num.at] != "?"], key=first)
-      lhs,rhs = Num(), adds([v[1] for v in xy])
-      small = rhs.sd * 0.34
-      few = rhs.n**0.5
-      lo = BIG
-      cut = None
-      for j,(x,y) in enumerate(xy):
-        add( sub(y, rhs), lhs)
+   def _num(num,xys):
+      lhs,rhs = adds([y for _,y in xys]),Collect()
+      nsd={}
+      for j,(_,y) in xys[::-1]: 
+         add(y,rhs)
+         nsd[ len(xys) - j - 1 ] = rhs.n * rhs.sd
+      lo,cut = BIG,None
+      for j,(x,y) in enumerate(xys):
+        add(x,lhs)
         if j < len(xy) - 1 and x != xy[j+1][0]:
-          xpect = (lhs.n * spread(lhs) + rhs.n * spread(rhs) ) / len(xy)
+          xpect = (lhs.n * spread(lhs) + nsd[j] ) / len(xys)
           if xpect < lo:
             lo, cut = xpect,x
+      return lo,[Span(num,-BIG,cut),Span(num,cut,BIG)] if cut else []
+
+   for col in data.cols.x:
+      xys = [(row[col.at], Y(row,data)) for row in rows if row[num.at] != "?"]
+      (_sym if col.at is Sym else _num)(col, sorted(xys, key=first))
    return 
 #----------------------------------------------------------------------------------------
 #      |  o  |_  
