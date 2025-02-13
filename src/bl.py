@@ -34,7 +34,7 @@ class Obj:
 number    = float  | int   #
 atom      = number | bool | str # and sometimes "?"
 row       = List[atom]
-classes   = dict[str,List[row]] # `str` is the class name
+classes   = Dict[str,List[row]] # `str` is the class name
 
 #----------------------------------------------------------------------------------------
 #      _  _|_  ._        _  _|_   _    
@@ -241,34 +241,47 @@ def acting(data : Obj):
          add( sub(best.rows.pop(-1), best), rest)
    return best.rows
 
-def cuts(rows, data, Y=ydist, collect=Num):
+def cuts(rows, data, Y=ydist, ything=Num):
    def _sym(sym,xys):
       ys= {}
       for x,y in xys:
-          ys[x] = ys.get(x) or collect(txt=txt)
+          ys[x] = ys.get(x) or ything(txt=txt)
           add(y, ys[x])
       return (sum(ys.values(), key= lambda col1: col1.n*spred(col1)/len(xys)),
              [Span(col,txt) for col in ys.values()])
 
    def _num(num,xys):
-      lhs,rhs = adds([y for _,y in xys]),Collect()
-      nsd={}
+      nsd, rhs, lhs = {}, ything(), adds([y for _,y in xys], ything())
       for j,(_,y) in xys[::-1]: 
          add(y,rhs)
          nsd[ len(xys) - j - 1 ] = rhs.n * rhs.sd
       lo,cut = BIG,None
       for j,(x,y) in enumerate(xys):
-        add(x,lhs)
-        if j < len(xy) - 1 and x != xy[j+1][0]:
-          xpect = (lhs.n * spread(lhs) + nsd[j] ) / len(xys)
-          if xpect < lo:
-            lo, cut = xpect,x
-      return lo,[Span(num,-BIG,cut),Span(num,cut,BIG)] if cut else []
+         add(y,lhs)
+         if j < len(xy) - 1 and x != xys[j+1][0]:
+           xpect = (lhs.n * spread(lhs) + nsd[j] ) / len(xys)
+           if xpect < lo:
+              lo, cut = xpect,x
+      return lo, ([Span(num,-BIG,cut),Span(num,cut,BIG)] if cut else [])
 
-   for col in data.cols.x:
+   def spans(col):
       xys = [(row[col.at], Y(row,data)) for row in rows if row[num.at] != "?"]
-      (_sym if col.at is Sym else _num)(col, sorted(xys, key=first))
-   return 
+      yield (_sym if col.at is Sym else _num)(col, sorted(xys, key=first))
+
+   return min(spans(col) for col in data.cols.x, key=first)[1]
+
+def tree(data,Y=ydist, ything=Num, gaurd=None,):
+   spans = cuts(rows or data.rows, data,Y,ything)
+  
+def selects(rows, span): 
+   yes,no = [],[]
+   for row in rows: (yes if select(row,span) or no).append(row)
+   return yes,no
+
+def select(row,span):
+   v= row[span.at
+   return v=="?" or span.lo==span.hi==v or span.lo <= v < span.hi
+
 #----------------------------------------------------------------------------------------
 #      |  o  |_  
 #      |  |  |_) 
@@ -302,7 +315,7 @@ def csv(file: str) -> Generator[List[Any], None, None]:
          if line: yield [coerce(s) for s in line.split(",")]
 
 # For command like flags that match the first letter of key, update that value. 
-# For boolean values, flags need no arguments (we just negate the default)
+# For Boolean values, flags need no arguments (we just negate the default)
 def cli(d: Dict[str, Any]) -> None:
    for k,v in d.items():
       for c,arg in enumerate(sys.argv):
