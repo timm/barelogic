@@ -241,6 +241,10 @@ def acting(data : Obj):
          add( sub(best.rows.pop(-1), best), rest)
    return best.rows
 
+#----------------------------------------------------------------------------------------
+#   _|_  ._   _    _  
+#    |_  |   (/_  (/_ 
+
 def cuts(rows, data, Y=ydist, ything=Num):
    def _sym(sym,xys):
       ys= {}
@@ -264,21 +268,37 @@ def cuts(rows, data, Y=ydist, ything=Num):
               lo, cut = xpect,x
       return lo, ([Span(num,-BIG,cut),Span(num,cut,BIG)] if cut else [])
 
-   def spans(col):
+   for col in data.cols.x:
       xys = [(row[col.at], Y(row,data)) for row in rows if row[num.at] != "?"]
       yield (_sym if col.at is Sym else _num)(col, sorted(xys, key=first))
 
-   return min(spans(col) for col in data.cols.x, key=first)[1]
-
-def tree(data,Y=ydist, ything=Num, gaurd=None,):
+def grow(data,Y=ydist, ything=Num, gaurd=None):
+   data.kids=[]
+   data.gaurd=gaurd
    if len(data.rows) > the.leaf:
-      here.kids=[]
       rows = data.rows
-      for span in cuts(rows or data.rows, data,Y,ything):
-         sub,rows = selects(rows,span)
-         here.kids += [tree(clone(data,sub),Y,ything,guad=span)]
+      for _,span in min(cuts(rows,data,Y,ything),key=first):
+         yes,rows = selects(rows,span)
+         here.kids += [tree(clone(data,yes),Y,ything,gaurd=span)]
    return data 
- 
+
+def nodes(data, lvl=0):
+   yield lvl,data
+   for kid in data.get:
+      for sub in nodes(kid,lvl+1):
+         yield sub
+
+def tree(data):
+   def _show(gaurd):
+      out = ""
+      if gaurd: 
+        txt, lo, hi = span.txt, span.lo, span.hi
+        if   hi==BIG: out = f"{txt} >= {lo}"
+        elif lo==BIG: out = f"{txt} < {hi}"
+        elif hi==lo:  out = f"{txt} == {lo}"
+        else:         out = f" {lo} <= {txt} < {hi}"
+      return out
+   [print(('|.. '* lvl) + _show(data.guard) for lvl,data in nodes(data)]
 
 def selects(rows, span): 
    yes,no = [],[]
@@ -286,7 +306,7 @@ def selects(rows, span):
    return yes,no
 
 def select(row,span):
-   v= row[span.at
+   v= row[span.at]
    return v=="?" or span.lo==span.hi==v or span.lo <= v < span.hi
 
 #----------------------------------------------------------------------------------------
