@@ -21,10 +21,10 @@ import re,sys,math,random
 from typing import List, Dict, Generator
 from typing import Any
 
-rand    = random.random
-one     = random.choice
-some    = random.choices
-BIG     = 1E32
+rand  = random.random
+one   = random.choice
+some  = random.choices
+BIG   = 1E32
 
 # `Obj` allows for easy initialization and have a built-in pretty print.
 class Obj:
@@ -251,15 +251,15 @@ def cuts(rows, data, Y=ydist, ything=Num):
              [Span(col,txt) for col in ys.values()])
 
    def _num(num,xys):
-      nsd, rhs, lhs = {}, ything(), adds([y for _,y in xys], ything())
+      rhs1, rhs, lhs = {}, ything(), adds([y for _,y in xys], ything())
       for j,(_,y) in xys[::-1]: 
          add(y,rhs)
-         nsd[ len(xys) - j - 1 ] = rhs.n * rhs.sd
+         rhs1[ len(xys) - j - 1 ] = (rhs.n * rhs.sd)/len(xys)
       lo,cut = BIG,None
       for j,(x,y) in enumerate(xys):
          add(y,lhs)
          if j < len(xy) - 1 and x != xys[j+1][0]:
-           xpect = (lhs.n * spread(lhs) + nsd[j] ) / len(xys)
+           xpect = lhs.n/len(xys) * spread(lhs) + rhs1[j] 
            if xpect < lo:
               lo, cut = xpect,x
       return lo, ([Span(num,-BIG,cut),Span(num,cut,BIG)] if cut else [])
@@ -271,8 +271,15 @@ def cuts(rows, data, Y=ydist, ything=Num):
    return min(spans(col) for col in data.cols.x, key=first)[1]
 
 def tree(data,Y=ydist, ything=Num, gaurd=None,):
-   spans = cuts(rows or data.rows, data,Y,ything)
-  
+   if len(data.rows) > the.leaf:
+      here.kids=[]
+      rows = data.rows
+      for span in cuts(rows or data.rows, data,Y,ything):
+         sub,rows = selects(rows,span)
+         here.kids += [tree(clone(data,sub),Y,ything,guad=span)]
+   return data 
+ 
+
 def selects(rows, span): 
    yes,no = [],[]
    for row in rows: (yes if select(row,span) or no).append(row)
