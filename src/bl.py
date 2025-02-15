@@ -5,17 +5,18 @@ nb.py : Naive Bayes
   
 OPTIONS:  
 
-      -a acg    xploit or xplore or adapt   = xploit  
-      -d decs   decimal places for printing = 3  
-      -f file   training csv file           = ../test/data/auto93.csv  
-      -g guess  size of guess               = 0.5  
-      -G Guesses max number of guesses      = 100  
-      -k k      low frequency Bayes hack    = 1  
-      -m m      low frequency Bayes hack    = 2  
-      -p p      distance formula exponent   = 2  
-      -r rseed  random number seed          = 1234567891  
-      -s start  where to begin              = 4  
-      -S Stop   where to end                = 32  
+      -a acq     xploit or xplore or adapt   = xploit  
+      -d decs    decimal places for printing = 3  
+      -f file    training csv file           = ../test/data/auto93.csv  
+      -g guess   size of guess               = 0.5  
+      -G Guesses max number of guesses       = 100  
+      -k k       low frequency Bayes hack    = 1  
+      -l leaf    min size of tree leaves     = 2
+      -m m       low frequency Bayes hack    = 2  
+      -p p       distance formula exponent   = 2  
+      -r rseed   random number seed          = 1234567891  
+      -s start   where to begin              = 4  
+      -S Stop    where to end                = 32  
 """
 import re,sys,math,random
 from typing import List, Dict, Generator
@@ -132,7 +133,7 @@ def norm(v: Any, col: Obj) -> Any:
    return v if (v=="?" or col.it is Sym) else (v - col.lo) /   (col.hi - col.lo + 1/BIG)
 
 # Return the middle of a data.
-def mids(data1: Obj) -> row:
+def mids(data1: Obj) -> row: 
   return [mid(col) for col in data1.cols.all]
 
 # Return the central tendency of a column.
@@ -251,15 +252,14 @@ def cuts(rows, data, Y=ydist, ything=Num):
       for x,y in xys:
           ys[x] = ys.get(x) or ything(txt=txt)
           add(y, ys[x])
-      return (sum(ys.values(), key= lambda col1: col1.n*spred(col1)/len(xys)),
-             [Span(col,txt) for col in ys.values()])
+      return (sum(ys.values(), key= lambda col1: col1.n*spred(col1)/len(xys)), [Span(col,txt) for col in ys.values()])
 
    def _num(num,xys):
       rhs1, rhs, lhs = {}, ything(), adds([y for _,y in xys], ything())
-      for j,(_,y) in xys[::-1]: 
+      for j,(_,y) in enumerate(reversed(xys)):
          add(y,rhs)
          rhs1[ len(xys) - j - 1 ] = (rhs.n * rhs.sd)/len(xys)
-      lo,cut = BIG,None
+      lo,cut = BIG,xys[0][0]
       for j,(x,y) in enumerate(xys):
          add(y,lhs)
          if j < len(xy) - 1 and x != xys[j+1][0]:
@@ -279,8 +279,13 @@ def grow(data,Y=ydist, ything=Num, gaurd=None):
       rows = data.rows
       for _,span in min(cuts(rows,data,Y,ything),key=first):
          yes,rows = selects(rows,span)
-         here.kids += [tree(clone(data,yes),Y,ything,gaurd=span)]
+         data.kids += [tree(clone(data,yes),Y,ything,gaurd=span)]
    return data 
+
+def leaf(row,data):
+   for sub in data.kids:
+      if select(row,sub.gaurd): return leaf(row,sub)
+   return data
 
 def nodes(data, lvl=0):
    yield lvl,data
