@@ -1,6 +1,6 @@
 #!/usr/bin/env python3 -B
 """
-nb.py : Naive Bayes  
+nb.py : Naive Bayes    
 (c) 2025, Tim Menzies <timm@ieee.org>, MIT License  
   
 OPTIONS:  
@@ -250,9 +250,10 @@ def cuts(rows, data, Y=ydist, ything=Num):
    def _sym(sym,xys):
       ys= {}
       for x,y in xys:
-          ys[x] = ys.get(x) or ything(txt=txt)
-          add(y, ys[x])
-      return (sum(ys.values(), key= lambda col1: col1.n*spred(col1)/len(xys)), [Span(col,txt) for col in ys.values()])
+         ys[x] = ys.get(x) or ything(txt=x)
+         add(y, ys[x])
+      return (sum(ys.values(), key= lambda col1: col1.n*spread(col1)/len(xys)), 
+              [Span(sym,col.txt) for col in ys.values()])
 
    def _num(num,xys):
       rhs1, rhs, lhs = {}, ything(), adds([y for _,y in xys], ything())
@@ -262,16 +263,17 @@ def cuts(rows, data, Y=ydist, ything=Num):
       lo,cut = BIG,xys[0][0]
       for j,(x,y) in enumerate(xys):
          add(y,lhs)
-         if j < len(xy) - 1 and x != xys[j+1][0]:
-           xpect = lhs.n/len(xys) * spread(lhs) + rhs1[j] 
-           if xpect < lo:
-              lo, cut = xpect,x
+         if j < len(xys) - 1 and x != xys[j+1][0]:
+            xpect = lhs.n/len(xys) * spread(lhs) + rhs1[j] 
+            if xpect < lo:
+               lo, cut = xpect,x
       return lo, ([Span(num,-BIG,cut),Span(num,cut,BIG)] if cut else [])
 
    for col in data.cols.x:
-      xys = [(row[col.at], Y(row,data)) for row in rows if row[num.at] != "?"]
+      xys = [(row[col.at], Y(row,data)) for row in rows if row[col.at] != "?"]
       yield (_sym if col.at is Sym else _num)(col, sorted(xys, key=first))
 
+# Add a tree to the kids of `data`. Add a `gaurd` showing when to use this data.
 def grow(data,Y=ydist, ything=Num, gaurd=None):
    data.kids=[]
    data.gaurd=gaurd
@@ -279,39 +281,46 @@ def grow(data,Y=ydist, ything=Num, gaurd=None):
       rows = data.rows
       for _,span in min(cuts(rows,data,Y,ything),key=first):
          yes,rows = selects(rows,span)
-         data.kids += [tree(clone(data,yes),Y,ything,gaurd=span)]
+         if len(yes) < len(data.rows):
+           data.kids += [grow(clone(data,yes),Y=Y,ything=ything,gaurd=span)]
    return data 
 
-def leaf(row,data):
-   for sub in data.kids:
-      if select(row,sub.gaurd): return leaf(row,sub)
+# Return the leaf that contains `row`.
+def leaf(row1,data):
+   for kid in data.kids:
+      if select(row1,kid.gaurd): return leaf(row,kid)
    return data
 
-def nodes(data, lvl=0):
-   yield lvl,data
+# Iterator, returns nodes in a tree of data (and their depth).
+def nodes(data, depth=0):
+   yield depth,data
    for kid in data.get:
-      for sub in nodes(kid,lvl+1):
-         yield sub
+      for tmp in nodes(kid,depth+1):
+         yield tmp
 
+# Pretty print a tree, using indeentation to show depth.
 def tree(data):
    def _show(gaurd):
       out = ""
       if gaurd: 
-        txt, lo, hi = span.txt, span.lo, span.hi
+        txt, lo, hi = gaurd.txt, gaurd.lo, gaurd.hi
         if   hi==BIG: out = f"{txt} >= {lo}"
         elif lo==BIG: out = f"{txt} < {hi}"
         elif hi==lo:  out = f"{txt} == {lo}"
         else:         out = f" {lo} <= {txt} < {hi}"
       return out
-   [print(('|.. '* lvl) + _show(data.guard) for lvl,data in nodes(data)]
+   [print(f"{len(data.rows):6} | {'|.. '* depth}" + 
+         _show(data.guard)) for depth,data in nodes(data)]
 
+# Return the `rows` that do, and do not, fall into `span`.
 def selects(rows, span): 
    yes,no = [],[]
-   for row in rows: (yes if select(row,span) or no).append(row)
+   for row1 in rows: (yes if select(row,span) else no).append(row1)
    return yes,no
 
-def select(row,span):
-   v= row[span.at]
+# Return true is a `row` calls into `span`
+def select(row1,span):
+   v= row1[span.at]
    return v=="?" or span.lo==span.hi==v or span.lo <= v < span.hi
 
 #----------------------------------------------------------------------------------------
