@@ -18,6 +18,9 @@ Tmp  ?= $(HOME)/tmp
 help      :  ## show help
 	gawk -f $(Top)/etc/help.awk $(MAKEFILE_LIST) 
 
+pull: ## update from main
+	git pull
+
 push: ## commit to main
 	- echo -en "$(LOUD)Why this push? $(SOFT)" ;  read x ; git commit -am "$$x" ;  git push
 	- git status
@@ -25,6 +28,8 @@ push: ## commit to main
 sh: ## run my shell
 	bash --init-file  $(Top)/etc/dotshellrc -i
 
+luac:
+	luacheck bll.lua --ignore 61*
 lint: ## lint all python in this directory
 	export PYTHONPATH="..:$$PYTHONPATH"; \
 	pylint --disable=W0311,C0303,C0116,C0321,C0103 \
@@ -58,5 +63,20 @@ lint: ## lint all python in this directory
 	  -o	 $@.ps $<
 	ps2pdf $@.ps $@; rm $@.ps
 	open $@
+
+~/tmp/%.pdf : %.lua  Makefile
+	@echo "pdfing : $@ ... "
+	@a2ps -Bj --landscape                           \
+		--chars-per-line=90 \
+		--line-numbers=1                    \
+		--highlight-level=normal  \
+		--columns 3                 \
+		--borders=no --pro=color \
+		--right-footer="" --left-footer=""    \
+		--pretty-print=../etc/lua.ssh             \
+		--footer="page %p."                     \
+		-M letter -o $@.ps $<
+	@ps2pdf $@.ps $@; rm $@.ps
+
 
 
