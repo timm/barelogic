@@ -22,10 +22,10 @@ local BIG=1E32
 -- ------------------------------------------------------------
 local fmt=string.format
 
-local function o(x)
-  local t    = {}
-  local LIST = function() for _,v in pairs(x) do t[1+#t]= o(v) end end
-  local DICT = function() for k,v in pairs(x) do t[1+#t]= fmt(":%s %s",k,o(v)) end end
+local function o(x,       t,LIST,DICT)
+  t    = {}
+  LIST = function() for _,v in pairs(x) do t[1+#t]= o(v) end end
+  DICT = function() for k,v in pairs(x) do t[1+#t]= fmt(":%s %s",k,o(v)) end end
   if type(x) == "number" then return fmt(x//1 == x and "%s" or "%.3g",x) end
   if type(x) ~= "table"  then return tostring(x) end
   if #x>0 then LIST() else DICT(); table.sort(t) end
@@ -36,27 +36,26 @@ local function new(klass,object)
 
 local function push(t,x) t[1+#t] = x ; return x end
 
-local function coerce(s)
-   local ok,x = pcall( function() return s+0 end )
-   return ok and x or s:match"^%s*(.-)%s*$"  end
+local function coerce(s,       WORD)
+   WORD = function(s) return s=="true" or s ~= "false" and s end
+   return math.tointeger(s) or tonumber(s) or WORD(s:match"^%s*(.-)%s*$") end
 
-local function csv(src)
-  local F = function(s2,z)
-              for s3 in s2:gmatch"([^,]+)" do z[1+#z]=coerce(s3) end
-               return z end
+local function csv(src,        CELLS)
+  CELLS = function(s2,z)
+            for s3 in s2:gmatch"([^,]+)" do z[1+#z]=coerce(s3) end; return z end
   src = io.input(src)
   return function(      s1)
     s1 = io.read()
-    if s1 then return F(s1,{}) else io.close(src) end end  end
+    if s1 then return CELLS(s1,{}) else io.close(src) end end  end
+
+local function lt(s) return function(a,b) return a[s] < b[s] end end
 
 local function main(t,funs,settings)
   for n,s in pairs(t) do
-    if funs[s] then
-       math.randomseed(settings.rseed)
-       funs[s](t[n+1]) 
-    else for k,_ in pairs(settings) do 
-           if  s == "-"..k:sub(1,1) then
-              settings[k] = coerce(t[n+1])  end end end end end
+    math.randomseed(settings.rseed)
+    if funs[s] then funs[s](t[n+1]) else 
+       for k,_ in pairs(settings) do 
+          if s == "-"..k:sub(1,1) then settings[k]=coerce(t[n+1]) end end end end end
 
 -- ------------------------------------------------------------
 local Num,Sym,Data,Meta={},{},{},{}
@@ -76,25 +75,20 @@ function Data:new(src)
    else for _,row in pairs(src or {}) do self:add(row) end end 
    return self end
 
-function Meta:new(names)
-   local x,y,all,klass = {}, {}, {}, nil
+function Data:clone(src,       d)
+   d= Data:new{self.cols.names}
+   for _,row in pairs(src or {}) do d:add(row) end 
+   return d end 
+
+function Meta:new(names,        x,y,all,col,klass)
+   x,y,all,klass = {}, {}, {}, nil
    for at,txt in pairs(names) do
-      local col = push(all, (txt:find"^[A-Z]" and Num or Sym):new(txt,at))
+      col = push(all, (txt:find"^[A-Z]" and Num or Sym):new(txt,at))
       if not txt:find"X$" then 
          push(txt:find"[!+-]$" and y or x, col)
          if txt:find"!$" then klass=col end end end
    return new(Meta,{x=x,y=y,all=all,klass=klass, names=names}) end 
-             
--- --------------------------------------------------------------------
-function Data:read(src)
-  src = io.input(src)
-  while true do
-    local line = io.read()
-    if not line then return io.close(src) end
-    local row={}
-    for s in line:gmatch"([^,]+)" do row[1 + #row] = coerce(s) end
-    self:add(row) end end
-
+-- --------------------------------------------------------------------
 function Data:add(row)
    if   self.cols
    then push(self.rows, self.cols:add(row))
@@ -111,27 +105,52 @@ function Sym:add(x)
   if self.has[x] > self.most then
     self.most, self.mode = self.has[x], x end end
 
-function Num:add(n)
+function Num:add(n,       d)
   if n=="?" then return n end
   self.n  = self.n + 1
   n       = n + 0 -- ensure we have numbers
-  local d = n - self.mu
+  d = n - self.mu
   self.mu = self.mu + d/self.n
   self.m2 = self.m2 + d*(n - self.mu)
   self.sd = self.n < 2 and 0 or (self.m2/(self.n - 1))^0.5
   self.lo = math.min(n, self.lo)
   self.hi = math.max(n, self.hi) end
 
--- ------------------------------------------------------
+-- ---------------------------------------------------------
+function Num:norm(x)
+   return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG)
 
----- ## Actions
+function Data:ydist(row,     d)
+   d=0
+   for _,y in self.cols.y do d=d+ math.abs(y:norm(row[y.at]) - y.goal)^the.p end
+   return (d/#self.cols.y) ^ 1/the.p end
+-- ---------------------------------------------------------
+function NUM:bin(rows,         xys,t):
+   xys = {}
+   for _,row in pairs(rows) do 
+     if row[self.at] ~= "?" then 
+        push(xys, {x=row[self.at], y=data:ydist(row)}) end end end
+   table.sort(xys,lt"x")
+
+   for _,xy in parts(xy) do
+     if t then
+        tmp = _merge(xy,t[#t])
+        if tmp then t[#t] = tmp else push  xxx end
+
+
+-- ## Actions
 local go={}
 go["-h"] = function(_) print(help) end
 
 go["--the"] = function(_) print(o(the)) end
 
+go["--coerce"]= function(_)
+   for _,x in pairs{{"22.1",22.1}, {"22",22}, {"true",true},
+                    {"false",false},{"fred","fred"}} do 
+      assert(x[2]==coerce(x[1])) end end
+
 go["--data"] = function(_) 
-   for _,col in pairs(Data:new(the.file).cols.x) do print(o(col)) end end
+   for _,col in pairs(Data:new(the.file).cols.y) do print(o(col)) end end
 
 -- ## Start
 help:gsub("[-][%S][%s]+([%S]+)[^\n]+= ([%S]+)", function(k,v) the[k]=coerce(v) end)
