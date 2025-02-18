@@ -125,18 +125,27 @@ function Data:ydist(row,     d)
    for _,y in self.cols.y do d=d+ math.abs(y:norm(row[y.at]) - y.goal)^the.p end
    return (d/#self.cols.y) ^ 1/the.p end
 -- ---------------------------------------------------------
-function NUM:bin(rows,         xys,t):
+function NUM:bin(rows,         Thing,xys,t):
    xys = {}
    for _,row in pairs(rows) do 
      if row[self.at] ~= "?" then 
         push(xys, {x=row[self.at], y=data:ydist(row)}) end end end
    table.sort(xys,lt"x")
-
-   for _,xy in parts(xy) do
-     if t then
-        tmp = _merge(xy,t[#t])
-        if tmp then t[#t] = tmp else push  xxx end
-
+   Thing = Thing or (type(xys[1].y) == "number" and Num or Sym)
+   local t,x,
+   small = (#xy)^.5
+   t={}
+   push(t, {x=Num:new(),y=Thing:new()})
+   for i,xy in parts(xys) do
+     x,y = t[#t].x, t[#t].y
+     x:add(xy.x); y:add(xy.y)
+     if i < #xys - small and  x.n > small and x.hi - x.lo > self.sd*0.35 
+        and xy.x ~= xys[i+1].x then
+        if #t > 1 then
+           t[#t-1] = {x=x:merge(t[#t=1].x), y=y:merge(t[#t-1].y)}
+           t[#t]   = {x=Num:new(),y=Thing:new()}
+        else
+           push(t, {x=Num:new(),y=Thing:new()} end end
 
 -- ## Actions
 local go={}
