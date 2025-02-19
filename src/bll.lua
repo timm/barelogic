@@ -21,9 +21,20 @@ local BIG=1E32
 
 -- ------------------------------------------------------------
 -- ## Library
--- Polymorphism stuff
+-- Meta stuff
 local function new(klass,object)
   klass.__index=klass; setmetatable(object,klass); return object end
+
+local function copy(t,     u)
+   if type(t) ~= "table" then return t end
+   u={}; for k,v in pairs(t) do u[ copy(k) ] = copy(v) end
+   return setmetatable(u, getmetatable(t)) end
+
+ local function map(t,F,   u)
+   u={}; for _,v in pairs(t) do push(u,F(v)) end; return u end
+
+local function sum(t,F,    n)
+   n=0; for _,v in pairs(t) do n = n + F(v) end; return n end
 
 -- List stuff
 local pop = table.remove
@@ -34,19 +45,12 @@ local function lt(s) return function(a,b) return a[s] < b[s] end end
 
 local function sort(t,F) table.sort(t,F); return t end
 
-local function map(t,F)
-   u={}; for _,v in pairs(t) do push(u,F(v)) end; return u end
-
 local function keysort(t,f)
    local DECOREATE  = function(x) return {f(x),x} end
    local UNDECOREATE= function(x) return x[2] end
    return map(sort(map(t, DECORATE), lt(1)), UNDECORATE) end
 
-local function copy(t,     u)
-   if type(t) ~= "table" then return t end
-   u={}; for k,v in pairs(t) do u[ copy(k) ] = copy(v) end
-   return setmetatable(u, getmetatable(t)) end
-
+-- Sort stuff
 -- String stuff
 local function coerce(s,       F)
    F = function(s) return s=="true" or s ~= "false" and s end
