@@ -32,10 +32,10 @@ local function push(t,x) t[1+#t] = x ; return x end
 
 local function lt(s) return function(a,b) return a[s] < b[s] end end
 
-local function sort(t,f) table.sort(t,f); return t end
+local function sort(t,F) table.sort(t,F); return t end
 
-local function map(t,f)
-   u={}; for _,v in pairs(t) do push(u,f(v)) end; return u end
+local function map(t,F)
+   u={}; for _,v in pairs(t) do push(u,F(v)) end; return u end
 
 local function keysort(t,f)
    local DECOREATE  = function(x) return {f(x),x} end
@@ -80,6 +80,7 @@ local function main(t,funs,settings)
           if s == "-"..k:sub(1,1) then settings[k]=coerce(t[n+1]) end end end end end
 
 -- ------------------------------------------------------------
+-- ## Structs
 local Num,Sym,Data,Meta={},{},{},{}
 
 function Num:new(txt,at)
@@ -110,7 +111,9 @@ function Meta:new(names,        x,y,all,col,klass)
          push(txt:find"[!+-]$" and y or x, col)
          if txt:find"!$" then klass=col end end end
    return new(Meta,{x=x,y=y,all=all,klass=klass, names=names}) end 
--- --------------------------------------------------------------------
+
+-- --------------------------------------------------------------------
+-- ## Update
 function Data:add(row)
    if   self.cols
    then push(self.rows, self.cols:add(row))
@@ -138,45 +141,67 @@ function Num:add(n,       d)
   self.lo = math.min(n, self.lo)
   self.hi = math.max(n, self.hi) end
 
--- ---------------------------------------------------------
-function Num:mid(): return self.mu end
-function Sym:mid(): return self.mode end
+-- ---------------------------------------------------------
+-- ## Query
+function Num:mid() return self.mu end
+function Sym:mid() return self.mode end
 
-function Num:var(): return self.sd end
-function Sym:var(): 
+function Num:var() return self.sd end
+function Sym:var() 
    return -sum(self.has, function(n) return n/self.n * math.log(n/self.n,2) end) end
 
 function Num:norm(x)
-   return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG)
+   return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG) end
 
 function Data:ydist(row,     d)
    d=0
-   for _,y in self.cols.y do d=d+ math.abs(y:norm(row[y.at]) - y.goal)^the.p end
+   for _,y in pairs(self.cols.y) do d=d+ math.abs(y:norm(row[y.at]) - y.goal)^the.p end
    return (d/#self.cols.y) ^ 1/the.p end
+   --
 -- ---------------------------------------------------------
-function NUM:bin(rows,data,        Thing,xys,t):
-   XY = function(r) if r[self.at]~="?" then return {x=r[self.at], y=data:ydist(r)} end end
-   xys   = sort(map(rows,XY),lt"x")
-   Thing = Thing or (type(xys[1].y) == "number" and Num or Sym)
-   MAKE  = function() return {x=Num:new(), y=Thing:new()} end
-   small = (#xys)^.5
-   local ab,out = MAKE(), {MAKE()}
-   for i,xy in parts(xys) do
-     a = all[#all]
-     a.x:add( xy.x); a.y:add( xy.y)
-     ab.x:add(xy.x); ab.y:add(xy.y)
-     if i < #xys-small and a.n > small and a.hi-a.lo > self.sd*0.35 and xy.x~=xys[i+1].x 
-     then
-        if #t> 1 then 
-           b = all[#all-1]
-           if ab.y:var() <= (a.y.n*a.y:var() + b.y.n*b.y:var()) / ab.y.n then
-             pop(all); pop(all); push(all,ab)
-           end  end
-        push(all,MAKE())
-        ab = copy(t[#t-1]) end end 
-   return out end
+-- ## Discretization
 
--- ## Actions
+-- Discretize numerics
+function Num:bins(rows, Y, Yklass)
+   local function _bin() -- A bin is a summary of 1 independent and 1 dependent variable.
+      return {x=Num:new(), y=Yklass:new()} end
+
+   local function _join(ab, a, b) -- Join 2 bins if the whole is simpler than the parts
+      return ab:var() <= (a.n*a:var() + b.n*b:var())/ab.n end 
+
+   local function _more(t, top2) -- Push a new bin, maybe first combine 2 top bins
+      if   #t> 1 and _join(top2, t[#t], t[#t-1]) then pop(t); pop(t); push(t,top2) end 
+      push(t, _bin()) -- add a new bin to handle new data
+      return t,copy(t[#t-1]) end -- new top is all or bin[-1] (which is empty) and bin[-2]
+
+   local function _full(a, x, i ,xys,      n) -- Time to make a new bin?
+      n=(#xys)^.5
+      return i< n-n^0.5 and a.n > n^0.5 and a.hi-a.lo > self.sd*0.35 and x ~= xys[i+1] end
+
+   local function _add(x, y, t, top2) -- Everything in "top" bin must also be in "top2"
+      t[#t].x:add(x)
+      t[#t].y:add(y) 
+      top2.x:add(x)  
+      top2.y:add(y) end
+
+   local function _fill(t) -- Fill in the gaps around the bins
+      for i=2,#t do t[i-1].x.hi = t[i].x.lo end
+      t[1].x.lo  = -BIG
+      t[#t].x.hi = BIG
+      return t end
+
+   local function XY(row) -- Collect info on 1 independent and 1 dependent variable
+      if row[self.at]~="?" then return {x=row[self.at], y=Y(row)} end end
+
+   local t, top2 = {_bin()}, _bin() -- top2 is a summary of the top two items in "t"
+   local xys = sort(map(rows,XY),lt"x")
+   for i,xy in pairs(xys) do
+      if _full(t[#t], xy.x, i, xys) then t,top2 = _more(t,top2) end
+      _add(xy.x, xy.y, t, top2) end
+   return _fill(t) end
+
+-- --------------------------------------------------
+-- ## Start-up Actions
 local go={}
 go["-h"] = function(_) print(help) end
 
@@ -190,6 +215,7 @@ go["--coerce"]= function(_)
 go["--data"] = function(_) 
    for _,col in pairs(Data:new(the.file).cols.y) do print(o(col)) end end
 
+-- --------------------------------------------------
 -- ## Start
 help:gsub("[-][%S][%s]+([%S]+)[^\n]+= ([%S]+)", function(k,v) the[k]=coerce(v) end)
 
