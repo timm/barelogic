@@ -45,6 +45,15 @@ lint: ## lint all python in this directory
                 next} 1' $@ > tmp.tmp
 	mv tmp.tmp $@
 
+../docs/%.html : %.lua
+	pycco -d $(Top)/docs  $^
+	echo "pre { font-size: small;} p { text-align:right; }" >> $(Top)/docs/pycco.css
+	gawk '/<h1>/ {print "<div class=docs>";                       \
+                while(getline x < "../etc/head.html") {print x}; \
+                print "<h1>'$^'</h1></div>";                  \
+                next} 1' $@ > tmp.tmp
+	mv tmp.tmp $@
+
 ~/tmp/%.pdf: %.py  ## make doco: .py ==> .pdf
 	mkdir -p ~/tmp
 	echo "pdf-ing $@ ... "

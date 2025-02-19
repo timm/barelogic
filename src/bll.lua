@@ -21,34 +21,37 @@ local BIG=1E32
 
 -- ------------------------------------------------------------
 -- ## Library
--- ### Meta
-local function coerce(s,       F)
-   F = function(s) return s=="true" or s ~= "false" and s end
-   return math.tointeger(s) or tonumber(s) or F(s:match"^%s*(.-)%s*$") end
-
--- ### Polymorphism
+-- Polymorphism stuff
 local function new(klass,object)
   klass.__index=klass; setmetatable(object,klass); return object end
 
--- ### Lists
+-- List stuff
+local pop = table.remove
+
 local function push(t,x) t[1+#t] = x ; return x end
 
 local function lt(s) return function(a,b) return a[s] < b[s] end end
+
+local function sort(t,f) table.sort(t,f); return t end
+
+local function map(t,f)
+   u={}; for _,v in pairs(t) do push(u,f(v)) end; return u end
+
+local function keysort(t,f)
+   local DECOREATE  = function(x) return {f(x),x} end
+   local UNDECOREATE= function(x) return x[2] end
+   return map(sort(map(t, DECORATE), lt(1)), UNDECORATE) end
 
 local function copy(t,     u)
    if type(t) ~= "table" then return t end
    u={}; for k,v in pairs(t) do u[ copy(k) ] = copy(v) end
    return setmetatable(u, getmetatable(t)) end
 
--- ### File
-local function csv(src,        F)
-  F = function(s,z) for x in s:gmatch"([^,]+)" do z[1+#z]=coerce(x) end; return z end
-  src = io.input(src)
-  return function(      s1)
-    s1 = io.read()
-    if s1 then return F(s1,{}) else io.close(src) end end  end
+-- String stuff
+local function coerce(s,       F)
+   F = function(s) return s=="true" or s ~= "false" and s end
+   return math.tointeger(s) or tonumber(s) or F(s:match"^%s*(.-)%s*$") end
 
--- ### String
 local fmt=string.format
 
 local function o(x,       t,LIST,DICT)
@@ -60,7 +63,15 @@ local function o(x,       t,LIST,DICT)
   if #x>0 then LIST() else DICT(); table.sort(t) end
   return "{" .. table.concat(t, " ") .. "}" end
 
--- ### Misc
+-- File stuff
+local function csv(src,        F)
+  F = function(s,z) for x in s:gmatch"([^,]+)" do z[1+#z]=coerce(x) end; return z end
+  src = io.input(src)
+  return function(      s1)
+    s1 = io.read()
+    if s1 then return F(s1,{}) else io.close(src) end end  end
+
+-- Misc stuff
 local function main(t,funs,settings)
   for n,s in pairs(t) do
     math.randomseed(settings.rseed)
@@ -127,7 +138,14 @@ function Num:add(n,       d)
   self.lo = math.min(n, self.lo)
   self.hi = math.max(n, self.hi) end
 
--- ---------------------------------------------------------
+-- ---------------------------------------------------------
+function Num:mid(): return self.mu end
+function Sym:mid(): return self.mode end
+
+function Num:var(): return self.sd end
+function Sym:var(): 
+   return -sum(self.has, function(n) return n/self.n * math.log(n/self.n,2) end) end
+
 function Num:norm(x)
    return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG)
 
@@ -136,27 +154,27 @@ function Data:ydist(row,     d)
    for _,y in self.cols.y do d=d+ math.abs(y:norm(row[y.at]) - y.goal)^the.p end
    return (d/#self.cols.y) ^ 1/the.p end
 -- ---------------------------------------------------------
-function NUM:bin(rows,         Thing,xys,t):
-   xys = {}
-   for _,row in pairs(rows) do 
-     if row[self.at] ~= "?" then 
-        push(xys, {x=row[self.at], y=data:ydist(row)}) end end end
-   table.sort(xys,lt"x")
+function NUM:bin(rows,data,        Thing,xys,t):
+   XY = function(r) if r[self.at]~="?" then return {x=r[self.at], y=data:ydist(r)} end end
+   xys   = sort(map(rows,XY),lt"x")
    Thing = Thing or (type(xys[1].y) == "number" and Num or Sym)
-   local t,x,
-   small = (#xy)^.5
-   t={}
-   push(t, {x=Num:new(),y=Thing:new()})
+   MAKE  = function() return {x=Num:new(), y=Thing:new()} end
+   small = (#xys)^.5
+   local ab,out = MAKE(), {MAKE()}
    for i,xy in parts(xys) do
-     x,y = t[#t].x, t[#t].y
-     x:add(xy.x); y:add(xy.y)
-     if i < #xys - small and  x.n > small and x.hi - x.lo > self.sd*0.35 
-        and xy.x ~= xys[i+1].x then
-        if #t > 1 then
-           t[#t-1] = {x=x:merge(t[#t=1].x), y=y:merge(t[#t-1].y)}
-           t[#t]   = {x=Num:new(),y=Thing:new()}
-        else
-           push(t, {x=Num:new(),y=Thing:new()} end end
+     a = all[#all]
+     a.x:add( xy.x); a.y:add( xy.y)
+     ab.x:add(xy.x); ab.y:add(xy.y)
+     if i < #xys-small and a.n > small and a.hi-a.lo > self.sd*0.35 and xy.x~=xys[i+1].x 
+     then
+        if #t> 1 then 
+           b = all[#all-1]
+           if ab.y:var() <= (a.y.n*a.y:var() + b.y.n*b.y:var()) / ab.y.n then
+             pop(all); pop(all); push(all,ab)
+           end  end
+        push(all,MAKE())
+        ab = copy(t[#t-1]) end end 
+   return out end
 
 -- ## Actions
 local go={}
