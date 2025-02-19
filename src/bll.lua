@@ -20,6 +20,35 @@ OPTIONS:
 local BIG=1E32
 
 -- ------------------------------------------------------------
+-- ## Library
+-- ### Meta
+local function coerce(s,       F)
+   F = function(s) return s=="true" or s ~= "false" and s end
+   return math.tointeger(s) or tonumber(s) or F(s:match"^%s*(.-)%s*$") end
+
+-- ### Polymorphism
+local function new(klass,object)
+  klass.__index=klass; setmetatable(object,klass); return object end
+
+-- ### Lists
+local function push(t,x) t[1+#t] = x ; return x end
+
+local function lt(s) return function(a,b) return a[s] < b[s] end end
+
+local function copy(t,     u)
+   if type(t) ~= "table" then return t end
+   u={}; for k,v in pairs(t) do u[ copy(k) ] = copy(v) end
+   return setmetatable(u, getmetatable(t)) end
+
+-- ### File
+local function csv(src,        F)
+  F = function(s,z) for x in s:gmatch"([^,]+)" do z[1+#z]=coerce(x) end; return z end
+  src = io.input(src)
+  return function(      s1)
+    s1 = io.read()
+    if s1 then return F(s1,{}) else io.close(src) end end  end
+
+-- ### String
 local fmt=string.format
 
 local function o(x,       t,LIST,DICT)
@@ -31,25 +60,7 @@ local function o(x,       t,LIST,DICT)
   if #x>0 then LIST() else DICT(); table.sort(t) end
   return "{" .. table.concat(t, " ") .. "}" end
 
-local function new(klass,object)
-  klass.__index=klass; setmetatable(object,klass); return object end
-
-local function push(t,x) t[1+#t] = x ; return x end
-
-local function coerce(s,       WORD)
-   WORD = function(s) return s=="true" or s ~= "false" and s end
-   return math.tointeger(s) or tonumber(s) or WORD(s:match"^%s*(.-)%s*$") end
-
-local function csv(src,        CELLS)
-  CELLS = function(s2,z)
-            for s3 in s2:gmatch"([^,]+)" do z[1+#z]=coerce(s3) end; return z end
-  src = io.input(src)
-  return function(      s1)
-    s1 = io.read()
-    if s1 then return CELLS(s1,{}) else io.close(src) end end  end
-
-local function lt(s) return function(a,b) return a[s] < b[s] end end
-
+-- ### Misc
 local function main(t,funs,settings)
   for n,s in pairs(t) do
     math.randomseed(settings.rseed)
