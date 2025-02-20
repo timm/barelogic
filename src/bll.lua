@@ -21,6 +21,11 @@ local BIG=1E32
 
 -- ------------------------------------------------------------
 -- ## Library
+-- List stuff
+local pop = table.remove
+
+local function push(t,x) t[1+#t] = x ; return x end
+
 -- Meta stuff
 local function new(klass,object)
   klass.__index=klass; setmetatable(object,klass); return object end
@@ -36,21 +41,16 @@ local function copy(t,     u)
 local function sum(t,F,    n)
    n=0; for _,v in pairs(t) do n = n + F(v) end; return n end
 
--- List stuff
-local pop = table.remove
-
-local function push(t,x) t[1+#t] = x ; return x end
-
+-- Sort stuff
 local function lt(s) return function(a,b) return a[s] < b[s] end end
 
 local function sort(t,F) table.sort(t,F); return t end
 
-local function keysort(t,f)
-   local DECOREATE  = function(x) return {f(x),x} end
-   local UNDECOREATE= function(x) return x[2] end
+local function keysort(t,F)
+   local DECORATE  = function(x) return {F(x),x} end
+   local UNDECORATE= function(x) return x[2] end
    return map(sort(map(t, DECORATE), lt(1)), UNDECORATE) end
 
--- Sort stuff
 -- String stuff
 local function coerce(s,       F)
    F = function(s) return s=="true" or s ~= "false" and s end
@@ -166,43 +166,38 @@ function Data:ydist(row,     d)
 -- ## Discretization
 
 -- Discretize numerics
-function Num:bins(rows, Y, Yklass)
-   local function _bin() -- A bin is a summary of 1 independent and 1 dependent variable.
+function Num:bins(rows, Yklass, Y,      XY,xys,t,top,_bin,_isFull,_joinable _more)
+   function XY(row) -- Collect info on 1 independent and 1 dependent variable
+      if row[self.at]~="?" then return {x=row[self.at], y=Y(row)} end end
+
+   function _bin() -- A bin is a summary of 1 independent and 1 dependent variable.
       return {x=Num:new(), y=Yklass:new()} end
 
-   local function _join(ab, a, b) -- Join 2 bins if the whole is simpler than the parts
-      return ab:var() <= (a.n*a:var() + b.n*b:var())/ab.n end 
-
-   local function _more(t, top2) -- Push a new bin, maybe first combine 2 top bins
-      if   #t> 1 and _join(top2, t[#t], t[#t-1]) then pop(t); pop(t); push(t,top2) end 
-      push(t, _bin()) -- add a new bin to handle new data
-      return t,copy(t[#t-1]) end -- new top is all or bin[-1] (which is empty) and bin[-2]
-
-   local function _full(a, x, i ,xys,      n) -- Time to make a new bin?
+   function _isFull(a, x, i,      n) -- True if time to make a new bin.
       n=(#xys)^.5
       return i< n-n^0.5 and a.n > n^0.5 and a.hi-a.lo > self.sd*0.35 and x ~= xys[i+1] end
 
-   local function _add(x, y, t, top2) -- Everything in "top" bin must also be in "top2"
-      t[#t].x:add(x)
-      t[#t].y:add(y) 
-      top2.x:add(x)  
-      top2.y:add(y) end
+   function _joinable(ab, a, b) -- True if whole is simpler than the parts
+      return ab:var() <= (a.n*a:var() + b.n*b:var())/ab.n end 
 
-   local function _fill(t) -- Fill in the gaps around the bins
-      for i=2,#t do t[i-1].x.hi = t[i].x.lo end
-      t[1].x.lo  = -BIG
-      t[#t].x.hi = BIG
-      return t end
+   function _more() -- Push a new bin, maybe first combine 2 top bins
+      if #t> 1 and _joinable(top2.y,t[#t].y,t[#t-1].y) then pop(t);pop(t) push(t,top2)end
+      push(t, _bin()) -- add a new bin to handle new data
+      top2 = copy(t[#t-1]) end -- initialize top with everything in bin[-2]
 
-   local function XY(row) -- Collect info on 1 independent and 1 dependent variable
-      if row[self.at]~="?" then return {x=row[self.at], y=Y(row)} end end
-
-   local t, top2 = {_bin()}, _bin() -- top2 is a summary of the top two items in "t"
-   local xys = sort(map(rows,XY),lt"x")
+   xys = sort(map(rows,XY),lt"x")
+   t, top2 = {_bin()}, _bin() -- top2 is a summary of the top two items in "t"
    for i,xy in pairs(xys) do
-      if _full(t[#t], xy.x, i, xys) then t,top2 = _more(t,top2) end
-      _add(xy.x, xy.y, t, top2) end
-   return _fill(t) end
+      if _isFull(t[#t], xy.x, i) then  _more() end
+      t[#t].x:add(xy.x)
+      t[#t].y:add(xy.y) 
+      top2.x:add( xy.x) -- everything that goes into top also goes into top2
+      top2.y:add( xy.y)  
+   end
+   for i = 2,#t do t[i-1].x.hi = t[i].x.lo end
+   t[1].x.lo  = -BIG
+   t[#t].x.hi = BIG
+   return t end
 
 -- --------------------------------------------------
 -- ## Start-up Actions
