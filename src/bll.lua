@@ -157,11 +157,10 @@ function Sym:var()
 function Num:norm(x)
    return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG) end
 
-function Data:ydist(row,     d)
-   d=0
-   for _,y in pairs(self.cols.y) do d=d+ math.abs(y:norm(row[y.at]) - y.goal)^the.p end
-   return (d/#self.cols.y) ^ 1/the.p end
-   --
+function Data:ydist(row,     F)
+   F = function(col) return maths.abs(col:norm(row[col.at]) - col.goal)^the.p end
+   return (sum(self.cols.y, F) / #self.cols.y) ^ (1/the.p) end
+
 -- ---------------------------------------------------------
 -- ## Discretization
 
