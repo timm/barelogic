@@ -36,6 +36,7 @@ local function copy(t)
    return setmetatable(u, getmetatable(t)) end
 
  local function map(t,F)
+   F = F or function(x) return x end
    local u={}; for _,v in pairs(t) do push(u,F(v)) end; return u end
 
 local function sum(t,F)
@@ -115,6 +116,9 @@ function Meta:new(names)
          if txt:find"!$" then klass=col end end end
    return new(Meta,{x=x,y=y,all=all,klass=klass, names=names}) end 
 
+function Span:new(txt,at,lo,hi) 
+   return new(Span,txt=txt,at=at,lo=lo,hi=hi or lo,n=0) end
+
 -- --------------------------------------------------------------------
 -- ## Update
 function Data:add(row)
@@ -144,6 +148,11 @@ function Num:add(n)
   self.lo = math.min(n, self.lo)
   self.hi = math.max(n, self.hi) end
 
+function Span:add(x)
+   self.n  = self.n + 1
+   self.lo = math.min(x, self.lo)
+   self.hi = math.max(x, self.hi)  end
+
 -- ---------------------------------------------------------
 -- ## Query
 function Num:mid() return self.mu end
@@ -165,18 +174,71 @@ function Data:ysort()
    local function F(row) return self:ydist(row) end 
    self.rows = keysort(self.rows, F)
    return self end 
+
+function Span.merged(i,j,n)
+   if i.n < n or j.n < n then 
+      k = Span(i.txt,i.at,i.lo,j.hi)
+      k.n = i.n + j.n
+      return k end end
+
 -- ---------------------------------------------------------
 -- ## Discretization
 
+function Sym:bin(x) return x end
+
+function Num:bin(x) return self:norm(x) * the.bins // 1
+
+function Sym:bins(bins,_) return bins end
+
+function Num:bins(b4,n)
+   local i,now,a = 1,{}
+   while i <= #t do
+      a = b4[i]
+      if i < #t-1 then
+         merged = a:marged(t[i+1],n)
+         if merged then
+            a = merged
+            i = i + 1 end end
+      push(now,a)
+      i = i + 1 
+   end
+   if #b4 < #row then return self:bins(now,n) else
+      now[1].lo = -BIG
+      now[#now].hi = BIG
+      return now end end
+  
+function Data:bins(rows)
+   local out,tmp,x,k,n
+   out  = {}
+   for _,col in pairs(self.cols.x) do
+      n,tmp = 0,{}
+      for i,row in pairs(rows or self.rows) do
+         x =  row[self.at]
+         if x ~= "?" then
+            n = n + 1
+            k = col:bin(x)
+            tmp[k] = tmp[k] or Span(col.txt.col.at,lo)
+            tmp[k]:add(x) end 
+      out[col.at] = col:bins(sort(map(tmp),lt"lo"),n^0.5) end end
+   return out end
+
 -- Discretize numerics
-function Num:bins(rows, Yklass, Y)
+function Num:xbins(rows, Yklass, Y)
    local XY,xys,t,top2,_bin,_isFull,_join,_more
    function _bin() return {x=Num:new(), y=Yklass:new()} end
    function XY(r)  if r[self.at]~="?" then return {x=r[self.at], y=Y(r)} end end
    function _join(ab,a,b) return ab:var() <= (a.n*a:var() + b.n*b:var())/ab.n end 
 
    function _isFull(a,x,i,n) 
-      return i < n-n^0.5 and a.n > n^0.5 and a.hi-a.lo > self.sd*0.35 and x ~= xys[i+1]end
+      if i < (n-n^0.5) then
+         print(1)
+         if a.n > n^0.5 then
+            print(2)
+            --if (a.hi - a.lo) > self.sd*0.35 then
+               print(3,x, xys[i+1].x)
+               if x ~= xys[i+1].x then
+                  print(4)
+                  return true end end end end --end 
 
    function _more() 
       if #t> 1 and _join(top2.y,t[#t].y,t[#t-1].y) then pop(t);pop(t); push(t,top2)end
@@ -184,12 +246,13 @@ function Num:bins(rows, Yklass, Y)
       top2 = copy(t[#t-1]) end -- initialize top with everything in bin[-2]
 
    xys = sort(map(rows,XY),lt"x")
+   print(o(xys))
    t, top2 = {_bin()}, _bin() -- top2 is a summary of the top two items in "t"
    for i,xy in pairs(xys) do
-      if _isFull(t[#t], xy.x, i, (#xys)^.5) then  _more() end
+      if _isFull(t[#t].x, xy.x, i, (#xys)^.5) then  _more() end
       t[#t].x:add(xy.x)
       t[#t].y:add(xy.y) 
-      top2.x:add( xy.x) -- everything that goes into top also goes into top2
+      top2.x:add( xy.x) -- everything for top also goes into top2
       top2.y:add( xy.y)  
    end
    for i = 2,#t do t[i-1].x.hi = t[i].x.lo end
@@ -210,8 +273,15 @@ go["--coerce"]= function(_)
       assert(x[2]==coerce(x[1])) end end
 
 go["--data"] = function(_) 
-   for _,col in pairs(Data:new(the.file).cols.y) do print(o(col)) end end
+   for _,col in pairs(Data:new(the.file).cols.y) do 
+      print(o(col)) end end
 
+go["--bins"] = function(_)
+   local d = Data:new(the.file)
+   local Y = function(r) return d:ydist(r) end
+   for _,p in pairs(d.cols.x[1]:bins(d.rows, Num,Y)) do
+       print(o(p.x)) end end
+   
 -- --------------------------------------------------
 -- ## Start
 help:gsub("[-][%S][%s]+([%S]+)[^\n]+= ([%S]+)", function(k,v) the[k]=coerce(v) end)
