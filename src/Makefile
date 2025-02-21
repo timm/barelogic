@@ -86,6 +86,7 @@ lint: ## lint all python in this directory
 		--footer="page %p."                     \
 		-M letter -o $@.ps $<
 	@ps2pdf $@.ps $@; rm $@.ps
+	open $@
 
 
 

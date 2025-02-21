@@ -30,16 +30,16 @@ local function push(t,x) t[1+#t] = x ; return x end
 local function new(klass,object)
   klass.__index=klass; setmetatable(object,klass); return object end
 
-local function copy(t,     u)
+local function copy(t)
    if type(t) ~= "table" then return t end
-   u={}; for k,v in pairs(t) do u[ copy(k) ] = copy(v) end
+   local u={}; for k,v in pairs(t) do u[ copy(k) ] = copy(v) end
    return setmetatable(u, getmetatable(t)) end
 
- local function map(t,F,   u)
-   u={}; for _,v in pairs(t) do push(u,F(v)) end; return u end
+ local function map(t,F)
+   local u={}; for _,v in pairs(t) do push(u,F(v)) end; return u end
 
-local function sum(t,F,    n)
-   n=0; for _,v in pairs(t) do n = n + F(v) end; return n end
+local function sum(t,F)
+   local n=0; for _,v in pairs(t) do n = n + F(v) end; return n end
 
 -- Sort stuff
 local function lt(s) return function(a,b) return a[s] < b[s] end end
@@ -52,37 +52,36 @@ local function keysort(t,F)
    return map(sort(map(t, DECORATE), lt(1)), UNDECORATE) end
 
 -- String stuff
-local function coerce(s,       F)
-   F = function(s) return s=="true" or s ~= "false" and s end
+local function coerce(s)
+   local function F(s1) return s1=="true" or s1 ~= "false" and s1 end
    return math.tointeger(s) or tonumber(s) or F(s:match"^%s*(.-)%s*$") end
 
 local fmt=string.format
 
-local function o(x,       t,LIST,DICT)
-  t    = {}
-  LIST = function() for _,v in pairs(x) do t[1+#t]= o(v) end end
-  DICT = function() for k,v in pairs(x) do t[1+#t]= fmt(":%s %s",k,o(v)) end end
+local function o(x)
+  local t    = {}
+  local LIST = function() for _,v in pairs(x) do t[1+#t]= o(v) end end
+  local DICT = function() for k,v in pairs(x) do t[1+#t]= fmt(":%s %s",k,o(v)) end end
   if type(x) == "number" then return fmt(x//1 == x and "%s" or "%.3g",x) end
   if type(x) ~= "table"  then return tostring(x) end
   if #x>0 then LIST() else DICT(); table.sort(t) end
   return "{" .. table.concat(t, " ") .. "}" end
 
 -- File stuff
-local function csv(src,        F)
-  F = function(s,z) for x in s:gmatch"([^,]+)" do z[1+#z]=coerce(x) end; return z end
+local function csv(src)
+  local function F(s,z) for x in s:gmatch"([^,]+)" do z[1+#z]=coerce(x) end; return z end
   src = io.input(src)
-  return function(      s1)
-    s1 = io.read()
+  return function()
+    local s1 = io.read()
     if s1 then return F(s1,{}) else io.close(src) end end  end
 
 -- Misc stuff
 local function main(t,funs,settings)
   for n,s in pairs(t) do
     math.randomseed(settings.rseed)
-    if funs[s] then funs[s](t[n+1]) else 
+    if funs[s] then funs[s](t[n+1]) else
        for k,_ in pairs(settings) do 
-          if s == "-"..k:sub(1,1) then settings[k]=coerce(t[n+1]) end end end end end
-
+          if s == "-"..k:sub(1,1) then settings[k] = coerce(t[n+1]) end end end end  end
 -- ------------------------------------------------------------
 -- ## Structs
 local Num,Sym,Data,Meta={},{},{},{}
@@ -102,15 +101,15 @@ function Data:new(src)
    else for _,row in pairs(src or {}) do self:add(row) end end 
    return self end
 
-function Data:clone(src,       d)
-   d= Data:new{self.cols.names}
+function Data:clone(src)
+   local d= Data:new{self.cols.names}
    for _,row in pairs(src or {}) do d:add(row) end 
    return d end 
 
-function Meta:new(names,        x,y,all,col,klass)
-   x,y,all,klass = {}, {}, {}, nil
+function Meta:new(names)
+   local x,y,all,klass = {}, {}, {}, nil
    for at,txt in pairs(names) do
-      col = push(all, (txt:find"^[A-Z]" and Num or Sym):new(txt,at))
+      local col = push(all, (txt:find"^[A-Z]" and Num or Sym):new(txt,at))
       if not txt:find"X$" then 
          push(txt:find"[!+-]$" and y or x, col)
          if txt:find"!$" then klass=col end end end
@@ -134,11 +133,11 @@ function Sym:add(x)
   if self.has[x] > self.most then
     self.most, self.mode = self.has[x], x end end
 
-function Num:add(n,       d)
+function Num:add(n)
   if n=="?" then return n end
   self.n  = self.n + 1
   n       = n + 0 -- ensure we have numbers
-  d = n - self.mu
+  local d = n - self.mu
   self.mu = self.mu + d/self.n
   self.m2 = self.m2 + d*(n - self.mu)
   self.sd = self.n < 2 and 0 or (self.m2/(self.n - 1))^0.5
@@ -152,42 +151,42 @@ function Sym:mid() return self.mode end
 
 function Num:var() return self.sd end
 function Sym:var() 
-   return -sum(self.has, function(n) return n/self.n * math.log(n/self.n,2) end) end
+   local function F(n) return n/self.n * math.log(n/self.n,2) end
+   return -sum(self.has, F) end 
 
 function Num:norm(x)
    return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG) end
 
-function Data:ydist(row,     F)
-   F = function(col) return maths.abs(col:norm(row[col.at]) - col.goal)^the.p end
+function Data:ydist(row)
+   local function F(col) return math.abs(col:norm(row[col.at]) - col.goal)^the.p end
    return (sum(self.cols.y, F) / #self.cols.y) ^ (1/the.p) end
 
+function Data:ysort()
+   local function F(row) return self:ydist(row) end 
+   self.rows = keysort(self.rows, F)
+   return self end 
 -- ---------------------------------------------------------
 -- ## Discretization
 
 -- Discretize numerics
-function Num:bins(rows, Yklass, Y,      XY,xys,t,top,_bin,_isFull,_joinable _more)
-   function XY(row) -- Collect info on 1 independent and 1 dependent variable
-      if row[self.at]~="?" then return {x=row[self.at], y=Y(row)} end end
+function Num:bins(rows, Yklass, Y)
+   local XY,xys,t,top2,_bin,_isFull,_join,_more
+   function _bin() return {x=Num:new(), y=Yklass:new()} end
+   function XY(r)  if r[self.at]~="?" then return {x=r[self.at], y=Y(r)} end end
+   function _join(ab,a,b) return ab:var() <= (a.n*a:var() + b.n*b:var())/ab.n end 
 
-   function _bin() -- A bin is a summary of 1 independent and 1 dependent variable.
-      return {x=Num:new(), y=Yklass:new()} end
+   function _isFull(a,x,i,n) 
+      return i < n-n^0.5 and a.n > n^0.5 and a.hi-a.lo > self.sd*0.35 and x ~= xys[i+1]end
 
-   function _isFull(a, x, i,      n) -- True if time to make a new bin.
-      n=(#xys)^.5
-      return i< n-n^0.5 and a.n > n^0.5 and a.hi-a.lo > self.sd*0.35 and x ~= xys[i+1] end
-
-   function _joinable(ab, a, b) -- True if whole is simpler than the parts
-      return ab:var() <= (a.n*a:var() + b.n*b:var())/ab.n end 
-
-   function _more() -- Push a new bin, maybe first combine 2 top bins
-      if #t> 1 and _joinable(top2.y,t[#t].y,t[#t-1].y) then pop(t);pop(t) push(t,top2)end
+   function _more() 
+      if #t> 1 and _join(top2.y,t[#t].y,t[#t-1].y) then pop(t);pop(t); push(t,top2)end
       push(t, _bin()) -- add a new bin to handle new data
       top2 = copy(t[#t-1]) end -- initialize top with everything in bin[-2]
 
    xys = sort(map(rows,XY),lt"x")
    t, top2 = {_bin()}, _bin() -- top2 is a summary of the top two items in "t"
    for i,xy in pairs(xys) do
-      if _isFull(t[#t], xy.x, i) then  _more() end
+      if _isFull(t[#t], xy.x, i, (#xys)^.5) then  _more() end
       t[#t].x:add(xy.x)
       t[#t].y:add(xy.y) 
       top2.x:add( xy.x) -- everything that goes into top also goes into top2
