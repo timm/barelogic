@@ -39,6 +39,9 @@ local function copy(t)
    F = F or function(x) return x end
    local u={}; for _,v in pairs(t) do push(u,F(v)) end; return u end
 
+local function kap(t,F,...)
+   local u={}; for k,v in pairs(t) do u[k] = F(v,k,...) end; return u end
+
 local function sum(t,F)
    local n=0; for _,v in pairs(t) do n = n + F(v) end; return n end
 
@@ -116,9 +119,6 @@ function Meta:new(names)
          if txt:find"!$" then klass=col end end end
    return new(Meta,{x=x,y=y,all=all,klass=klass, names=names}) end 
 
-function Span:new(txt,at,lo,hi) 
-   return new(Span,txt=txt,at=at,lo=lo,hi=hi or lo,n=0) end
-
 -- --------------------------------------------------------------------
 -- ## Update
 function Data:add(row)
@@ -148,11 +148,6 @@ function Num:add(n)
   self.lo = math.min(n, self.lo)
   self.hi = math.max(n, self.hi) end
 
-function Span:add(x)
-   self.n  = self.n + 1
-   self.lo = math.min(x, self.lo)
-   self.hi = math.max(x, self.hi)  end
-
 -- ---------------------------------------------------------
 -- ## Query
 function Num:mid() return self.mu end
@@ -175,52 +170,81 @@ function Data:ysort()
    self.rows = keysort(self.rows, F)
    return self end 
 
-function Span.merged(i,j,n)
-   if i.n < n or j.n < n then 
-      k = Span(i.txt,i.at,i.lo,j.hi)
-      k.n = i.n + j.n
-      return k end end
-
 -- ---------------------------------------------------------
 -- ## Discretization
 
-function Sym:bin(x) return x end
+function Bin:new(txt,at,lo,hi) 
+   return new(Bin,txt=txt,at=at,lo=lo,hi=hi or lo,ys={}, sorted=false) end
 
-function Num:bin(x) return self:norm(x) * the.bins // 1
+function Bin:add(x,y)
+   push(self.ys, y)
+   self.sorted = false
+   self.lo = math.min(x, self.lo)
+   self.hi = math.max(x, self.hi)  end
 
-function Sym:bins(bins,_) return bins end
+function Bin:var()
+   if not self.sorted then table.sort(self.ys) end
+   self.sorted = true
+   if #self.ys < 10 
+   then lo,hi = self.ys[1], self.ys[#self.ys]
+   else tenth = #self.ys //10
+        lo,hi = self.ys[tenth], self.ys[9*tenth] end
+   return (hi - lo) / 2.56  end
 
-function Num:bins(b4,n)
-   local i,now,a = 1,{}
-   while i <= #t do
-      a = b4[i]
-      if i < #t-1 then
-         merged = a:marged(t[i+1],n)
-         if merged then
-            a = merged
-            i = i + 1 end end
-      push(now,a)
-      i = i + 1 
-   end
-   if #b4 < #row then return self:bins(now,n) else
-      now[1].lo = -BIG
-      now[#now].hi = BIG
-      return now end end
-  
+function Bin.merge(i,j)
+  local k = copy(i)
+  k.sorted = false
+  for _,y in pairs(j.ys) do push(k.ys,y) end
+  return k end
+
+function Bin:merged(i,j,n)
+  k = i:merge(j)
+  if #i.ys < n or #j.ys < n then  return k end
+  if k:var() <= (i:var()*#i.ys + j:var()*#j.ys) / #k.ys then return k end end
+
+function Sym:discretize(x) return x end
+
+function Num:discretize(x) return self:norm(x) * the.bins // 1
+
 function Data:bins(rows)
-   local out,tmp,x,k,n
-   out  = {}
-   for _,col in pairs(self.cols.x) do
-      n,tmp = 0,{}
-      for i,row in pairs(rows or self.rows) do
-         x =  row[self.at]
-         if x ~= "?" then
-            n = n + 1
-            k = col:bin(x)
-            tmp[k] = tmp[k] or Span(col.txt.col.at,lo)
-            tmp[k]:add(x) end 
-      out[col.at] = col:bins(sort(map(tmp),lt"lo"),n^0.5) end end
-   return out end
+   local function _bins(col)
+      local n,tmp,n,j = 0,{}
+      for i,row in pairs(rows) do
+          x =  row[self.at]
+          if x ~= "?" then
+             n = n + 1
+             k = col:discretize(x)
+             tmp[k] = tmp[k] or Bin(col.txt.col.at,lo)
+             tmp[k]:add(x, self:ydist(row)) end  end
+      return col:merge(sort(map(tmp),lt"lo"),n^0.5) end 
+
+   return map(self.cols.x, _bins) end 
+
+function Sym:merge(bins,_) return bins end
+
+function Num:merge(bins0,n)
+   local i,bins = 0,{}
+   while i <= #bins0 do
+      i = i + 1 
+      local bin = bins0[i]
+      if i < #bins0-1 then
+         local merged = bin:merged(bins0[i+1],n)
+         if merged then bin,i = merged, i+1 end end
+      push(bins,bin)
+   end
+   if #bins < #bins0 then return self:merge(bins,n) else
+      bins[1].lo = -BIG
+      bins[#bins].hi = BIG
+      return bins end end
+
+-- ---------------------------------------------------------
+function Data:cuts(rows)
+   local function F(bin) 
+      n=Num:new()
+      for _,y in pairs(bin.ys) do n:add(y) end
+      return n:var()*n.n/#rows end
+
+   return keysort(self:bins(rows),function(bins4col) return sum(bins4col,F) end)[1] end
 
 -- Discretize numerics
 function Num:xbins(rows, Yklass, Y)
