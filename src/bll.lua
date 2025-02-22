@@ -119,6 +119,10 @@ function Meta:new(names)
          if txt:find"!$" then klass=col end end end
    return new(Meta,{x=x,y=y,all=all,klass=klass, names=names}) end 
 
+function Some:new() return new(Some,{sorted=false, has={}) end
+
+
+
 -- --------------------------------------------------------------------
 -- ## Update
 function Data:add(row)
@@ -148,8 +152,24 @@ function Num:add(n)
   self.lo = math.min(n, self.lo)
   self.hi = math.max(n, self.hi) end
 
+function Some:add(n) self.sorted=false; push(self.has,n) end
+
+function Some:ok()
+   if not self.sorted then table.sort(self.has) end
+   self.sorted=true
+   return self end
+
+function Some:mid() t=self:ok().has; return t[#t//2] end
+
+function Some:var() 
+   t = self:ok().has 
+   c = self:mid()
+   if #t > 20 then a,b = t[math.max(1,#t*0.05 //1)], t[#t*0.95//1] 
+              else a,b = t[1], t[#t] end
+   return ((a^2 + b^2 + c^2 - a*b - a*c - b*c)/18)^0.5 end
+
 -- ---------------------------------------------------------
--- ## Query
+-- ## Misc Query
 function Num:mid() return self.mu end
 function Sym:mid() return self.mode end
 
@@ -170,37 +190,26 @@ function Data:ysort()
    self.rows = keysort(self.rows, F)
    return self end 
 
+function Some.merge(i,j,   k)
+   k=copy(i); for _,n in pairs(j.has) do k:add(n) end; k.sorted=false; return k end
+
 -- ---------------------------------------------------------
 -- ## Discretization
-
 function Bin:new(txt,at,lo,hi) 
-   return new(Bin,txt=txt,at=at,lo=lo,hi=hi or lo,ys={}, sorted=false) end
+   return new(Bin,{txt=txt,at=at,lo=lo,hi=hi or lo,ys=Some:new()}) end
 
 function Bin:add(x,y)
-   push(self.ys, y)
-   self.sorted = false
+   self.ys:add(y)
    self.lo = math.min(x, self.lo)
    self.hi = math.max(x, self.hi)  end
 
-function Bin:var()
-   if not self.sorted then table.sort(self.ys) end
-   self.sorted = true
-   if #self.ys < 10 
-   then lo,hi = self.ys[1], self.ys[#self.ys]
-   else tenth = #self.ys //10
-        lo,hi = self.ys[tenth], self.ys[9*tenth] end
-   return (hi - lo) / 2.56  end
-
-function Bin.merge(i,j)
-  local k = copy(i)
-  k.sorted = false
-  for _,y in pairs(j.ys) do push(k.ys,y) end
-  return k end
-
-function Bin:merged(i,j,n)
-  k = i:merge(j)
-  if #i.ys < n or #j.ys < n then  return k end
-  if k:var() <= (i:var()*#i.ys + j:var()*#j.ys) / #k.ys then return k end end
+function Bin,merged(i,j,n)
+  local k,n1,n2,n3,v1,v2,v3
+  k         = copy(i)
+  k.has     = i.has:merge(j.has)
+  n1,n2,n12 = #i.ys.has, #j.ys.has, #k.ys.has
+  v1.v2.v12 = i.has:var(), j.has:var(), k.has:var()
+  if n1 < n or n2 < n or v12 <= (v1*n1 + v2*n2) / n12 then return k end end
 
 function Sym:discretize(x) return x end
 
@@ -245,44 +254,6 @@ function Data:cuts(rows)
       return n:var()*n.n/#rows end
 
    return keysort(self:bins(rows),function(bins4col) return sum(bins4col,F) end)[1] end
-
--- Discretize numerics
-function Num:xbins(rows, Yklass, Y)
-   local XY,xys,t,top2,_bin,_isFull,_join,_more
-   function _bin() return {x=Num:new(), y=Yklass:new()} end
-   function XY(r)  if r[self.at]~="?" then return {x=r[self.at], y=Y(r)} end end
-   function _join(ab,a,b) return ab:var() <= (a.n*a:var() + b.n*b:var())/ab.n end 
-
-   function _isFull(a,x,i,n) 
-      if i < (n-n^0.5) then
-         print(1)
-         if a.n > n^0.5 then
-            print(2)
-            --if (a.hi - a.lo) > self.sd*0.35 then
-               print(3,x, xys[i+1].x)
-               if x ~= xys[i+1].x then
-                  print(4)
-                  return true end end end end --end 
-
-   function _more() 
-      if #t> 1 and _join(top2.y,t[#t].y,t[#t-1].y) then pop(t);pop(t); push(t,top2)end
-      push(t, _bin()) -- add a new bin to handle new data
-      top2 = copy(t[#t-1]) end -- initialize top with everything in bin[-2]
-
-   xys = sort(map(rows,XY),lt"x")
-   print(o(xys))
-   t, top2 = {_bin()}, _bin() -- top2 is a summary of the top two items in "t"
-   for i,xy in pairs(xys) do
-      if _isFull(t[#t].x, xy.x, i, (#xys)^.5) then  _more() end
-      t[#t].x:add(xy.x)
-      t[#t].y:add(xy.y) 
-      top2.x:add( xy.x) -- everything for top also goes into top2
-      top2.y:add( xy.y)  
-   end
-   for i = 2,#t do t[i-1].x.hi = t[i].x.lo end
-   t[1].x.lo  = -BIG
-   t[#t].x.hi = BIG
-   return t end
 
 -- --------------------------------------------------
 -- ## Start-up Actions
