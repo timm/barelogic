@@ -18,7 +18,7 @@ OPTIONS:
       -S Stop    where to end                = 32]]
 
 local BIG=1E32
-local Num,Sym,Data,Meta,Some,Bin = {},{},{},{},{},{}
+local Num,Sym,Data,Meta,Some,XY = {},{},{},{},{},{}
 
 -- ------------------------------------------------------------
 -- ## Library
@@ -137,23 +137,39 @@ function Meta:add(row)
    for _,col in pairs(self.all) do col:add(row[col.at]) end
    return row end
 
-function Sym:add(x)
-  if x=="?" then return x end
-  self.n = self.n + 1
-  self.has[x] = 1 + (self.has[x] or 0)
-  if self.has[x] > self.most then
-    self.most, self.mode = self.has[x], x end end
+function Sym:add(v,  n)
+  if v ~= "?" then 
+     self.n = self.n + (n or 1)
+     self.has[v] = (n or 1) + (self.has[v] or 0)
+     if self.has[v] > self.most then
+       self.most, self.mode = self.has[v], v end  end
+  return v end
 
-function Num:add(n)
-  if n=="?" then return n end
-  self.n  = self.n + 1
-  n       = n + 0 -- ensure we have numbers
-  local d = n - self.mu
-  self.mu = self.mu + d/self.n
-  self.m2 = self.m2 + d*(n - self.mu)
-  self.sd = self.n < 2 and 0 or (self.m2/(self.n - 1))^0.5
-  self.lo = math.min(n, self.lo)
-  self.hi = math.max(n, self.hi) end
+function Num:add(v)
+  if v ~= "?" then 
+     self.n  = self.n + 1
+     local d = v - self.mu
+     self.mu = self.mu + d/self.n
+     self.m2 = self.m2 + d*(v - self.mu)
+     self.sd = self.n < 2 and 0 or (self.m2/(self.n - 1))^0.5
+     self.lo = math.min(v, self.lo)
+     self.hi = math.max(v, self.hi) end
+  return v end
+
+function Sym.merge(i,j,   k)
+   k = copy(i)
+   for v,n in pairs(j.has) do k:add(v,n) end
+   return k end
+
+function Num.merge(i,j,   k)
+   k    = Num:new(i.txt, i.at)
+   k.n  = i.n + j.n
+   k.mu = (i.n*i.mu + j.n*j.mu)/(i.n + j.n)
+   k.m2 = i.m2 + j.m2 + (i.n * j.n/(i.n+j.n)) * (i.mu - j.mu)^2
+   k.sd = k.n < 2 and 0 or (k.m2/(k.n - 1))^0.5
+   k.lo = math.min(i.lo,j.lo)
+   k.hi = math.max(i.hi,j.hi)
+   return k end 
 
 -- ---------------------------------------------------------
 -- ## Misc Query
@@ -177,82 +193,64 @@ function Data:ysort()
    self.rows = keysort(self.rows, F)
    return self end 
 
--- ---------------------------------------------------------
--- ## Some
-function Some:new() return new(Some,{sorted=false, has={}}) end
-
-function Some:add(n) self.sorted=false; push(self.has,n) end
-
-function Some:ok()
-   if not self.sorted then table.sort(self.has) end
-   self.sorted=true
+-- ---------------------------------------------------------
+-- ## XY
+function XY:new(col,lo,hi) 
+   self= new(XY,{x=Num:new(col.txt,col.at), y=nil})
+   self.x.lo = lo
+   self.x.hi = hi or lo
+   self.y    = (type(lo)=="number" and Num or Sym):new()
    return self end
 
-function Some:mid() t=self:ok().has; return t[#t//2] end
+function XY:add(x,y)
+   self.x:add(x)
+   self.y:add(y) end
 
-function Some:var() 
-   t = self:ok().has 
-   c = self:mid()
-   if #t > 20 then a, b = math.max(1,#t*0.01 //1), #t*0.99//1 
-              else a, b = 1, #t end
-   print(a,b)
-   a,b = t[a], t[b]
-   return ((a^2 + b^2 + c^2 - a*b - a*c - b*c)/18)^0.5 end
+function XY.merge(i,j)
+  return new(XY,{x = i.x:merge(j.x), y = i.y:merge(j.y)}) end
 
--- ---------------------------------------------------------
--- ## Bin
-function Bin:new(txt,at,lo,hi) 
-   return new(Bin,{txt=txt,at=at,lo=lo,hi=hi or lo,ys=Some:new()}) end
-
-function Bin:add(x,y)
-   self.ys:add(y)
-   self.lo = math.min(x, self.lo)
-   self.hi = math.max(x, self.hi)  end
-
-function Bin.merged(i,j,n)
-  local k,n1,n2,n3,v1,v2,v3
-  k         = copy(i)
-  k.has     = i.has:merge(j.has)
-  n1,n2,n12 = #i.ys.has, #j.ys.has, #k.ys.has
-  v1.v2.v12 = i.has:var(), j.has:var(), k.has:var()
+function XY.merges(i,j,n,   k)
+  k = i:merge(j)
+  local n1,n2,n12 = i.x.n, j.x.n, k.x.n
+  local v1.v2.v12 = i.y:var(), j.y:var(), k.y:var()
   if n1 < n or n2 < n or v12 <= (v1*n1 + v2*n2) / n12 then return k end end
 
 -- ---------------------------------------------------------
 -- ## Discretization
-function Data:bins(rows)
-   local function _bins(col)
-      local n,tmp,n,j = 0,{}
+function Data:xys(rows,Y)
+   local function _xys(col)
+      local n,tmp = 0,{}
       for i,row in pairs(rows) do
-          x =  row[self.at]
+          local x =  row[col.at]
           if x ~= "?" then
-             n = n + 1
-             k = col:discretize(x)
-             tmp[k] = tmp[k] or Bin(col.txt.col.at,lo)
-             tmp[k]:add(x, self:ydist(row)) end  end
-      return col:merge(sort(map(tmp),lt"lo"),n^0.5) end 
-
-   return map(self.cols.x, _bins) end 
+             local k = col:discretize(x)
+             tmp[k] = tmp[k] or XY(col,lo)
+             tmp[k]:add(x, Y(row)) end end
+      return col:merges(sort(map(tmp),lt"lo"),(#rows)^0.5) 
+   end 
+   return map(self.cols.x, _xys) end 
 
 function Sym:discretize(x) return x end
-
 function Num:discretize(x) return self:norm(x) * the.bins // 1 end
 
-function Sym:merge(bins,_) return bins end
-
-function Num:merge(bins0,n)
-   local i,bins = 0,{}
-   while i <= #bins0 do
-      i = i + 1 
-      local bin = bins0[i]
-      if i < #bins0-1 then
-         local merged = bin:merged(bins0[i+1],n)
-         if merged then bin,i = merged, i+1 end end
-      push(bins,bin)
+function Sym:merges(xys,_) return xys end
+function Num:merges(xys,n) 
+   local new,i = {},0
+   while i <= #xys do
+      i=i+1
+      if i < #xys then
+         merged = xys[i]:merges(xys[i+1],n)
+         if merged then xys[i],i = merged, i+1 end 
+      end
+      push(new, xys[i]) 
    end
-   if #bins < #bins0 then return self:merge(bins,n) else
-      bins[1].lo = -BIG
-      bins[#bins].hi = BIG
-      return bins end end
+   return #new < #xys and self:merges(new,n) or self:fill(xys) end
+
+function Num:fill(xys)
+   for i=2,#xys do xys[i-1].x.hi = xys[i].x.lo end
+   xys[1].x.lo = -BIG
+   xys[#xys].x.hi = BIG
+   return xys end 
 
 -- ---------------------------------------------------------
 function Data:cuts(rows)
@@ -290,7 +288,28 @@ go["--bins"] = function(_)
    local Y = function(r) return d:ydist(r) end
    for _,p in pairs(d.cols.x[1]:bins(d.rows, Num,Y)) do
        print(o(p.x)) end end
-   
+
+local function _weibull(x, k, lambda)
+  if x < 0 or k <= 0 or lambda <= 0 then return 0 end
+  local term = (x / lambda)^(k - 1)
+  local exp_term = math.exp(- (x / lambda)^k)
+  return (k / lambda) * term * exp_term end
+
+go["--nums"] = function(_)
+  for _ = 1,10^2 do
+      local n1,n2,n12 = Num:new(), Num:new(), Num:new()
+      for _ = 1,10^3 do
+         local x,l,k
+         x = 2.5 * math.random(1,10^6)/10^6 
+         l = 0.5 + math.random(1,10^6)/10^6
+         k = 5   * math.random(1,10^6)/10^6
+         n12:add(n1:add(_weibull(x,l,k))) 
+         x = 2.5 * math.random(1,10^6)/10^6 
+         l = 0.5 + math.random(1,10^6)/10^6
+         k = 5   * math.random(1,10^6)/10^6
+         n12:add(n2:add(_weibull(x,l,k))) end 
+      assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd))) end end
+  
 -- --------------------------------------------------
 -- ## Start
 help:gsub("[-][%S][%s]+([%S]+)[^\n]+= ([%S]+)", function(k,v) the[k]=coerce(v) end)
