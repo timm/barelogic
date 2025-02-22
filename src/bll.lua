@@ -193,8 +193,10 @@ function Some:mid() t=self:ok().has; return t[#t//2] end
 function Some:var() 
    t = self:ok().has 
    c = self:mid()
-   if #t > 20 then a, b = t[math.max(1,#t*0.05 //1)], t[#t*0.95//1] 
-              else a, b = t[1], t[#t] end
+   if #t > 20 then a, b = math.max(1,#t*0.01 //1), #t*0.99//1 
+              else a, b = 1, #t end
+   print(a,b)
+   a,b = t[a], t[b]
    return ((a^2 + b^2 + c^2 - a*b - a*c - b*c)/18)^0.5 end
 
 -- ---------------------------------------------------------
@@ -275,8 +277,9 @@ go["--coerce"]= function(_)
 
 go["--some"] = function(_,s)
    s = Some:new()
-   for _ in 1,1000 do s:add(gaussian(10,2)) end
-   print(s:var()) end
+   for _ = 1,10000 do s:add(gaussian(10,1)) end
+   assert(math.abs(10 - s:mid()) < .02)
+   assert(math.abs(1 - s:var()) < .06) end
 
 go["--data"] = function(_) 
    for _,col in pairs(Data:new(the.file).cols.y) do 
