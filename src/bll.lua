@@ -121,8 +121,6 @@ function Meta:new(names)
 
 function Some:new() return new(Some,{sorted=false, has={}) end
 
-
-
 -- --------------------------------------------------------------------
 -- ## Update
 function Data:add(row)
@@ -154,29 +152,28 @@ function Num:add(n)
 
 function Some:add(n) self.sorted=false; push(self.has,n) end
 
-function Some:ok()
-   if not self.sorted then table.sort(self.has) end
-   self.sorted=true
-   return self end
-
-function Some:mid() t=self:ok().has; return t[#t//2] end
-
-function Some:var() 
-   t = self:ok().has 
-   c = self:mid()
-   if #t > 20 then a,b = t[math.max(1,#t*0.05 //1)], t[#t*0.95//1] 
-              else a,b = t[1], t[#t] end
-   return ((a^2 + b^2 + c^2 - a*b - a*c - b*c)/18)^0.5 end
-
 -- ---------------------------------------------------------
 -- ## Misc Query
 function Num:mid() return self.mu end
 function Sym:mid() return self.mode end
+function Some:mid() t=self:ok().has; return t[#t//2] end
 
 function Num:var() return self.sd end
 function Sym:var() 
    local function F(n) return n/self.n * math.log(n/self.n,2) end
    return -sum(self.has, F) end 
+
+function Some:var() 
+   t = self:ok().has 
+   c = self:mid()
+   if #t > 20 then a, b = t[math.max(1,#t*0.05 //1)], t[#t*0.95//1] 
+              else a, b = t[1], t[#t] end
+   return ((a^2 + b^2 + c^2 - a*b - a*c - b*c)/18)^0.5 end
+
+function Some:ok()
+   if not self.sorted then table.sort(self.has) end
+   self.sorted=true
+   return self end
 
 function Num:norm(x)
    return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG) end
@@ -190,10 +187,7 @@ function Data:ysort()
    self.rows = keysort(self.rows, F)
    return self end 
 
-function Some.merge(i,j,   k)
-   k=copy(i); for _,n in pairs(j.has) do k:add(n) end; k.sorted=false; return k end
-
--- ---------------------------------------------------------
+-- ---------------------------------------------------------
 -- ## Discretization
 function Bin:new(txt,at,lo,hi) 
    return new(Bin,{txt=txt,at=at,lo=lo,hi=hi or lo,ys=Some:new()}) end
