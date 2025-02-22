@@ -18,6 +18,7 @@ OPTIONS:
       -S Stop    where to end                = 32]]
 
 local BIG=1E32
+local Num,Sym,Data,Meta,Some,Bin = {},{},{},{},{},{}
 
 -- ------------------------------------------------------------
 -- ## Library
@@ -25,6 +26,13 @@ local BIG=1E32
 local pop = table.remove
 
 local function push(t,x) t[1+#t] = x ; return x end
+
+-- Math stuff
+local R=math.random
+
+local function gaussian(  mu,sd)
+  local sq,pi,log,cos = math.sqrt,math.pi,math.log,math.cos
+  return (mu or 0) + (sd or 1)* sq(-2*log(R())) * cos(2*pi*R())  end
 
 -- Meta stuff
 local function new(klass,object)
@@ -88,7 +96,6 @@ local function main(t,funs,settings)
           if s == "-"..k:sub(1,1) then settings[k] = coerce(t[n+1]) end end end end  end
 -- ------------------------------------------------------------
 -- ## Structs
-local Num,Sym,Data,Meta={},{},{},{}
 
 function Num:new(txt,at)
    return new(Num,{txt=txt or " ", at=at or 0, n=0, 
@@ -119,8 +126,6 @@ function Meta:new(names)
          if txt:find"!$" then klass=col end end end
    return new(Meta,{x=x,y=y,all=all,klass=klass, names=names}) end 
 
-function Some:new() return new(Some,{sorted=false, has={}) end
-
 -- --------------------------------------------------------------------
 -- ## Update
 function Data:add(row)
@@ -150,30 +155,15 @@ function Num:add(n)
   self.lo = math.min(n, self.lo)
   self.hi = math.max(n, self.hi) end
 
-function Some:add(n) self.sorted=false; push(self.has,n) end
-
 -- ---------------------------------------------------------
 -- ## Misc Query
 function Num:mid() return self.mu end
 function Sym:mid() return self.mode end
-function Some:mid() t=self:ok().has; return t[#t//2] end
 
 function Num:var() return self.sd end
 function Sym:var() 
    local function F(n) return n/self.n * math.log(n/self.n,2) end
    return -sum(self.has, F) end 
-
-function Some:var() 
-   t = self:ok().has 
-   c = self:mid()
-   if #t > 20 then a, b = t[math.max(1,#t*0.05 //1)], t[#t*0.95//1] 
-              else a, b = t[1], t[#t] end
-   return ((a^2 + b^2 + c^2 - a*b - a*c - b*c)/18)^0.5 end
-
-function Some:ok()
-   if not self.sorted then table.sort(self.has) end
-   self.sorted=true
-   return self end
 
 function Num:norm(x)
    return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG) end
@@ -187,8 +177,28 @@ function Data:ysort()
    self.rows = keysort(self.rows, F)
    return self end 
 
+-- ---------------------------------------------------------
+-- ## Some
+function Some:new() return new(Some,{sorted=false, has={}}) end
+
+function Some:add(n) self.sorted=false; push(self.has,n) end
+
+function Some:ok()
+   if not self.sorted then table.sort(self.has) end
+   self.sorted=true
+   return self end
+
+function Some:mid() t=self:ok().has; return t[#t//2] end
+
+function Some:var() 
+   t = self:ok().has 
+   c = self:mid()
+   if #t > 20 then a, b = t[math.max(1,#t*0.05 //1)], t[#t*0.95//1] 
+              else a, b = t[1], t[#t] end
+   return ((a^2 + b^2 + c^2 - a*b - a*c - b*c)/18)^0.5 end
+
 -- ---------------------------------------------------------
--- ## Discretization
+-- ## Bin
 function Bin:new(txt,at,lo,hi) 
    return new(Bin,{txt=txt,at=at,lo=lo,hi=hi or lo,ys=Some:new()}) end
 
@@ -197,7 +207,7 @@ function Bin:add(x,y)
    self.lo = math.min(x, self.lo)
    self.hi = math.max(x, self.hi)  end
 
-function Bin,merged(i,j,n)
+function Bin.merged(i,j,n)
   local k,n1,n2,n3,v1,v2,v3
   k         = copy(i)
   k.has     = i.has:merge(j.has)
@@ -205,10 +215,8 @@ function Bin,merged(i,j,n)
   v1.v2.v12 = i.has:var(), j.has:var(), k.has:var()
   if n1 < n or n2 < n or v12 <= (v1*n1 + v2*n2) / n12 then return k end end
 
-function Sym:discretize(x) return x end
-
-function Num:discretize(x) return self:norm(x) * the.bins // 1
-
+-- ---------------------------------------------------------
+-- ## Discretization
 function Data:bins(rows)
    local function _bins(col)
       local n,tmp,n,j = 0,{}
@@ -222,6 +230,10 @@ function Data:bins(rows)
       return col:merge(sort(map(tmp),lt"lo"),n^0.5) end 
 
    return map(self.cols.x, _bins) end 
+
+function Sym:discretize(x) return x end
+
+function Num:discretize(x) return self:norm(x) * the.bins // 1 end
 
 function Sym:merge(bins,_) return bins end
 
@@ -260,6 +272,11 @@ go["--coerce"]= function(_)
    for _,x in pairs{{"22.1",22.1}, {"22",22}, {"true",true},
                     {"false",false},{"fred","fred"}} do 
       assert(x[2]==coerce(x[1])) end end
+
+go["--some"] = function(_,s)
+   s = Some:new()
+   for _ in 1,1000 do s:add(gaussian(10,2)) end
+   print(s:var()) end
 
 go["--data"] = function(_) 
    for _,col in pairs(Data:new(the.file).cols.y) do 
