@@ -18,83 +18,87 @@ OPTIONS:
       -S Stop    where to end                = 32]]
 
 local BIG=1E32
-local Num,Sym,Data,Meta,Some,XY = {},{},{},{},{},{}
+local l,Num,Sym,Data,Meta,Some,XY = {},{},{},{},{},{},{}
 
 -- ------------------------------------------------------------
 -- ## Library
 -- List stuff
-local pop = table.remove
+l.pop = table.remove
 
-local function push(t,x) t[1+#t] = x ; return x end
+function l.push(t,x) t[1+#t] = x ; return x end
 
 -- Math stuff
-local R=math.random
+l.R=math.random
 
-local function gaussian(  mu,sd)
+function l.gaussian(  mu,sd)
   local sq,pi,log,cos = math.sqrt,math.pi,math.log,math.cos
   return (mu or 0) + (sd or 1)* sq(-2*log(R())) * cos(2*pi*R())  end
 
 -- Meta stuff
-local function new(klass,object)
+function l.new(klass,object)
   klass.__index=klass; setmetatable(object,klass); return object end
 
-local function copy(t)
+function l.copy(t)
    if type(t) ~= "table" then return t end
-   local u={}; for k,v in pairs(t) do u[ copy(k) ] = copy(v) end
+   local u={}; for k,v in pairs(t) do u[ l.copy(k) ] = l.copy(v) end
    return setmetatable(u, getmetatable(t)) end
 
- local function map(t,F)
+function l.map(t,F)
    F = F or function(x) return x end
-   local u={}; for _,v in pairs(t) do push(u,F(v)) end; return u end
+   local u={}; for _,v in pairs(t) do l.push(u,F(v)) end; return u end
 
-local function kap(t,F,...)
-   local u={}; for k,v in pairs(t) do u[k] = F(v,k,...) end; return u end
-
-local function sum(t,F)
+function l.sum(t,F)
    local n=0; for _,v in pairs(t) do n = n + F(v) end; return n end
 
 -- Sort stuff
-local function lt(s) return function(a,b) return a[s] < b[s] end end
+function l.lt(s) return function(a,b) return a[s] < b[s] end end
 
-local function sort(t,F) table.sort(t,F); return t end
+function l.sort(t,F) table.sort(t,F); return t end
 
-local function keysort(t,F)
+function l.keysort(t,F)
    local DECORATE  = function(x) return {F(x),x} end
    local UNDECORATE= function(x) return x[2] end
-   return map(sort(map(t, DECORATE), lt(1)), UNDECORATE) end
+   return l.map(l.sort(l.map(t, DECORATE), l.lt(1)), UNDECORATE) end
 
 -- String stuff
-local function coerce(s)
+function l.coerce(s)
    local function F(s1) return s1=="true" or s1 ~= "false" and s1 end
    return math.tointeger(s) or tonumber(s) or F(s:match"^%s*(.-)%s*$") end
 
-local fmt=string.format
+l.fmt=string.format
 
-local function o(x)
+function l.o(x)
   local t    = {}
-  local LIST = function() for _,v in pairs(x) do t[1+#t]= o(v) end end
-  local DICT = function() for k,v in pairs(x) do t[1+#t]= fmt(":%s %s",k,o(v)) end end
-  if type(x) == "number" then return fmt(x//1 == x and "%s" or "%.3g",x) end
+  local LIST = function() for _,v in pairs(x) do t[1+#t]= l.o(v) end end
+  local DICT = function() for k,v in pairs(x) do t[1+#t]= l.fmt(":%s %s",k,l.o(v)) end end
+  if type(x) == "number" then return l.fmt(x//1 == x and "%s" or "%.3g",x) end
   if type(x) ~= "table"  then return tostring(x) end
   if #x>0 then LIST() else DICT(); table.sort(t) end
   return "{" .. table.concat(t, " ") .. "}" end
 
--- File stuff
-local function csv(src)
-  local function F(s,z) for x in s:gmatch"([^,]+)" do z[1+#z]=coerce(x) end; return z end
+-- Misc stuff
+function l.csv(src)
+  local function F(s,z) for x in s:gmatch"([^,]+)" do z[1+#z]=l.coerce(x) end; return z end
   src = io.input(src)
   return function()
     local s1 = io.read()
     if s1 then return F(s1,{}) else io.close(src) end end  end
 
--- Misc stuff
-local function main(t,funs,settings)
+function l.main(t,funs,settings)
   for n,s in pairs(t) do
     math.randomseed(settings.rseed)
     if funs[s] then funs[s](t[n+1]) else
        for k,_ in pairs(settings) do 
-          if s == "-"..k:sub(1,1) then settings[k] = coerce(t[n+1]) end end end end  end
+          if s == "-"..k:sub(1,1) then settings[k] = l.coerce(t[n+1]) end end end end end
+
 -- ------------------------------------------------------------
+-- Namespace stuff
+local   R,  coerce,  copy,  csv,  fmt,  gaussian,  keysort  =
+      l.R,l.coerce,l.copy,l.csv,l.fmt,l.gaussian,l.keysort
+local   lt,  main,  map,  new,  o,  pop,  push,  sort,  sum =
+      l.lt,l.main,l.map,l.new,l.o,l.pop,l.push,l.sort,l.sum
+
+-- ------------------------------------------------------------
 -- ## Structs
 
 function Num:new(txt,at)
@@ -126,7 +130,7 @@ function Meta:new(names)
          if txt:find"!$" then klass=col end end end
    return new(Meta,{x=x,y=y,all=all,klass=klass, names=names}) end 
 
--- --------------------------------------------------------------------
+-- --------------------------------------------------------------------
 -- ## Update
 function Data:add(row)
    if   self.cols
@@ -212,7 +216,7 @@ function XY.merge(i,j)
 function XY.merges(i,j,n,   k)
   k = i:merge(j)
   local n1,n2,n12 = i.x.n, j.x.n, k.x.n
-  local v1.v2.v12 = i.y:var(), j.y:var(), k.y:var()
+  local v1,v2,v12 = i.y:var(), j.y:var(), k.y:var()
   if n1 < n or n2 < n or v12 <= (v1*n1 + v2*n2) / n12 then return k end end
 
 -- ---------------------------------------------------------
@@ -235,22 +239,20 @@ function Num:discretize(x) return self:norm(x) * the.bins // 1 end
 
 function Sym:merges(xys,_) return xys end
 function Num:merges(xys,n) 
+   local function _fill(xys)
+      for i = 2,#xys do xys[i-1].x.hi = xys[i].x.lo end
+      xys[1   ].x.lo = -BIG
+      xys[#xys].x.hi =  BIG
+      return xys end 
+
    local new,i = {},0
    while i <= #xys do
-      i=i+1
-      if i < #xys then
-         merged = xys[i]:merges(xys[i+1],n)
-         if merged then xys[i],i = merged, i+1 end 
-      end
-      push(new, xys[i]) 
-   end
-   return #new < #xys and self:merges(new,n) or self:fill(xys) end
-
-function Num:fill(xys)
-   for i=2,#xys do xys[i-1].x.hi = xys[i].x.lo end
-   xys[1].x.lo = -BIG
-   xys[#xys].x.hi = BIG
-   return xys end 
+      i = i + 1
+      if i < #xys 
+      then local merged = xys[i]:merges(xys[i+1],n)
+           if merged then xys[i],i = merged, i+1 end end
+      push(new, xys[i]) end
+   return #new < #xys and self:merges(new,n) or _fill(xys) end
 
 -- ---------------------------------------------------------
 function Data:cuts(rows)
