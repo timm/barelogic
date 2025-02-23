@@ -298,7 +298,7 @@ local function _weibull(x, k, lambda)
   return (k / lambda) * term * exp_term end
 
 go["--nums"] = function(_)
-  for _ = 1,10^2 do
+  for _ = 1,10^2 do -- 100 times, compare two ways to calc sd
       local n1,n2,n12 = Num:new(), Num:new(), Num:new()
       for _ = 1,10^3 do
          local x,l,k
@@ -309,8 +309,11 @@ go["--nums"] = function(_)
          x = 2.5 * math.random(1,10^6)/10^6 
          l = 0.5 + math.random(1,10^6)/10^6
          k = 5   * math.random(1,10^6)/10^6
-         n12:add(n2:add(_weibull(x,l,k))) end 
-      assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd))) end end
+         n12:add(n2:add(_weibull(x,l,k))) 
+      end 
+      assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd)))
+  end
+end
   
 -- --------------------------------------------------
 -- ## Start
