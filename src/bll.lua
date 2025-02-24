@@ -273,7 +273,22 @@ function Num:merges(xys,n)
 function Data:cuts(rows)
    local function F(xys) 
       return sum(xys, function(xy) return xy.y.n / #rows * xy.y:var() end) end
-   return keysort(self:xys(self.rows, function(r) return self:ydist(r) end),F)[1] end
+   return keysort(self:xys(self.rows, 
+                           function(r) return self:ydist(r) end),
+                  F)[1] end
+
+function Data:grow(guard)
+  rows = data.rows
+  stop = (#rows)^.5
+  self.guard = guard
+  if #rows > #stop then
+    self.kids = {}
+    for _,xy in pairs(self:cuts(rows)) do
+       rows, more = xy.x:selects(rows)
+       if #rows < #self.rows then 
+          push(self.kids, self:clone(rows):grow(xy.x)) end
+       rows = more end end    
+  return self end
 
 -- --------------------------------------------------
 -- ## Start-up Actions
@@ -318,7 +333,7 @@ go["--nums"] = function(_)
       end 
       assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd))) end end
   
-go["--xys1"] = function(_)
+go["--xys"] = function(_)
    local d = Data:new(the.file)
    local Y = function(row) return d:ydist(row) end
    for n,xys in pairs(d:xys(d.rows, Y)) do 
