@@ -5,6 +5,7 @@ nb.lua : Naive Bayes
 OPTIONS:  
 
       -a acq     xploit or xplore or adapt   = xplout  
+      -b bins    number of bins              = 16
       -d decs    decimal places for printing = 2  
       -f file    training csv file           = ../test/data/auto93.csv  
       -g guess   size of guess               = 0.5  
@@ -43,8 +44,9 @@ function l.copy(t)
    local u={}; for k,v in pairs(t) do u[ l.copy(k) ] = l.copy(v) end
    return setmetatable(u, getmetatable(t)) end
 
-function l.map(t,F)
-   F = F or function(x) return x end
+function l.map(t,F,  self,      G)
+   if self then G=F; F = function(v) return getmetatable(self)[G](self,v) end end
+   F = F or function(v) return v end
    local u={}; for _,v in pairs(t) do l.push(u,F(v)) end; return u end
 
 function l.sum(t,F)
@@ -55,7 +57,8 @@ function l.lt(s) return function(a,b) return a[s] < b[s] end end
 
 function l.sort(t,F) table.sort(t,F); return t end
 
-function l.keysort(t,F)
+function l.keysort(t,F,  self,       G)
+   if self then G=F; F = function(v) return getmetatable(self)[G](self,v) end end
    local DECORATE  = function(x) return {F(x),x} end
    local UNDECORATE= function(x) return x[2] end
    return l.map(l.sort(l.map(t, DECORATE), l.lt(1)), UNDECORATE) end
@@ -193,9 +196,18 @@ function Data:ydist(row)
    return (sum(self.cols.y, F) / #self.cols.y) ^ (1/the.p) end
 
 function Data:ysort()
-   local function F(row) return self:ydist(row) end 
-   self.rows = keysort(self.rows, F)
-   return self end 
+   return keysort(self.rows,"ydist",self) end
+
+function Num:selects(rows)
+   local function _select(row)
+      v = row[self.at]
+      if v == "?" then return true end
+      if self.lo == self.hi then return v == self.lo end
+      return self.lo <= v and v < self.hi end
+
+   local yes,no = {},{}
+   for _,row in pairs(rows) do push(_select(row) and yes or no, row) end
+   return yes,no end
 
 -- ---------------------------------------------------------
 -- ## XY
@@ -213,31 +225,33 @@ function XY:add(x,y)
 function XY.merge(i,j)
   return new(XY,{x = i.x:merge(j.x), y = i.y:merge(j.y)}) end
 
-function XY.merges(i,j,n,   k)
+function XY.merges(i,j,n,eps,   k)
   k = i:merge(j)
   local n1,n2,n12 = i.x.n, j.x.n, k.x.n
   local v1,v2,v12 = i.y:var(), j.y:var(), k.y:var()
-  if n1 < n or n2 < n or v12 <= (v1*n1 + v2*n2) / n12 then return k end end
+  if math.abs(i.x.mu - j.x.mu) < eps or n1<n or n2<n or v12<=(v1*n1+v2*n2)/n12 
+  then return k end end
 
 -- ---------------------------------------------------------
 -- ## Discretization
 function Data:xys(rows,Y)
-   local function _xys(col)
-      local n,tmp = 0,{}
-      for i,row in pairs(rows) do
-          local x =  row[col.at]
-          if x ~= "?" then
-             local k = col:discretize(x)
-             tmp[k] = tmp[k] or XY(col,lo)
-             tmp[k]:add(x, Y(row)) end end
-      return col:merges(sort(map(tmp),lt"lo"),(#rows)^0.5) 
-   end 
-   return map(self.cols.x, _xys) end 
+   return map(self.cols.x, function(col) return self:xys1(col,rows,Y) end) end
+
+function Data:xys1(col,rows,Y)
+   local n,tmp = 0,{}
+   for i,row in pairs(rows) do
+      local x =  row[col.at]
+      if x ~= "?" then
+         local k = col:discretize(x)
+         tmp[k] = tmp[k] or XY:new(col,x)
+         tmp[k]:add(x, Y(row)) end end
+   return col:merges(keysort(map(tmp),function(v) return v.x.lo end),
+                     (#rows)^.5) end
 
 function Sym:discretize(x) return x end
 function Num:discretize(x) return self:norm(x) * the.bins // 1 end
 
-function Sym:merges(xys,_) return xys end
+function Sym:merges(xys,...) return xys end
 function Num:merges(xys,n) 
    local function _fill(xys)
       for i = 2,#xys do xys[i-1].x.hi = xys[i].x.lo end
@@ -245,23 +259,21 @@ function Num:merges(xys,n)
       xys[#xys].x.hi =  BIG
       return xys end 
 
-   local new,i = {},0
+   local new,i,a = {},0
    while i <= #xys do
-      i = i + 1
+      i = i+1
+      local a = xys[i]
       if i < #xys 
-      then local merged = xys[i]:merges(xys[i+1],n)
-           if merged then xys[i],i = merged, i+1 end end
-      push(new, xys[i]) end
+      then local merged = a:merges(xys[i+1], n, self:var()*.35)
+           if merged then a,i = merged,i+1 end end
+      push(new, a) end
    return #new < #xys and self:merges(new,n) or _fill(xys) end
 
 -- ---------------------------------------------------------
 function Data:cuts(rows)
-   local function F(bin) 
-      n=Num:new()
-      for _,y in pairs(bin.ys) do n:add(y) end
-      return n:var()*n.n/#rows end
-
-   return keysort(self:bins(rows),function(bins4col) return sum(bins4col,F) end)[1] end
+   local function F(xys) 
+      return sum(xys, function(xy) return xy.y.n / #rows * xy.y:var() end) end
+   return keysort(self:xys(self.rows, function(r) return self:ydist(r) end),F)[1] end
 
 -- --------------------------------------------------
 -- ## Start-up Actions
@@ -275,22 +287,15 @@ go["--coerce"]= function(_)
                     {"false",false},{"fred","fred"}} do 
       assert(x[2]==coerce(x[1])) end end
 
-go["--some"] = function(_,s)
-   s = Some:new()
-   for _ = 1,10000 do s:add(gaussian(10,1)) end
-   assert(math.abs(10 - s:mid()) < .02)
-   assert(math.abs(1 - s:var()) < .06) end
-
 go["--data"] = function(_) 
    for _,col in pairs(Data:new(the.file).cols.y) do 
       print(o(col)) end end
 
-go["--bins"] = function(_)
+go["--ysorts"] = function(_)
    local d = Data:new(the.file)
-   local Y = function(r) return d:ydist(r) end
-   for _,p in pairs(d.cols.x[1]:bins(d.rows, Num,Y)) do
-       print(o(p.x)) end end
-
+   for i,row in pairs(d:ysort()) do 
+      if i % 30 == 1 then print(fmt("%3s,  %.3f,  %s",i,d:ydist(row),o(row))) end end end
+   
 local function _weibull(x, k, lambda)
   if x < 0 or k <= 0 or lambda <= 0 then return 0 end
   local term = (x / lambda)^(k - 1)
@@ -311,10 +316,17 @@ go["--nums"] = function(_)
          k = 5   * math.random(1,10^6)/10^6
          n12:add(n2:add(_weibull(x,l,k))) 
       end 
-      assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd)))
-  end
-end
+      assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd))) end end
   
+go["--xys1"] = function(_)
+   local d = Data:new(the.file)
+   local Y = function(row) return d:ydist(row) end
+   for n,xys in pairs(d:xys(d.rows, Y)) do 
+      print""
+      for _,xy in pairs(xys) do print(n,o(xy)) end end 
+   print""
+   for _,xy in pairs(d:cuts(d.rows)) do print(0,o(xy)) end end
+
 -- --------------------------------------------------
 -- ## Start
 help:gsub("[-][%S][%s]+([%S]+)[^\n]+= ([%S]+)", function(k,v) the[k]=coerce(v) end)
