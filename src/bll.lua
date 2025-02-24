@@ -5,7 +5,7 @@ nb.lua : Naive Bayes
 OPTIONS:  
 
       -a acq     xploit or xplore or adapt   = xplout  
-      -b bins    number of bins              = 16
+      -b bins    number of bins              = 17
       -d decs    decimal places for printing = 2  
       -f file    training csv file           = ../test/data/auto93.csv  
       -g guess   size of guess               = 0.5  
