@@ -1,5 +1,5 @@
 local the,help = {},[[
-nb.lua : Naive Bayes    
+bll.lua : Naive Bayes    
 (c) 2025, Tim Menzies <timm@ieee.org>, MIT License  
    
 OPTIONS:  
@@ -32,12 +32,12 @@ function l.push(t,x) t[1+#t] = x ; return x end
 l.R=math.random
 
 function l.gaussian(  mu,sd)
-  local sq,pi,log,cos = math.sqrt,math.pi,math.log,math.cos
-  return (mu or 0) + (sd or 1)* sq(-2*log(R())) * cos(2*pi*R())  end
+   local sq,pi,log,cos = math.sqrt,math.pi,math.log,math.cos
+   return (mu or 0) + (sd or 1)* sq(-2*log(R())) * cos(2*pi*R())  end
 
 -- Meta stuff
 function l.new(klass,object)
-  klass.__index=klass; setmetatable(object,klass); return object end
+   klass.__index=klass; setmetatable(object,klass); return object end
 
 function l.copy(t)
    if type(t) ~= "table" then return t end
@@ -71,28 +71,29 @@ function l.coerce(s)
 l.fmt=string.format
 
 function l.o(x)
-  local t    = {}
-  local LIST = function() for _,v in pairs(x) do t[1+#t]= l.o(v) end end
-  local DICT = function() for k,v in pairs(x) do t[1+#t]= l.fmt(":%s %s",k,l.o(v)) end end
-  if type(x) == "number" then return l.fmt(x//1 == x and "%s" or "%.3g",x) end
-  if type(x) ~= "table"  then return tostring(x) end
-  if #x>0 then LIST() else DICT(); table.sort(t) end
-  return "{" .. table.concat(t, " ") .. "}" end
+   local t    = {}
+   local LIST = function() for _,v in pairs(x) do t[1+#t]=l.o(v) end end
+   local DICT = function() for k,v in pairs(x) do t[1+#t]=l.fmt(":%s %s",k,l.o(v)) end end
+   if type(x) == "number" then return l.fmt(x//1 == x and "%s" or "%.3g",x) end
+   if type(x) ~= "table"  then return tostring(x) end
+   if #x>0 then LIST() else DICT(); table.sort(t) end
+   return "{" .. table.concat(t, " ") .. "}" end
 
 -- Misc stuff
 function l.csv(src)
-  local function F(s,z) for x in s:gmatch"([^,]+)" do z[1+#z]=l.coerce(x) end; return z end
-  src = io.input(src)
-  return function()
-    local s1 = io.read()
-    if s1 then return F(s1,{}) else io.close(src) end end  end
+   local function F(s) 
+      local z={}; for x in s:gmatch"([^,]+)" do z[1+#z]=l.coerce(x) end;return z end
+   src = io.input(src)
+   return function()
+      local s1 = io.read()
+      if s1 then return F(s1) else io.close(src) end end  end
 
 function l.main(t,funs,settings)
-  for n,s in pairs(t) do
-    math.randomseed(settings.rseed)
-    if funs[s] then funs[s](t[n+1]) else
-       for k,_ in pairs(settings) do 
-          if s == "-"..k:sub(1,1) then settings[k] = l.coerce(t[n+1]) end end end end end
+   for n,s in pairs(t) do
+      math.randomseed(settings.rseed)
+      if funs[s] then funs[s](t[n+1]) else
+         for k,_ in pairs(settings) do 
+            if s == "-"..k:sub(1,1) then settings[k]=l.coerce(t[n+1]) end end end end end
 
 -- ------------------------------------------------------------
 -- Namespace stuff
@@ -145,23 +146,23 @@ function Meta:add(row)
    return row end
 
 function Sym:add(v,  n)
-  if v ~= "?" then 
-     self.n = self.n + (n or 1)
-     self.has[v] = (n or 1) + (self.has[v] or 0)
-     if self.has[v] > self.most then
-       self.most, self.mode = self.has[v], v end  end
-  return v end
+   if v ~= "?" then 
+      self.n = self.n + (n or 1)
+      self.has[v] = (n or 1) + (self.has[v] or 0)
+      if self.has[v] > self.most then
+         self.most, self.mode = self.has[v], v end  end
+   return v end
 
 function Num:add(v)
-  if v ~= "?" then 
-     self.n  = self.n + 1
-     local d = v - self.mu
-     self.mu = self.mu + d/self.n
-     self.m2 = self.m2 + d*(v - self.mu)
-     self.sd = self.n < 2 and 0 or (self.m2/(self.n - 1))^0.5
-     self.lo = math.min(v, self.lo)
-     self.hi = math.max(v, self.hi) end
-  return v end
+   if v ~= "?" then 
+      self.n  = self.n + 1
+      local d = v - self.mu
+      self.mu = self.mu + d/self.n
+      self.m2 = self.m2 + d*(v - self.mu)
+      self.sd = self.n < 2 and 0 or (self.m2/(self.n - 1))^0.5
+      self.lo = math.min(v, self.lo)
+      self.hi = math.max(v, self.hi) end
+   return v end
 
 function Sym.merge(i,j,   k)
    k = copy(i)
@@ -200,7 +201,7 @@ function Data:ysort()
 
 function Num:selects(rows)
    local yes,no = {},{}
-   for _,row in pairs(rows) do push(self;select(row) and yes or no, row) end
+   for _,row in pairs(rows) do push(self:select(row) and yes or no, row) end
    return yes,no end
 
 function Num:select(row)
@@ -293,6 +294,15 @@ function Data:grow(guard)
 -- --------------------------------------------------
 -- ## Start-up Actions
 local go={}
+go["--all"] = function(_)
+   local all,bad=0,0
+   for k,fun in pairs(go) do
+      if k ~= "--all" then
+         all=all+1
+         local ok,err= xpcall(fun, debug.traceback) 
+         if not ok then bad=bad+1; print("\27[31mERROR:\27[0m",k,err) end end end
+   print(string.format("\n%.2f%% errors.", 100*bad/all)) end
+
 go["-h"] = function(_) print(help) end
 
 go["--the"] = function(_) print(o(the)) end
@@ -312,25 +322,19 @@ go["--ysorts"] = function(_)
       if i % 30 == 1 then print(fmt("%3s,  %.3f,  %s",i,d:ydist(row),o(row))) end end end
    
 local function _weibull(x, k, lambda)
-  if x < 0 or k <= 0 or lambda <= 0 then return 0 end
-  local term = (x / lambda)^(k - 1)
-  local exp_term = math.exp(- (x / lambda)^k)
-  return (k / lambda) * term * exp_term end
+   if x < 0 or k <= 0 or lambda <= 0 then return 0 end
+   local term = (x / lambda)^(k - 1)
+   local exp_term = math.exp(- (x / lambda)^k)
+   return (k / lambda) * term * exp_term end
 
 go["--nums"] = function(_)
-  for _ = 1,10^2 do -- 100 times, compare two ways to calc sd
+   for _ = 1,10^2 do -- 100 times, compare two ways to calc sd
       local n1,n2,n12 = Num:new(), Num:new(), Num:new()
+      local r = function() return math.random(0,10^6)/(10^6) end
       for _ = 1,10^3 do
          local x,l,k
-         x = 2.5 * math.random(1,10^6)/10^6 
-         l = 0.5 + math.random(1,10^6)/10^6
-         k = 5   * math.random(1,10^6)/10^6
-         n12:add(n1:add(_weibull(x,l,k))) 
-         x = 2.5 * math.random(1,10^6)/10^6 
-         l = 0.5 + math.random(1,10^6)/10^6
-         k = 5   * math.random(1,10^6)/10^6
-         n12:add(n2:add(_weibull(x,l,k))) 
-      end 
+         n12:add(n1:add(_weibull(2.5*r(), 0.5 + r(), 5*r()))) 
+         n12:add(n2:add(_weibull(2.5*r(), 0.5 + r(), 5*r()))) end 
       assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd))) end end
   
 go["--xys"] = function(_)
@@ -344,10 +348,9 @@ go["--xys"] = function(_)
 
 -- --------------------------------------------------
 -- ## Start
-help:gsub("[-][%S][%s]+([%S]+)[^\n]+= ([%S]+)", function(k,v) the[k]=coerce(v) end)
 
+help:gsub("[-][%S][%s]+([%S]+)[^\n]+= ([%S]+)", function(k,v) the[k]=coerce(v) end)
 math.randomseed(the.rseed)
 
-if    pcall(debug.getlocal,4,1) 
-then  return {the=the, Data=Data, Sym=Sym, Num=Num}
-else  main(arg,go,the) end
+if not pcall(debug.getlocal,4,1) then  main(arg,go,the) end
+return {the=the, Data=Data, Sym=Sym, Num=Num}
