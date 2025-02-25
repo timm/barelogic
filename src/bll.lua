@@ -96,10 +96,10 @@ function l.main(t,funs,settings)
 
 -- ------------------------------------------------------------
 -- Namespace stuff
-local   R,  coerce,  copy,  csv,  fmt,  gaussian,  keysort  =
-      l.R,l.coerce,l.copy,l.csv,l.fmt,l.gaussian,l.keysort
-local   lt,  main,  map,  new,  o,  pop,  push,  sort,  sum =
-      l.lt,l.main,l.map,l.new,l.o,l.pop,l.push,l.sort,l.sum
+local R,coerce,copy,csv,fmt,gaussian,keysort,lt =
+      l.R,l.coerce,l.copy,l.csv,l.fmt,l.gaussian,l.keysort,l.lt
+local main,map,new,o,pop,push,sort,sum =
+      l.main,l.map,l.new,l.o,l.pop,l.push,l.sort,l.sum
 
 -- ------------------------------------------------------------
 -- ## Structs
@@ -199,15 +199,15 @@ function Data:ysort()
    return keysort(self.rows,"ydist",self) end
 
 function Num:selects(rows)
-   local function _select(row)
-      v = row[self.at]
-      if v == "?" then return true end
-      if self.lo == self.hi then return v == self.lo end
-      return self.lo <= v and v < self.hi end
-
    local yes,no = {},{}
-   for _,row in pairs(rows) do push(_select(row) and yes or no, row) end
+   for _,row in pairs(rows) do push(self;select(row) and yes or no, row) end
    return yes,no end
+
+function Num:select(row)
+   local v = row[self.at]
+   if v == "?" then return true end
+   if self.lo == self.hi then return v == self.lo end
+   return self.lo <= v and v < self.hi end
 
 -- ---------------------------------------------------------
 -- ## XY
