@@ -19,7 +19,7 @@ OPTIONS:
       -S Stop    where to end                = 32]]
 
 local BIG=1E32
-local l,Num,Sym,Data,Meta,Some,XY = {},{},{},{},{},{},{}
+local l,Num,Sym,Data,Meta,XY = {},{},{},{},{},{}
 
 -- ------------------------------------------------------------
 -- ## Library
@@ -33,7 +33,13 @@ l.R=math.random
 
 function l.gaussian(  mu,sd)
    local sq,pi,log,cos = math.sqrt,math.pi,math.log,math.cos
-   return (mu or 0) + (sd or 1)* sq(-2*log(R())) * cos(2*pi*R())  end
+   return (mu or 0) + (sd or 1)* sq(-2*log(l.R())) * cos(2*pi*l.R())  end
+
+function l.weibull(x, k, lambda)
+   if x < 0 or k <= 0 or lambda <= 0 then return 0 end
+   local term = (x / lambda)^(k - 1)
+   local exp_term = math.exp(- (x / lambda)^k)
+   return (k / lambda) * term * exp_term end
 
 -- Meta stuff
 function l.new(klass,object)
@@ -99,8 +105,8 @@ function l.main(t,funs,settings)
 -- Namespace stuff
 local R,coerce,copy,csv,fmt,gaussian,keysort,lt =
       l.R,l.coerce,l.copy,l.csv,l.fmt,l.gaussian,l.keysort,l.lt
-local main,map,new,o,pop,push,sort,sum =
-      l.main,l.map,l.new,l.o,l.pop,l.push,l.sort,l.sum
+local main,map,new,o,pop,push,sort,sum,weibull =
+      l.main,l.map,l.new,l.o,l.pop,l.push,l.sort,l.sum,l.weibull
 
 -- ------------------------------------------------------------
 -- ## Structs
@@ -199,17 +205,6 @@ function Data:ydist(row)
 function Data:ysort()
    return keysort(self.rows,"ydist",self) end
 
-function Num:selects(rows)
-   local yes,no = {},{}
-   for _,row in pairs(rows) do push(self:select(row) and yes or no, row) end
-   return yes,no end
-
-function Num:select(row)
-   local v = row[self.at]
-   if v == "?" then return true end
-   if self.lo == self.hi then return v == self.lo end
-   return self.lo <= v and v < self.hi end
-
 -- ---------------------------------------------------------
 -- ## XY
 function XY:new(col,lo,hi) 
@@ -233,6 +228,20 @@ function XY.merges(i,j,n,eps,   k)
   if math.abs(i.x.mu - j.x.mu) < eps or n1<n or n2<n or v12<=(v1*n1+v2*n2)/n12 
   then return k end end
 
+function XY:xpect(n)
+   return self.y.sd * self.y.n/n end
+
+function XY:selects(rows)
+   local yes,no = {},{}
+   for _,row in pairs(rows) do push(self:select(row) and yes or no, row) end
+   return yes,no end
+
+function XY:select(row)
+   local v = row[self.x.at]
+   if v == "?" then return true end
+   if self.x.lo == self.x.hi then return v == self.x.lo end
+   return self.x.lo <= v and v < self.x.hi end
+
 -- ---------------------------------------------------------
 -- ## Discretization
 function Data:xys(rows,Y)
@@ -240,7 +249,7 @@ function Data:xys(rows,Y)
 
 function Data:xys1(col,rows,Y)
    local n,tmp = 0,{}
-   for i,row in pairs(rows) do
+   for _,row in pairs(rows) do
       local x =  row[col.at]
       if x ~= "?" then
          local k = col:discretize(x)
@@ -252,15 +261,15 @@ function Data:xys1(col,rows,Y)
 function Sym:discretize(x) return x end
 function Num:discretize(x) return self:norm(x) * the.bins // 1 end
 
-function Sym:merges(xys,...) return xys end
+function Sym:merges(xys,_) return xys end
 function Num:merges(xys,n) 
-   local function _fill(xys)
-      for i = 2,#xys do xys[i-1].x.hi = xys[i].x.lo end
-      xys[1   ].x.lo = -BIG
-      xys[#xys].x.hi =  BIG
-      return xys end 
+   local function _fill(xys1)
+      for i = 2,#xys1 do xys1[i-1].x.hi = xys1[i].x.lo end
+      xys1[1   ].x.lo = -BIG
+      xys1[#xys].x.hi =  BIG
+      return xys1 end 
 
-   local new,i,a = {},0
+   local new,i = {},0
    while i <= #xys do
       i = i+1
       local a = xys[i]
@@ -272,20 +281,18 @@ function Num:merges(xys,n)
 
 -- ---------------------------------------------------------
 function Data:cuts(rows)
-   local function F(xys) 
-      return sum(xys, function(xy) return xy.y.n / #rows * xy.y:var() end) end
-   return keysort(self:xys(self.rows, 
-                           function(r) return self:ydist(r) end),
+   local function F(xys) return sum(xys, function(xy) return xy:xpect(#rows) end) end
+   return keysort(self:xys(self.rows, function(r) return self:ydist(r) end),
                   F)[1] end
 
 function Data:grow(guard)
-  rows = data.rows
-  stop = (#rows)^.5
+  local rows = self.rows
+  local stop = (#rows)^.5
   self.guard = guard
   if #rows > #stop then
     self.kids = {}
     for _,xy in pairs(self:cuts(rows)) do
-       rows, more = xy.x:selects(rows)
+       local rows, more = xy.x:selects(rows)
        if #rows < #self.rows then 
           push(self.kids, self:clone(rows):grow(xy.x)) end
        rows = more end end    
@@ -295,13 +302,12 @@ function Data:grow(guard)
 -- ## Start-up Actions
 local go={}
 go["--all"] = function(_)
-   local all,bad=0,0
-   for k,fun in pairs(go) do
-      if k ~= "--all" then
-         all=all+1
-         local ok,err= xpcall(fun, debug.traceback) 
-         if not ok then bad=bad+1; print("\27[31mERROR:\27[0m",k,err) end end end
-   print(string.format("\n%.2f%% errors.", 100*bad/all)) end
+   local n,all=0,{}
+   for k,fun in pairs(go) do if k ~= "--all" then push(all,{key=k,fun=fun}) end end
+   for _,p in pairs(sort(all, lt"key")) do
+      local ok,err= xpcall(p.fun, debug.traceback) 
+      if not ok then n=n+1; print("\27[31mERROR:\27[0m",p.key,err) end end 
+   print(string.format("\n%.2f%% errors.", 100*n/#all)) end
 
 go["-h"] = function(_) print(help) end
 
@@ -321,20 +327,13 @@ go["--ysorts"] = function(_)
    for i,row in pairs(d:ysort()) do 
       if i % 30 == 1 then print(fmt("%3s,  %.3f,  %s",i,d:ydist(row),o(row))) end end end
    
-local function _weibull(x, k, lambda)
-   if x < 0 or k <= 0 or lambda <= 0 then return 0 end
-   local term = (x / lambda)^(k - 1)
-   local exp_term = math.exp(- (x / lambda)^k)
-   return (k / lambda) * term * exp_term end
-
 go["--nums"] = function(_)
    for _ = 1,10^2 do -- 100 times, compare two ways to calc sd
       local n1,n2,n12 = Num:new(), Num:new(), Num:new()
-      local r = function() return math.random(0,10^6)/(10^6) end
+      local r = function() return R(0,10^6)/(10^6) end
       for _ = 1,10^3 do
-         local x,l,k
-         n12:add(n1:add(_weibull(2.5*r(), 0.5 + r(), 5*r()))) 
-         n12:add(n2:add(_weibull(2.5*r(), 0.5 + r(), 5*r()))) end 
+         n12:add(n1:add(weibull(2.5*r(), 0.5 + r(), 5*r()))) 
+         n12:add(n2:add(weibull(2.5*r(), 0.5 + r(), 5*r()))) end 
       assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd))) end end
   
 go["--xys"] = function(_)
