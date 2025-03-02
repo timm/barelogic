@@ -328,12 +328,14 @@ go["--ysorts"] = function(_)
       if i % 30 == 1 then print(fmt("%3s,  %.3f,  %s",i,d:ydist(row),o(row))) end end end
    
 go["--nums"] = function(_)
-   for _ = 1,10^2 do -- 100 times, compare two ways to calc sd
+   for _ = 1,10^3 do -- 100 times, compare two ways to calc sd
       local n1,n2,n12 = Num:new(), Num:new(), Num:new()
       local r = function() return R(0,10^6)/(10^6) end
-      for _ = 1,10^3 do
-         n12:add(n1:add(weibull(2.5*r(), 0.5 + r(), 5*r()))) 
-         n12:add(n2:add(weibull(2.5*r(), 0.5 + r(), 5*r()))) end 
+      local k1, l1 = 0.5+r(), 5*r() 
+      local k2, l2 = 0.5+r(), 5*r() 
+      for _ = 1,10^2 do
+         n12:add(n1:add(weibull(2.5*r(), k1,l1)))
+         n12:add(n2:add(weibull(2.5*r(), k2,l2))) end
       assert(10^-6 > math.abs(1 - n12.sd/ (n1:merge(n2).sd))) end end
   
 go["--xys"] = function(_)
