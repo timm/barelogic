@@ -29,7 +29,7 @@ l.pop = table.remove
 function l.push(t,x) t[1+#t] = x ; return x end
 
 -- Math stuff
-l.R=math.random
+l.R = math.random
 
 function l.gaussian(  mu,sd)
    local sq,pi,log,cos = math.sqrt,math.pi,math.log,math.cos
@@ -228,9 +228,6 @@ function XY.merges(i,j,n,eps,   k)
   if math.abs(i.x.mu - j.x.mu) < eps or n1<n or n2<n or v12<=(v1*n1+v2*n2)/n12 
   then return k end end
 
-function XY:xpect(n)
-   return self.y.sd * self.y.n/n end
-
 function XY:selects(rows)
    local yes,no = {},{}
    for _,row in pairs(rows) do push(self:select(row) and yes or no, row) end
@@ -280,23 +277,23 @@ function Num:merges(xys,n)
    return #new < #xys and self:merges(new,n) or _fill(xys) end
 
 -- ---------------------------------------------------------
-function Data:cuts(rows)
-   local function F(xys) return sum(xys, function(xy) return xy:xpect(#rows) end) end
-   return keysort(self:xys(self.rows, function(r) return self:ydist(r) end),
-                  F)[1] end
+function Data:cuts(rows,      X,F,D)
+   X = function(xy)  return xy.y.sd * xy.y.n / #rows end
+   F = function(xys) return sum(xys, X) end
+   D = function(row) return self:ydist(row) end
+   return keysort(self:xys(rows, D), F)[1] end
 
-function Data:grow(guard)
-  local rows = self.rows
-  local stop = (#rows)^.5
+function Data:grow(  guard,stop)
+  local stop = stop or (#self.rows)^.5
   self.guard = guard
-  if #rows > #stop then
-    self.kids = {}
-    for _,xy in pairs(self:cuts(rows)) do
-       local rows, more = xy.x:selects(rows)
-       if #rows < #self.rows then 
-          push(self.kids, self:clone(rows):grow(xy.x)) end
-       rows = more end end    
-  return self end
+  self.kids  = {}
+  for _,xy in pairs(self:cuts(self.rows)) do
+     local rows = self.rows
+     local rows,more = xy:selects(rows)
+     if #rows < #self.rows and #rows > stop then 
+        push(self.kids, self:clone(rows):grow(xy, stop)) end
+     rows = more end 
+  return self end 
 
 -- --------------------------------------------------
 -- ## Start-up Actions
