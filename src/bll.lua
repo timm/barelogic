@@ -4,7 +4,7 @@ bll.lua : Naive Bayes
    
 OPTIONS:  
 
-      -a acq     xploit or xplore or adapt   = xplout  
+      -a acq     xploit or xplore or adapt   = xploit  
       -b bins    number of bins              = 17
       -d decs    decimal places for printing = 2  
       -f file    training csv file           = ../test/data/auto93.csv  
@@ -214,6 +214,13 @@ function XY:new(col,lo,hi)
    self.y    = (type(lo)=="number" and Num or Sym):new()
    return self end
 
+function XY:__tostring()
+   local lo,hi,s = self.x.lo,self.x.hi,self.x.txt
+   if lo == -BIG then return fmt("%s < %s",  s,hi) end
+   if hi == BIG  then return fmt("%s >= %s", s,lo) end
+   if hi == lo   then return fmt("%s == %s", s,lo) end
+   return fmt("%s <= %s < %s", lo,s,hi) end
+
 function XY:add(x,y)
    self.x:add(x)
    self.y:add(y) end
@@ -277,27 +284,31 @@ function Num:merges(xys,n)
    return #new < #xys and self:merges(new,n) or _fill(xys) end
 
 -- ---------------------------------------------------------
+-- XXX check these calcs
 function Data:cuts(rows,      X,F,D)
    X = function(xy)  return xy.y.sd * xy.y.n / #rows end
    F = function(xys) return sum(xys, X) end
    D = function(row) return self:ydist(row) end
    return keysort(self:xys(rows, D), F)[1] end
 
-function Data:grow(  guard,stop)
+function Data:grow(  guard,stop,lvl)
   local stop = stop or (#self.rows)^.5
-  self.guard = guard
-  self.kids  = {}
-  for _,xy in pairs(self:cuts(self.rows)) do
-     local rows = self.rows
-     local rows,more = xy:selects(rows)
-     if #rows < #self.rows and #rows > stop then 
-        push(self.kids, self:clone(rows):grow(xy, stop)) end
+  local lvl  = lvl  or 0
+  self.kids, self.guard = {}, guard
+  local rows,more = self.rows,{}
+  local xys  = self:cuts(self.rows)
+  for _,xy in pairs(xys) do     
+     rows,more = xy:selects(rows or self.rows)
+     if #rows < #self.rows and #rows > stop then  
+        print(fmt("%-5s %.3f",xy.x.n, xy.y.mu), ("|.. "):rep(lvl) .. tostring(xy))
+        push(self.kids, self:clone(rows):grow(xy, stop, lvl+1)) end
      rows = more end 
   return self end 
 
 -- --------------------------------------------------
 -- ## Start-up Actions
 local go={}
+
 go["--all"] = function(_)
    local n,all=0,{}
    for k,fun in pairs(go) do if k ~= "--all" then push(all,{key=k,fun=fun}) end end
@@ -340,9 +351,12 @@ go["--xys"] = function(_)
    local Y = function(row) return d:ydist(row) end
    for n,xys in pairs(d:xys(d.rows, Y)) do 
       print""
-      for _,xy in pairs(xys) do print(n,o(xy)) end end 
+      for _,xy in pairs(xys) do print(fmt("%2s %5s : %s",n,xy.x.n, xy)) end end 
    print""
    for _,xy in pairs(d:cuts(d.rows)) do print(0,o(xy)) end end
+
+go["--grow"] = function(_)
+   Data:new(the.file):grow() end
 
 -- --------------------------------------------------
 -- ## Start
