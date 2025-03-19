@@ -6,6 +6,7 @@ OPTIONS:
 
       -a acq     xploit or xplore or adapt   = xploit  
       -b bins    number of bins              = 17
+      -c cohen   cohen's delta               = 0.35
       -d decs    decimal places for printing = 2  
       -f file    training csv file           = ../test/data/auto93.csv  
       -g guess   size of guess               = 0.5  
@@ -185,6 +186,10 @@ function Num.merge(i,j,   k)
    k.hi = math.max(i.hi,j.hi)
    return k end 
 
+function Num.same(i,j)
+   local sd = ((((i.n - 1) * i.sd^2) + ((j.n - 1) * j.sd^2)) / (i.n + j.n - 2))^0.5
+   return math.abs(i.mu - j.mu) < the.cohen * sd end
+
 -- ---------------------------------------------------------
 -- ## Misc Query
 function Num:mid() return self.mu end
@@ -232,7 +237,10 @@ function XY.merges(i,j,n,eps,   k)
   k = i:merge(j)
   local n1,n2,n12 = i.x.n, j.x.n, k.x.n
   local v1,v2,v12 = i.y:var(), j.y:var(), k.y:var()
-  if math.abs(i.x.mu - j.x.mu) < eps or n1<n or n2<n or v12<=(v1*n1+v2*n2)/n12 
+  if math.abs(i.x.mu - j.x.mu) < eps or 
+     n1<n or n2<n or 
+     v12<=(v1*n1+v2*n2)/n12 or
+     i.y:same(j.y)
   then return k end end
 
 function XY:selects(rows)
@@ -260,13 +268,15 @@ function Data:xys1(col,rows,Y)
          tmp[k] = tmp[k] or XY:new(col,x)
          tmp[k]:add(x, Y(row)) end end
    return col:merges(keysort(map(tmp),function(v) return v.x.lo end),
-                     (#rows)^.5) end
+                     (#rows)^.5,
+                     col:vars() * the.cohen
+                     ) end
 
 function Sym:discretize(x) return x end
 function Num:discretize(x) return self:norm(x) * the.bins // 1 end
 
-function Sym:merges(xys,_) return xys end
-function Num:merges(xys,n) 
+function Sym:merges(xys,_,_) return xys end
+function Num:merges(xys,n, trivial) 
    local function _fill(xys1)
       for i = 2,#xys1 do xys1[i-1].x.hi = xys1[i].x.lo end
       xys1[1   ].x.lo = -BIG
@@ -276,32 +286,33 @@ function Num:merges(xys,n)
    local new,i = {},0
    while i <= #xys do
       i = i+1
-      local a = xys[i]
+      local xy = xys[i]
       if i < #xys 
-      then local merged = a:merges(xys[i+1], n, self:var()*.35)
-           if merged then a,i = merged,i+1 end end
-      push(new, a) end
+      then local merged = xy:merges(xys[i+1], n, trivial)
+           if merged then xy,i = merged,i+1 end end
+      push(new, xy) end
    return #new < #xys and self:merges(new,n) or _fill(xys) end
 
 -- ---------------------------------------------------------
 -- XXX check these calcs
-function Data:cuts(rows,      X,F,D)
+function Data:cuts(rows,root,      X,F,D)
    X = function(xy)  return xy.y.sd * xy.y.n / #rows end
    F = function(xys) return sum(xys, X) end
    D = function(row) return self:ydist(row) end
-   return keysort(self:xys(rows, D), F)[1] end
+   return keysort(self:xys(rows, roots,D), F)[1] end
 
-function Data:grow(  guard,stop,lvl)
+function Data:grow(  guard,stop,lvl,root)
   local stop = stop or (#self.rows)^.5
   local lvl  = lvl  or 0
+  root = root or self
   self.kids, self.guard = {}, guard
   local rows,more = self.rows,{}
-  local xys  = self:cuts(self.rows)
+  local xys  = self:cuts(self.rows, root)
   for _,xy in pairs(xys) do     
      rows,more = xy:selects(rows or self.rows)
      if #rows < #self.rows and #rows > stop then  
         print(fmt("%-5s %.3f",xy.x.n, xy.y.mu), ("|.. "):rep(lvl) .. tostring(xy))
-        push(self.kids, self:clone(rows):grow(xy, stop, lvl+1)) end
+        push(self.kids, self:clone(rows):grow(xy, stop, lvl+1,root)) end
      rows = more end 
   return self end 
 
