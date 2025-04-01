@@ -86,6 +86,7 @@ function l.o(x)
    if #x>0 then LIST() else DICT(); table.sort(t) end
    return "{" .. table.concat(t, " ") .. "}" end
 
+
 -- Misc stuff
 function l.csv(src)
    local function F(s) 
@@ -239,7 +240,7 @@ function XY.merges(i,j,n,eps,   k)
   local v1,v2,v12 = i.y:var(), j.y:var(), k.y:var()
   if math.abs(i.x.mu - j.x.mu) < eps or 
      n1<n or n2<n or 
-     v12<=(v1*n1+v2*n2)/n12 or
+     v12 <= (v1*n1 + v2*n2)/n12 or
      i.y:same(j.y)
   then return k end end
 
@@ -269,7 +270,7 @@ function Data:xys1(col,rows,Y)
          tmp[k]:add(x, Y(row)) end end
    return col:merges(keysort(map(tmp),function(v) return v.x.lo end),
                      (#rows)^.5,
-                     col:vars() * the.cohen
+                     col:var() * the.cohen
                      ) end
 
 function Sym:discretize(x) return x end
@@ -298,11 +299,12 @@ function Num:merges(xys,n, trivial)
 function Data:cuts(rows,root,      X,F,D)
    X = function(xy)  return xy.y.sd * xy.y.n / #rows end
    F = function(xys) return sum(xys, X) end
-   D = function(row) return self:ydist(row) end
+   D = function(row) return self:ydist(row) end -- move D to top
    return keysort(self:xys(rows, roots,D), F)[1] end
 
-function Data:grow(  guard,stop,lvl,root)
-  local stop = stop or (#self.rows)^.5
+function Data:grow(  guard,xstop,lvl,root)
+  local xstop = xstop or (#self.rows)^.5
+  local ystop = ystop or adds(self.rows, function(r) return self:ydist(r) end)
   local lvl  = lvl  or 0
   root = root or self
   self.kids, self.guard = {}, guard
