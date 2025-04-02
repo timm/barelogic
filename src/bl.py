@@ -21,39 +21,41 @@ OPTIONS:
 import re,sys,math,random
 
 rand  = random.random
+shuffle=random.shuffle
 one   = random.choice
 some  = random.choices
 BIG   = 1E32
 
-#-----------------------------------------------------------------------------------------
-class Obj:
+#--------- --------- --------- --------- --------- --------- ------- -------
+class o:
   __init__ = lambda i,**d: i.__dict__.update(**d)
   __repr__ = lambda i: i.__class__.__name__ + show(i.__dict__)
 
 def Num(txt=" ", at=0):
-  return Obj(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG,
-             goal = 0 if txt[-1]=="-" else 1)
+  return o(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG, 
+           goal = 0 if txt[-1]=="-" else 1)
 
 def Sym(txt=" ", at=0):
-  return Obj(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
+  return o(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
 
 def Cols(names):
-  x,y,lst,klass = [], [], [], None
-  for col in [(Num if s[0].isupper() else Sym)(s,n) for n,s in enumerate(names)]:
-    lst += [col]
+  cols = o(it=Cols, x=[], y=[], all=[], klass=None)
+  for n,s in enumerate(names):
+    col = (Num if s[0].isupper() else Sym)(s,n)
+    cols.all += [col]
     if col.txt[-1] != "X":
-      (y if col.txt[-1] in "+-!" else x).append(col)
-      if col.txt[-1] == "!": klass=col
-  return Obj(it=Cols, names=names, all=lst, x=x, y=y, klass=klass)
+      (cols.y if col.txt[-1] in "+-!" else cols.x).append(col)
+      if col.txt[-1] == "!": cols.klass=col
+  return cols
 
-def Data(src=[]): return adds(src, Obj(it=Data, n=0, rows=[], cols=None))
+def Data(src=[]): return adds(src, o(it=Data,n=0,rows=[],cols=None))
 
 def clone(data, src=[]): return adds(src, Data([data.cols.names]))
 
-#-----------------------------------------------------------------------------------------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def adds(src, i=None):
   for x in src:
-    if not i: return adds(src, Num() if isinstance(x,(int,float)) else Sym())
+    if not i: return adds(src,Num() if isinstance(x,(int,float)) else Sym())
     add(x,i)
   return i
 
@@ -91,23 +93,24 @@ def sub(v, i):
      _sym() if i.it is Sym else (_num() if i.it is Num else _data())
    return v
 
-#-----------------------------------------------------------------------------------------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def norm(v, col):
-   return v if (v=="?" or col.it is Sym) else (v - col.lo) / (col.hi - col.lo + 1/BIG)
+   if v=="?" or col.it is Sym: return v
+   return (v - col.lo) / (col.hi - col.lo + 1/BIG)
 
-def mid(col)    : return col.mu if col.it is Num else col.mode
+def mid(col): return col.mu if col.it is Num else col.mode
 
-def spread(col) : return col.sd if col.it is Num else ent(col.has)
+def spread(col): return col.sd if col.it is Num else ent(col.has)
 
-def delta(i, j) : return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
+#def delta(i,j): return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
 
 def ydist(row,  data):
   return (sum(abs(norm(row[c.at], c) - c.goal)**the.p for c in data.cols.y) 
           / len(data.cols.y)) ** (1/the.p)
 
-def ydists(row, data): return sorted(rows, key=lambda row: ydist(row,data)
+def ydists(row, data): return sorted(rows, key=lambda row: ydist(row,data))
 
-#-----------------------------------------------------------------------------------------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def likes(lst, datas):
   n = sum(data.n for data in datas)
   return max(datas, key=lambda data: like(lst, data, n, len(datas)))
@@ -125,14 +128,15 @@ def like(lst, data, nall=100, nh=2):
   tmp   = [_col(lst[x.at], x) for x in data.cols.x if lst[x.at] != "?"]
   return sum(math.log(l) for l in tmp + [prior] if l>0)
 
-#-----------------------------------------------------------------------------------------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def acquire(p, b,r): 
   b,r = math.e**b, math.e**r
   q = 0 if the.acq=="xploit" else (1 if the.acq=="xplore" else 1-p)
   return (b + r*q) / abs(b*q - r + 1/BIG) 
 
-def activeLearn(data, want=acquire):
-  def _guess(row): return want((n/the.Stop, like(row,best,n,2), like(row,rest,n,2))
+def activeLearn(data, guess=acquire):
+  def _guess(row): 
+     return guess(n/the.Stop, like(row,best,n,2), like(row,rest,n,2))
 
   n     =  the.start
   todo  =  shuffle(data.rows[n:])
@@ -143,10 +147,12 @@ def activeLearn(data, want=acquire):
   while len(todo) > 2  and n < the.Stop:
     n += 1
     top, *others = sorted(todo[:the.Guesses], key=_guess, reverse=True)
-    todo = todo[the.Guesses:] + others
+    m = int(len(others)/2)
+    todo = others[:m] + todo[the.Guesses:] + others[m:]
     add(top, best)
     best.rows = ydists(best.rows, data)
     if len(best.rows) > n**0.5:
       add( sub(best.rows.pop(-1), best), rest)
   return best.rows
 
+#--------- --------- --------- --------- --------- --------- ------- -------
