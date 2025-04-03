@@ -198,8 +198,7 @@ function Sym:mid() return self.mode end
 
 function Num:var() return self.sd end
 function Sym:var() 
-   local function F(n) return n/self.n * math.log(n/self.n,2) end
-   return -sum(self.has, F) end 
+   return - sum(self.has, function(n) return n/self.n * math.log(n/self.n,2) end) end
 
 function Num:norm(x)
    return x=="?" and x or (x - self.lo) / (self.hi - self.lo + 1/BIG) end
