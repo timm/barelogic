@@ -198,6 +198,7 @@ def show(x):
 
 def main():
   cli(the.__dict__)
+  print(the.Stop)
   for n,s in enumerate(sys.argv):
     if fun := globals().get("eg" + s.replace("-","_")):
       arg = "" if n==len(sys.argv) - 1 else sys.argv[n+1]
@@ -223,7 +224,6 @@ def eg__data(file):
   [print(col) for col in data.cols.all]
   nums = adds(ydist(row,data) for row in data.rows)
   print(o(mu=nums.mu, sd=nums.sd))
-
 
 def dump(): print(len(data.rows)); [print(col) for col in data.cols.all]
 
@@ -252,8 +252,9 @@ def eg__actLearn(file):
   for _ in range(20):
     random.shuffle(data.rows)
     add(ydist(actLearn(data)[0],data), now)
-  print(o(rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
-          lo=b4.lo, mu=b4.mu, hi=b4.hi, new=now.mu,most=now.hi,name=name))
+  print(o(win= int(100*(b4.mu - now.mu) /(b4.mu - b4.lo)),
+          rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
+          lo=b4.lo, mu=b4.mu, hi=b4.hi, new=now.mu,sd=now.sd,stop=the.Stop,name=name))
 
 
 #--------- --------- --------- --------- --------- --------- ------- -------

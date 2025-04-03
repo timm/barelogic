@@ -88,8 +88,39 @@ lint: ## lint all python in this directory
 	@ps2pdf $@.ps $@; rm $@.ps
 	open $@
 
+eg?=eg24
+pretties:
+	$(MAKE) eg=eg6 pretty
+	$(MAKE) eg=eg12 pretty
+	$(MAKE) eg=eg24 pretty
+	$(MAKE) eg=eg50 pretty
+	$(MAKE) eg=eg100 pretty
+	$(MAKE) eg=eg200 pretty
 
-eg1: ../../moot/optimize/[chmp]*/*.csv
-	mkdir -p ~/tmp/$@
-	rm -f  ~/tmp/$@/*
-	$(foreach d,$^, (python3 -B bl.py --actLearn $d > ~/tmp/$@/$(notdir $d) &); )
+pretty:
+	mkdir -p ~/tmp/$(eg)
+	rm -f  ~/tmp/$(eg)/*
+	time $(MAKE) $(eg) | sort -n -k 2 | column -t
+	bash plot.sh ~/tmp/$(eg)
+
+eg6: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d,$^, (python3 bl.py -S 6 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+
+eg12: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d,$^, (python3 bl.py -S 12 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+
+eg18: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d,$^, (python3 bl.py -S 18 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+
+eg24: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d,$^, (python3 bl.py -S 24 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+
+eg50: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d,$^, (python3 bl.py -S 50 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+
+eg100: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d,$^, (python3 bl.py -S 100 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+
+eg200: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d,$^, (python3 bl.py -S 200 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+
