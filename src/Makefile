@@ -34,7 +34,7 @@ lint: ## lint all python in this directory
 	export PYTHONPATH="..:$$PYTHONPATH"; \
 	pylint --disable=W0311,C0303,C0116,C0321,C0103 \
 		     --disable=C0410,C0115,C3001,R0903,E1101 \
-				 --disable=W0108,W0106,W0718   *.py
+				 --disable=W0108,W0106,W0718   bl.py
 
 ../docs/%.html : %.py
 	pycco -d $(Top)/docs  $^

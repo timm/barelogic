@@ -1,8 +1,8 @@
-# vim: set sw=2:ts=2:et:
+# vim: set sw=2 ts=2 et :
 """
-nb.py : Naive Bayes    
+bl.py : barelogic, XAI for active learning + multi-objective optimization
 (c) 2025, Tim Menzies <timm@ieee.org>, MIT License  
-  
+
 OPTIONS:  
 
       -a acq     xploit or xplore or adapt   = xploit  
@@ -21,7 +21,6 @@ OPTIONS:
 import re,sys,math,random
 
 rand  = random.random
-shuffle=random.shuffle
 one   = random.choice
 some  = random.choices
 BIG   = 1E32
@@ -39,13 +38,13 @@ def Sym(txt=" ", at=0):
   return o(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
 
 def Cols(names):
-  cols = o(it=Cols, x=[], y=[], all=[], klass=None)
+  cols = o(it=Cols, x=[], y=[], klass=-1, all=[])
   for n,s in enumerate(names):
     col = (Num if s[0].isupper() else Sym)(s,n)
     cols.all += [col]
-    if col.txt[-1] != "X":
-      (cols.y if col.txt[-1] in "+-!" else cols.x).append(col)
-      if col.txt[-1] == "!": cols.klass=col
+    if s[-1] != "X":
+      (cols.y if s[-1] in "+-!" else cols.x).append(col)
+      if s[-1] == "!": cols.klass = col
   return cols
 
 def Data(src=[]): return adds(src, o(it=Data,n=0,rows=[],cols=None))
@@ -61,7 +60,7 @@ def adds(src, i=None):
 
 def add(v, i):
   def _data():
-    if i.cols: i.rows  += [[add( v[col.at], c) for c in i.cols.all]]
+    if i.cols: i.rows  += [[add( v[c.at], c) for c in i.cols.all]]
     else     : i.cols   = Cols(v)
   def _sym():
     n = i.has[v] = 1 + i.has.get(v,0)
@@ -108,7 +107,11 @@ def ydist(row,  data):
   return (sum(abs(norm(row[c.at], c) - c.goal)**the.p for c in data.cols.y) 
           / len(data.cols.y)) ** (1/the.p)
 
-def ydists(row, data): return sorted(rows, key=lambda row: ydist(row,data))
+def ydists(rows, data): return sorted(rows, key=lambda row: ydist(row,data))
+
+def ent(d):
+   N = sum(n for n in d.values())
+   return -sum(n/N * math.log(n/N,2) for n in d.values())
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def likes(lst, datas):
@@ -129,17 +132,16 @@ def like(lst, data, nall=100, nh=2):
   return sum(math.log(l) for l in tmp + [prior] if l>0)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def acquire(p, b,r): 
-  b,r = math.e**b, math.e**r
-  q = 0 if the.acq=="xploit" else (1 if the.acq=="xplore" else 1-p)
-  return (b + r*q) / abs(b*q - r + 1/BIG) 
-
-def activeLearn(data, guess=acquire):
+def activeLearn(data):
   def _guess(row): 
-     return guess(n/the.Stop, like(row,best,n,2), like(row,rest,n,2))
+    return _acquire(n/the.Stop, like(row,best,n,2), like(row,rest,n,2))
+  def _acquire(p, b,r): 
+    b,r = math.e**b, math.e**r
+    q = 0 if the.acq=="xploit" else (1 if the.acq=="xplore" else 1-p)
+    return (b + r*q) / abs(b*q - r + 1/BIG) 
 
   n     =  the.start
-  todo  =  shuffle(data.rows[n:])
+  todo  =  data.rows[n:]
   done  =  ydists(data.rows[:n], data)
   cut   =  round(n**the.guess)
   best  =  clone(data, done[:cut])
@@ -147,7 +149,7 @@ def activeLearn(data, guess=acquire):
   while len(todo) > 2  and n < the.Stop:
     n += 1
     top, *others = sorted(todo[:the.Guesses], key=_guess, reverse=True)
-    m = int(len(others)/2)
+    m    = int(len(others)/2)
     todo = others[:m] + todo[the.Guesses:] + others[m:]
     add(top, best)
     best.rows = ydists(best.rows, data)
@@ -156,3 +158,56 @@ def activeLearn(data, guess=acquire):
   return best.rows
 
 #--------- --------- --------- --------- --------- --------- ------- -------
+def coerce(s):
+  try: return int(s)
+  except Exception:
+    try: return float(s)
+    except Exception:
+      s = s.strip()
+      return True if s=="True" else (False if s=="False" else s)
+
+def csv(file):
+  with open(sys.stdin if file=="-" else file, encoding="utf-8") as src:
+    for line in src:
+      line = re.sub(r'([\n\t\r ]|#.*)', '', line)
+      if line: yield [coerce(s) for s in line.split(",")]
+
+def cli(d):
+  for k,v in d.items():
+    for c,arg in enumerate(sys.argv):
+      if arg == "-"+k[0]:
+        print(k,c,arg)
+        d[k] = coerce("False" if str(v) == "True"  else (
+                      "True"  if str(v) == "False" else (
+                      sys.argv[c+1] if c < len(sys.argv) - 1 else str(v))))
+
+def showd(x): print(show(x)); return x
+
+def show(x):
+  it = type(x)
+  if   it is str   : x= f'"{x}"'
+  elif callable(x) : x= x.__name__ + '()'
+  elif it is float : x= str(round(x,the.decs))
+  elif it is list  : x= '['+', '.join([show(v) for v in x])+']'
+  elif it is dict  : x= "{"+' '.join([f":{k} {show(v)}" 
+                                   for k,v in x.items() if k[0] !="_"])+"}"
+  return str(x)
+
+def main():
+  for n,s in enumerate(sys.argv):
+    if fun := globals().get("eg" + s.replace("-","_")):
+      arg = None if n==len(sys.argv) - 1 else sys.argv[n+1]
+      random.seed(the.rseed)
+      fun(coerce(arg))
+
+#--------- --------- --------- --------- --------- --------- ------- -------
+def eg__the(_): print(the)
+
+#--------- --------- --------- --------- --------- --------- ------- -------
+regx = r"-\w+\s*(\w+).*=\s*(\S+)"
+the  = o(**{m[1]:coerce(m[2]) for m in re.finditer(regx,__doc__)})
+random.seed(the.rseed)
+
+if __name__ == "__main__":  
+  cli(the.__dict__)
+  main()
