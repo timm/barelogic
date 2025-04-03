@@ -89,4 +89,7 @@ lint: ## lint all python in this directory
 	open $@
 
 
-
+eg1: ../../moot/optimize/[chmp]*/*.csv
+	mkdir -p ~/tmp/$@
+	rm -f  ~/tmp/$@/*
+	$(foreach d,$^, (python3 -B bl.py --actLearn $d > ~/tmp/$@/$(notdir $d) &); )

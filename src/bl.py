@@ -38,7 +38,7 @@ def Sym(txt=" ", at=0):
   return o(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
 
 def Cols(names):
-  cols = o(it=Cols, x=[], y=[], klass=-1, all=[])
+  cols = o(it=Cols, x=[], y=[], klass=-1, all=[], names=names)
   for n,s in enumerate(names):
     col = (Num if s[0].isupper() else Sym)(s,n)
     cols.all += [col]
@@ -71,7 +71,7 @@ def add(v, i):
     d     = v - i.mu
     i.mu += d / i.n
     i.m2 += d * (v -   i.mu)
-    i.sd  = 0 if i.n <2 else (i.m2/(i.n-1))**.5
+    i.sd  = 0 if i.n <=2  else (max(0,i.m2)/(i.n-1))**.5
 
   if v != "?":
     i.n += 1
@@ -82,10 +82,12 @@ def sub(v, i):
    def _data(): [sub(v[col.at],col) for col in i.cols.all]  
    def _sym() : i.has[v] -= 1
    def _num():
-     d     = v - i.mu
-     i.mu -= d / i.n
-     i.m2 -= d * (v - i.mu)
-     i.sd  = 0 if i.n <2 else (i.m2/(i.n-1))**.5
+     if i.n < 2: i.mu = i.sd = 0
+     else:
+       d     = v - i.mu
+       i.mu -= d / i.n
+       i.m2 -= d * (v - i.mu)
+       i.sd  = (max(0,i.m2)/(i.n-1))**.5
 
    if v != "?":
      i.n -= 1
@@ -109,6 +111,8 @@ def ydist(row,  data):
 
 def ydists(rows, data): return sorted(rows, key=lambda row: ydist(row,data))
 
+def yNums(rows,data): return adds(ydist(row,data) for row in rows)
+
 def ent(d):
    N = sum(n for n in d.values())
    return -sum(n/N * math.log(n/N,2) for n in d.values())
@@ -118,7 +122,7 @@ def likes(lst, datas):
   n = sum(data.n for data in datas)
   return max(datas, key=lambda data: like(lst, data, n, len(datas)))
 
-def like(lst, data, nall=100, nh=2):
+def like(row, data, nall=100, nh=2):
   def _col(v,col): 
     if col.it is Sym: 
       return (col.has.get(v,0) + the.m*prior) / (col.n + the.m + 1/BIG)
@@ -128,11 +132,11 @@ def like(lst, data, nall=100, nh=2):
     return max(0, min(1, nom/denom))
 
   prior = (data.n + the.k) / (nall + the.k*nh)
-  tmp   = [_col(lst[x.at], x) for x in data.cols.x if lst[x.at] != "?"]
+  tmp   = [_col(row[x.at], x) for x in data.cols.x if row[x.at] != "?"]
   return sum(math.log(l) for l in tmp + [prior] if l>0)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def activeLearn(data):
+def actLearn(data):
   def _guess(row): 
     return _acquire(n/the.Stop, like(row,best,n,2), like(row,rest,n,2))
   def _acquire(p, b,r): 
@@ -149,7 +153,7 @@ def activeLearn(data):
   while len(todo) > 2  and n < the.Stop:
     n += 1
     top, *others = sorted(todo[:the.Guesses], key=_guess, reverse=True)
-    m    = int(len(others)/2)
+    m = int(len(others)/2)
     todo = others[:m] + todo[the.Guesses:] + others[m:]
     add(top, best)
     best.rows = ydists(best.rows, data)
@@ -176,10 +180,9 @@ def cli(d):
   for k,v in d.items():
     for c,arg in enumerate(sys.argv):
       if arg == "-"+k[0]:
-        print(k,c,arg)
+        new = sys.argv[c+1] if c < len(sys.argv) - 1 else str(v)
         d[k] = coerce("False" if str(v) == "True"  else (
-                      "True"  if str(v) == "False" else (
-                      sys.argv[c+1] if c < len(sys.argv) - 1 else str(v))))
+                      "True"  if str(v) == "False" else new))
 
 def showd(x): print(show(x)); return x
 
@@ -190,24 +193,72 @@ def show(x):
   elif it is float : x= str(round(x,the.decs))
   elif it is list  : x= '['+', '.join([show(v) for v in x])+']'
   elif it is dict  : x= "{"+' '.join([f":{k} {show(v)}" 
-                                   for k,v in x.items() if k[0] !="_"])+"}"
+                                   for k,v in x.items() if str(k)[0] !="_"])+"}"
   return str(x)
 
 def main():
+  cli(the.__dict__)
   for n,s in enumerate(sys.argv):
     if fun := globals().get("eg" + s.replace("-","_")):
-      arg = None if n==len(sys.argv) - 1 else sys.argv[n+1]
+      arg = "" if n==len(sys.argv) - 1 else sys.argv[n+1]
       random.seed(the.rseed)
       fun(coerce(arg))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def eg__the(_): print(the)
 
+def eg__cols(_): 
+  s="Clndrs,Volume,HpX,Model,origin,Lbs-,Acc+,Mpg+"
+  [print(col) for col in Cols(s.split(",")).all]
+
+def eg__csv(file): 
+  rows =list(csv(file or the.file))
+  assert 3192== sum(len(row) for row in rows)
+  for row in rows[1:]: assert type(row[0])==int
+
+def eg__data(file):
+  data=Data(csv(file or the.file))
+  assert 3184== sum(len(row) for row in data.rows)
+  for row in data.rows: assert type(row[0])==int
+  [print(col) for col in data.cols.all]
+  nums = adds(ydist(row,data) for row in data.rows)
+  print(o(mu=nums.mu, sd=nums.sd))
+
+
+def dump(): print(len(data.rows)); [print(col) for col in data.cols.all]
+
+def eg__addSub(file):
+  data=Data(csv(file or the.file))
+  dump(data)
+  cached=data.rows[:]
+  while data.rows: sub(data.rows.pop(), data)
+  dump(data)
+  for row in cached: add(row,data)
+  dump(data)
+  for row in data.rows: assert -17 < like(row,data,1000,2) < -10
+
+def eg__clone(file):
+  data=Data(csv(file or the.file))
+  dump(data)
+  data2=clone(data,src=data.rows)
+  dump(data2)
+
+def eg__actLearn(file):
+  file = file or the.file
+  name = re.search(r'([^/]+)\.csv$', file).group(1)
+  data=Data(csv(file))
+  b4 = yNums(data.rows,data)
+  now=Num()
+  for _ in range(20):
+    random.shuffle(data.rows)
+    add(ydist(actLearn(data)[0],data), now)
+  print(o(rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
+          lo=b4.lo, mu=b4.mu, hi=b4.hi, new=now.mu,most=now.hi,name=name))
+
+
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
 the  = o(**{m[1]:coerce(m[2]) for m in re.finditer(regx,__doc__)})
 random.seed(the.rseed)
 
-if __name__ == "__main__":  
-  cli(the.__dict__)
-  main()
+if __name__ == "__main__":  main()
