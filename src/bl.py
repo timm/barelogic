@@ -180,7 +180,7 @@ def showxy(xy):
   if hi == lo   : return f"{s} == {lo}"
   return f"{lo} <= {s} < {hi}"
 
-def merge(i,j):
+def merge(xy1,xy2):
   def _sym(i,j):
     k   = Sym(i.txt, i.at)
     k.n = i.n + j.n
@@ -200,15 +200,15 @@ def merge(i,j):
     k.hi = max(i.hi,j.hi)
     return k 
 
-  return o(it=XY, x=_num(i.x,j.x), y=_sym(i.y,j.y))
+  return o(it=XY, x=_num(xy1.x, xy2.x), y=_sym(xy1.y, xy2.y))
 
 def isMerged(i,j,n=20,xCohen=0,yCohen=0):
    k = merge(i,j)
-   if (i.n < n or j.n <= n or
+   if (i.x.n < n or j.x.n <= n or
       abs(i.x.mu - j.x.mu) <= xCohen or
       (k.y.it is Num and abs(i.y.mu - j.y.mu)) <= yCohen or
-      var(k) <= (i.n*var(i) + j.n*var(j))/k.n) :
-      return k
+      var(k.y) <= (i.y.n*var(i.y) + j.y.n*var(j.y))/k.y.n
+      ) : return k
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def isNum(x): return isinstance(x,(float,int))
