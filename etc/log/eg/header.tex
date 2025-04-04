@@ -1,0 +1,19 @@
+\usepackage{wrapfig} 
+\definecolor{NCSUred}{RGB}{204,0,0} % Define NC State Red
+\setbeamercolor{frametitle}{fg=white, bg=NCSUred}
+\setbeamercolor{title}{fg=NCSUred}
+\setbeamercolor{structure}{fg=NCSUred} % Change section/subsection colors
+\setbeamercolor{progress bar}{fg=NCSUred} % Change progress bar color (if used)
+\setbeamercolor{block title}{fg=white, bg=NCSUred}
+\setbeamercolor{item}{fg=NCSUred}
+\setbeamerfont{frametitle}{size=\LARGE,series=\bfseries}
+\titlegraphic{\hfill\includegraphics[width=3cm]{ncstate_logo.jpg}}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=NCSUred,
+    urlcolor=NCSUred
+}
+\setbeamertemplate{itemize item}{\color{NCSUred}$\blacksquare$}
+
+
+% pandoc a.md -t beamer --pdf-engine=xelatex -H header.tex -o a.pdf
