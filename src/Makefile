@@ -101,7 +101,8 @@ pretty:
 	mkdir -p ~/tmp/$(eg)
 	rm -f  ~/tmp/$(eg)/*
 	time $(MAKE) $(eg) | sort -n -k 2 | column -t
-	bash plot.sh ~/tmp/$(eg)
+	bash plot.sh $(eg)
+	open ~/tmp/$(eg)/$(eg).png
 
 eg6: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d,$^, (python3 bl.py -S 6 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )

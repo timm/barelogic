@@ -198,7 +198,6 @@ def show(x):
 
 def main():
   cli(the.__dict__)
-  print(the.Stop)
   for n,s in enumerate(sys.argv):
     if fun := globals().get("eg" + s.replace("-","_")):
       arg = "" if n==len(sys.argv) - 1 else sys.argv[n+1]
@@ -248,13 +247,14 @@ def eg__actLearn(file):
   name = re.search(r'([^/]+)\.csv$', file).group(1)
   data=Data(csv(file))
   b4 = yNums(data.rows,data)
+  def R(n): eps=b4.sd *0.35 ; return round(n/eps)*eps
   now=Num()
   for _ in range(20):
     random.shuffle(data.rows)
     add(ydist(actLearn(data)[0],data), now)
-  print(o(win= int(100*(b4.mu - now.mu) /(b4.mu - b4.lo)),
+  print(o(win= R(b4.mu - now.mu) /R(b4.mu - b4.lo),
           rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
-          lo=b4.lo, mu=b4.mu, hi=b4.hi, new=now.mu,sd=now.sd,stop=the.Stop,name=name))
+          lo0=b4.lo, mu0=b4.mu, hi0=b4.hi, mu1=now.mu,sd1=now.sd,stop=the.Stop,name=name))
 
 
 #--------- --------- --------- --------- --------- --------- ------- -------
