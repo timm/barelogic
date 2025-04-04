@@ -54,7 +54,7 @@ def clone(data, src=[]): return adds(src, Data([data.cols.names]))
 #--------- --------- --------- --------- --------- --------- ------- -------
 def adds(src, i=None):
   for x in src:
-    if not i: return adds(src,Num() if isinstance(x,(int,float)) else Sym())
+    if not i: return adds(src,Num() if isNum(x) else Sym())
     add(x,i)
   return i
 
@@ -62,6 +62,7 @@ def add(v, i):
   def _data():
     if i.cols: i.rows  += [[add( v[c.at], c) for c in i.cols.all]]
     else     : i.cols   = Cols(v)
+  
   def _sym():
     n = i.has[v] = 1 + i.has.get(v,0)
     if n > i.most: i.most, i.mode = n, v
@@ -75,7 +76,7 @@ def add(v, i):
 
   if v != "?":
     i.n += 1
-    _sym() if i.it is Sym else (_num() if i.it is Num else _data())
+    _sym() if i.it is Sym else (_num() if i.it is Num else _data)
   return v
 
 def sub(v, i):
@@ -162,6 +163,56 @@ def actLearn(data):
   return best.rows
 
 #--------- --------- --------- --------- --------- --------- ------- -------
+def XY(col,lo,hi=None):
+  xy = o(it=XY,x=Num(col.txt, col.at),y=Nume)
+  xy.x.lo = lo
+  xy.x.hi = hi or lo
+
+def addxy(x,y, xy):
+  xy.y = xy.y if xy.y else (Num if isNum(y) else Sym)()
+  xy.x.add(x)
+  xy.y.add(y)
+
+def showxy(xy):
+  lo,hi,s = xy.x.lo, xy.x.hi, xy.x.txt
+  if lo == -BIG : return f"{s} < {hi}"
+  if hi == BIG  : return f"{s} >= {lo}"
+  if hi == lo   : return f"{s} == {lo}"
+  return f"{lo} <= {s} < {hi}"
+
+def merge(i,j):
+  def _sym(i,j):
+    k   = Sym(i.txt, i.at)
+    k.n = i.n + j.n
+    for d in [i.has, j.has] 
+      for x,v in d.items():
+        k.has[x] = k.has.get(x,0) + v
+    k.mode = max(k.has, key=k.has.get)
+    k.most = k.has[k.mode]
+    return s
+  def _num(i,j):
+    k    = Num(i.txt, i.at)
+    k.n  = i.n + j.n
+    k.mu = (i.n*i.mu + j.n*j.mu)/(i.n + j.m)
+    k.m2 = i.m2 + j.m2 + (i.n * j.n/(i.n+j.n)) * (i.mu - j.mu)^2
+    k.sd = (k.m2/(k.n - 1))^0.5
+    k.lo = min(i.lo,j.lo)
+    k.hi = max(i.hi,j.hi)
+    return k 
+
+  return o(it=XY, x=_num(i.x,j.x), y=_sym(i.y,j.y))
+
+def isMerged(i,j,n=20,xCohen=0,yCohen=0):
+   k = merge(i,j)
+   if (i.n < n or j.n <= n or
+      abs(i.x.mu - j.x.mu) <= xCohen or
+      (k.y.it is Num and abs(i.y.mu - j.y.mu)) <= yCohen or
+      var(k) <= (i.n*var(i) + j.n*var(j))/k.n) :
+      return k
+
+#--------- --------- --------- --------- --------- --------- ------- -------
+def isNum(x): return isinstance(x,(float,int))
+
 def coerce(s):
   try: return int(s)
   except Exception:
@@ -194,6 +245,7 @@ def show(x):
   elif it is list  : x= '['+', '.join([show(v) for v in x])+']'
   elif it is dict  : x= "{"+' '.join([f":{k} {show(v)}" 
                                    for k,v in x.items() if str(k)[0] !="_"])+"}"
+  elif it is XY    : x= showxy(x)
   return str(x)
 
 def main():
