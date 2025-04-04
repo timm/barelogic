@@ -22,7 +22,8 @@ pull: ## update from main
 	git pull
 
 push: ## commit to main
-	- echo -en "$(LOUD)Why this push? $(SOFT)" ;  read x ; git commit -am "$$x" ;  git push
+	- echo -en "$(LOUD)Why this push? $(SOFT)" 
+	- read x ; git commit -am "$$x" ;  git push
 	- git status
 
 sh: ## run my shell
@@ -33,8 +34,8 @@ luac:
 lint: ## lint all python in this directory
 	export PYTHONPATH="..:$$PYTHONPATH"; \
 	pylint --disable=W0311,C0303,C0116,C0321,C0103 \
-		     --disable=C0410,C0115,C3001,R0903,E1101 \
-				 --disable=W0108,W0106,W0718   bl.py
+		    --disable=C0410,C0115,C3001,R0903,E1101 \
+		    --disable=E701,W0108,W0106,W0718   bl.py
 
 ../docs/%.html : %.py
 	pycco -d $(Top)/docs  $^

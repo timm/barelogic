@@ -134,7 +134,7 @@ def like(row, data, nall=100, nh=2):
 
   prior = (data.n + the.k) / (nall + the.k*nh)
   tmp   = [_col(row[x.at], x) for x in data.cols.x if row[x.at] != "?"]
-  return sum(math.log(l) for l in tmp + [prior] if l>0)
+  return sum(math.log(n) for n in tmp + [prior] if n>0)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def actLearn(data):
@@ -164,7 +164,7 @@ def actLearn(data):
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def XY(col,lo,hi=None):
-  xy = o(it=XY,x=Num(col.txt, col.at),y=Nume)
+  xy = o(it=XY,x=Num(col.txt, col.at),y=None)
   xy.x.lo = lo
   xy.x.hi = hi or lo
 
@@ -184,12 +184,12 @@ def merge(xy1,xy2):
   def _sym(i,j):
     k   = Sym(i.txt, i.at)
     k.n = i.n + j.n
-    for d in [i.has, j.has] 
+    for d in [i.has, j.has]:
       for x,v in d.items():
         k.has[x] = k.has.get(x,0) + v
     k.mode = max(k.has, key=k.has.get)
     k.most = k.has[k.mode]
-    return s
+    return k
   def _num(i,j):
     k    = Num(i.txt, i.at)
     k.n  = i.n + j.n
@@ -207,7 +207,7 @@ def isMerged(i,j,n=20,xCohen=0,yCohen=0):
    if (i.x.n < n or j.x.n <= n or
       abs(i.x.mu - j.x.mu) <= xCohen or
       (k.y.it is Num and abs(i.y.mu - j.y.mu)) <= yCohen or
-      var(k.y) <= (i.y.n*var(i.y) + j.y.n*var(j.y))/k.y.n
+      spread(k.y) <= (i.y.n*spread(i.y) + j.y.n*spread(j.y))/k.y.n
       ) : return k
 
 #--------- --------- --------- --------- --------- --------- ------- -------
@@ -265,18 +265,18 @@ def eg__cols(_):
 
 def eg__csv(file): 
   rows =list(csv(file or the.file))
-  assert 3192== sum(len(row) for row in rows)
-  for row in rows[1:]: assert type(row[0])==int
+  assert 3192 == sum(len(row) for row in rows)
+  for row in rows[1:]: assert type(row[0]) is int
 
 def eg__data(file):
   data=Data(csv(file or the.file))
-  assert 3184== sum(len(row) for row in data.rows)
-  for row in data.rows: assert type(row[0])==int
+  assert 3184 == sum(len(row) for row in data.rows)
+  for row in data.rows: assert type(row[0]) is int
   [print(col) for col in data.cols.all]
   nums = adds(ydist(row,data) for row in data.rows)
   print(o(mu=nums.mu, sd=nums.sd))
 
-def dump(): print(len(data.rows)); [print(col) for col in data.cols.all]
+def dump(d): print(len(d.rows)); [print(col) for col in d.cols.all]
 
 def eg__addSub(file):
   data=Data(csv(file or the.file))
