@@ -1,4 +1,3 @@
-# vim: set sw=2 ts=2 et :
 """
 bl.py : barelogic, XAI for active learning + multi-objective optimization
 (c) 2025, Tim Menzies <timm@ieee.org>, MIT License  
@@ -18,7 +17,7 @@ OPTIONS:
       -s start   where to begin              = 4  
       -S Stop    where to end                = 32  
 """
-import re,sys,math,random
+import re,sys,math,time,random
 
 rand  = random.random
 one   = random.choice
@@ -201,7 +200,8 @@ def merge(xy1,xy2):
 
   return o(it=XY, x=_num(xy1.x, xy2.x), y=_sym(xy1.y, xy2.y))
 
-def isMerged(i,j,n=20,xCohen=0,yCohen=0):
+def isMerged(xy1,xy2,n=20,xCohen=0,yCohen=0):
+   i,j= xy1,xy2
    k = merge(i,j)
    if (i.x.n < n or j.x.n <= n or
       abs(i.x.mu - j.x.mu) <= xCohen or
@@ -293,20 +293,22 @@ def eg__clone(file):
   data2=clone(data,src=data.rows)
   dump(data2)
 
-def eg__actLearn(file):
+def eg__actLearn(file,  repeats=20):
   file = file or the.file
   name = re.search(r'([^/]+)\.csv$', file).group(1)
-  data=Data(csv(file))
-  b4 = yNums(data.rows,data)
-  def R(n): eps=b4.sd *0.35 ; return round(n/eps)*eps
-  now=Num()
-  for _ in range(20):
+  data = Data(csv(file))
+  b4   = yNums(data.rows,data)
+  now  = Num()
+  t1   = time.perf_counter_ns()
+  for _ in range(repeats):
     random.shuffle(data.rows)
     add(ydist(actLearn(data)[0],data), now)
-  print(o(win= R(b4.mu - now.mu) /R(b4.mu - b4.lo),
+  t2  = time.perf_counter_ns()
+  print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
           rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
-          lo0=b4.lo, mu0=b4.mu, hi0=b4.hi, mu1=now.mu,sd1=now.sd,stop=the.Stop,name=name))
-
+          lo0=b4.lo, mu0=b4.mu, hi0=b4.hi, mu1=now.mu,sd1=now.sd,
+          ms = int((t2-t1)/repeats/1000000),
+          stop=the.Stop,name=name))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
