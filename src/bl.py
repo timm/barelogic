@@ -62,7 +62,6 @@ def add(v, i):
   def _data():
     if i.cols: i.rows  += [[add( v[c.at], c) for c in i.cols.all]]
     else     : i.cols   = Cols(v)
-  
   def _sym():
     n = i.has[v] = 1 + i.has.get(v,0)
     if n > i.most: i.most, i.mode = n, v
@@ -76,7 +75,7 @@ def add(v, i):
 
   if v != "?":
     i.n += 1
-    _sym() if i.it is Sym else (_num() if i.it is Num else _data)
+    _sym() if i.it is Sym else (_num() if i.it is Num else _data())
   return v
 
 def sub(v, i):
