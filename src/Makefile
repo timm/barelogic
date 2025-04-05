@@ -105,7 +105,7 @@ pretty:
 	bash plot.sh $(eg)
 	open ~/tmp/$(eg)/$(eg).png
 
-eg6: ../../moot/optimize/[bchmp]*/*.csv
+eg6: ../../moot/optimize/[chmp]*/*.csv
 	$(foreach d,$^, (python3 bl.py -S 6 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
 
 eg12: ../../moot/optimize/[bchmp]*/*.csv
