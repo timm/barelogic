@@ -4,18 +4,21 @@ bl.py : barelogic, XAI for active learning + multi-objective optimization
 
 OPTIONS:  
 
-      -a acq     xploit or xplore or adapt   = xploit  
-      -d decs    decimal places for printing = 3  
-      -f file    training csv file           = ../test/data/auto93.csv  
-      -g guess   size of guess               = 0.5  
-      -G Guesses max number of guesses       = 100  
-      -k k       low frequency Bayes hack    = 1  
-      -l leaf    min size of tree leaves     = 2
-      -m m       low frequency Bayes hack    = 2  
-      -p p       distance formula exponent   = 2  
-      -r rseed   random number seed          = 1234567891  
-      -s start   where to begin              = 4  
-      -S Stop    where to end                = 32  
+      -a acq        xploit or xplore or adapt   = xploit  
+      -b bootstraps num of bootstrap samples    = 512
+      -B bootConf   bootstrap threshold         = 0.05
+      -c cliffConf  cliffs' delta threshold     = 0.197
+      -d decs       decimal places for printing = 3  
+      -f file       training csv file           = ../test/data/auto93.csv  
+      -g guess      size of guess               = 0.5  
+      -G Guesses    max number of guesses       = 100  
+      -k k          low frequency Bayes hack    = 1  
+      -l leaf       min size of tree leaves     = 2
+      -m m          low frequency Bayes hack    = 2  
+      -p p          distance formula exponent   = 2  
+      -r rseed      random number seed          = 1234567891  
+      -s start      where to begin              = 4  
+      -S Stop       where to end                = 32  
 """
 import re,sys,math,time,random
 
@@ -31,6 +34,7 @@ class o:
 
 def Num(txt=" ", at=0):
   return o(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG, 
+           rank=0, # used by the stats functions, ignore otherwise
            goal = 0 if txt[-1]=="-" else 1)
 
 def Sym(txt=" ", at=0):
@@ -79,7 +83,10 @@ def add(v, i):
 
 def sub(v, i):
    def _data(): [sub(v[col.at],col) for col in i.cols.all]  
-   def _sym() : i.has[v] -= 1
+   def _sym() : 
+     i.has[v] -= 1
+     i.mode = max(i.has, key=i.has.get)
+     i.most = i.has[i.mode]
    def _num():
      if i.n < 2: i.mu = i.sd = 0
      else:
@@ -101,8 +108,6 @@ def norm(v, col):
 def mid(col): return col.mu if col.it is Num else col.mode
 
 def spread(col): return col.sd if col.it is Num else ent(col.has)
-
-#def delta(i,j): return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
 
 def ydist(row,  data):
   return (sum(abs(norm(row[c.at], c) - c.goal)**the.p for c in data.cols.y) 
@@ -210,6 +215,50 @@ def isMerged(xy1,xy2,n=20,xCohen=0,yCohen=0):
       ) : return k
 
 #--------- --------- --------- --------- --------- --------- ------- -------
+def delta(i,j): 
+  return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
+
+# non-parametric significance test From Introduction to Bootstrap, 
+# Efron and Tibshirani, 1993, chapter 20. https://doi.org/10.1201/9780429246593"""
+def bootstrap(vals1, vals2):
+    x,y,z = adds(vals1+vals2), adds(vals1), adds(vals2)
+    yhat  = [y1 - mid(y) + mid(x) for y1 in vals1]
+    zhat  = [z1 - mid(z) + mid(x) for z1 in vals2] 
+    n     = 0
+    for _ in range(the.bootstraps):
+      n += delta(some(yhat,k=len(yhat)), 
+                 some(zhat,k=len(zhat))) > delta(y,z) 
+    return n / the.bootstraps >= the.cliffConf
+
+# Non-parametric effect size. threshold is border between small=.11 and medium=.28 
+# from Table1 of  https://doi.org/10.3102/10769986025002101
+def cliffs(vals1,vals2):
+   n,lt,gt = 0,0,0
+   for x in vals1:
+     for y in vals2:
+        n += 1
+        if x > y: gt += 1
+        if x < y: lt += 1 
+   return abs(lt - gt)/n  < the.cliffConf # 0.197) 
+
+def summarize(d, eps=0, reverse=False):
+  def _samples():            return [_sample(d[k],k) for k in d]
+  def _sample(vals,txt=" "): return o(vals=vals,num=adds(vals,Num(txt=txt)))
+  def _same(b4,now):         return (abs(b4.num.mu - now.num.mu) < eps or
+                                    cliffs(b4.vals, now.vals) and 
+                                    bootstrap(b4.vals, now.vals))
+
+  summary,tmp = {},[]
+  for now in sorted(_samples(), key=lambda z:z.num.mu, reverse=reverse):
+    if tmp and _same(tmp[-1], now): 
+      tmp[-1] = _sample(tmp[-1].vals + now.vals)
+    else: 
+      tmp += [now]
+    now.num.rank = len(tmp)
+    summary[now.num.txt] = now.num
+  return summary
+
+#--------- --------- --------- --------- --------- --------- ------- -------
 def isNum(x): return isinstance(x,(float,int))
 
 def coerce(s):
@@ -303,6 +352,7 @@ def eg__actLearn(file,  repeats=20):
   for _ in range(repeats):
     random.shuffle(data.rows)
     add(ydist(actLearn(data)[0],data), now)
+    #adds([ydist(row,data) for row in actLearn(data)], now)
   t2  = time.perf_counter_ns()
   print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
           rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
