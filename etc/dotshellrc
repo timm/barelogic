@@ -35,10 +35,7 @@ alias fgrep='fgrep --color=auto'
 alias h="history"
 alias ls="ls -G"
 alias py="python3 -B "
-alias vi='nvim --clean -p -c "colorscheme habamax" \
-                          -c "set number" \
-                          -c "set ts=2 sw=2 sts=2 et" \
-                          -c "setlocal spell spelllang=en_us" ' 
+alias vi='nvim --clean -p -c "colorscheme habamax" -c "set number" -c "set ts=2 sw=2 sts=2 et" -c "setlocal spell spelllang=en_us" ' 
 
 export BASH_SILENCE_DEPRECATION_WARNING=1
 export PATH="$PWD:/opt/homebrew/bin:$PATH"
