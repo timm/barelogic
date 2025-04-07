@@ -6,7 +6,7 @@ OPTIONS:
 
       -a acq        xploit or xplore or adapt   = xploit  
       -b bootstraps num of bootstrap samples    = 512
-      -B bootConf   bootstrap threshold         = 0.05
+      -B bootConf   bootstrap threshold         = 0.95
       -c cliffConf  cliffs' delta threshold     = 0.197
       -d decs       decimal places for printing = 3  
       -f file       training csv file           = ../test/data/auto93.csv  
@@ -226,11 +226,11 @@ def bootstrap(vals1, vals2):
     zhat  = [z1 - mid(z) + mid(x) for z1 in vals2] 
     n     = 0
     for _ in range(the.bootstraps):
-      n += delta(some(yhat,k=len(yhat)), 
-                 some(zhat,k=len(zhat))) > delta(y,z) 
-    return n / the.bootstraps >= the.cliffConf
+      n += delta(adds(some(yhat,k=len(yhat))), 
+                 adds(some(zhat,k=len(zhat)))) > delta(y,z) 
+    return n / the.bootstraps >= (1- the.bootConf)
 
-# Non-parametric effect size. threshold is border between small=.11 and medium=.28 
+# Non-parametric effect size. Threshold is border between small=.11 and medium=.28 
 # from Table1 of  https://doi.org/10.3102/10769986025002101
 def cliffs(vals1,vals2):
    n,lt,gt = 0,0,0
@@ -248,15 +248,16 @@ def summarize(d, eps=0, reverse=False):
                                     cliffs(b4.vals, now.vals) and 
                                     bootstrap(b4.vals, now.vals))
 
-  summary,tmp = {},[]
+  out,tmp = {},[]
   for now in sorted(_samples(), key=lambda z:z.num.mu, reverse=reverse):
     if tmp and _same(tmp[-1], now): 
       tmp[-1] = _sample(tmp[-1].vals + now.vals)
     else: 
-      tmp += [now]
-    now.num.rank = len(tmp)
-    summary[now.num.txt] = now.num
-  return summary
+      tmp += [ _sample(now.vals) ]
+    now.num.meta= tmp[-1].num
+    now.num.meta.rank = len(tmp) - 1
+    out[now.num.txt] = now.num
+  return out
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def isNum(x): return isinstance(x,(float,int))
@@ -352,13 +353,35 @@ def eg__actLearn(file,  repeats=20):
   for _ in range(repeats):
     random.shuffle(data.rows)
     add(ydist(actLearn(data)[0],data), now)
-    #adds([ydist(row,data) for row in actLearn(data)], now)
   t2  = time.perf_counter_ns()
   print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
           rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
           lo0=b4.lo, mu0=b4.mu, hi0=b4.hi, mu1=now.mu,sd1=now.sd,
           ms = int((t2-t1)/repeats/1000000),
           stop=the.Stop,name=name))
+
+def eg__stats(_):
+   def c(b): return 1 if b else 0
+   G  = random.gauss
+   R  = random.random
+   n  = 32
+   b4 = [G(10,1) for _ in range(n)]
+   d  = 0
+   while d < 2:
+     now=[x+d*R() for x in b4]
+     b1=cliffs(b4,now)
+     b2=bootstrap(b4,now)
+     showd(o(d=d,cliffs=c(b1), boot=c(b2), agree=c(b1==b2)))
+     d+= 0.1
+
+def eg__rank(_):
+   G  = random.gauss
+   n=32
+   for k,num in summarize(dict(
+                                b4 = [G(10,1) for _ in range(n)],
+                                now = [G(20,1) for _ in range(n)])).items():
+      print(k,num.meta.rank, num.meta.mu)
+      #print(k, num.meta.rank, num.meta.mu)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"

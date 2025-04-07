@@ -105,24 +105,13 @@ pretty:
 	bash plot.sh $(eg)
 	open ~/tmp/$(eg)/$(eg).png
 
-eg6: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d,$^, (python3 bl.py -S 6 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+MOOT=../../moot/optimize/[bchmp]*/*.csv
 
-eg12: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d,$^, (python3 bl.py -S 12 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-
-eg18: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d,$^, (python3 bl.py -S 18 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-
-eg24: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d,$^, (python3 bl.py -S 24 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-
-eg50: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d,$^, (python3 bl.py -S 50 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-
-eg100: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d,$^, (python3 bl.py -S 100 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-
-eg200: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d,$^, (python3 bl.py -S 200 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+eg6  : $(MOOT); $(foreach d,$^, (python3 bl.py -S   6 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+eg12 : $(MOOT); $(foreach d,$^, (python3 bl.py -S  12 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+eg18 : $(MOOT); $(foreach d,$^, (python3 bl.py -S  18 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+eg24 : $(MOOT); $(foreach d,$^, (python3 bl.py -S  24 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+eg50 : $(MOOT); $(foreach d,$^, (python3 bl.py -S  50 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+eg100: $(MOOT); $(foreach d,$^, (python3 bl.py -S 100 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+eg200: $(MOOT); $(foreach d,$^, (python3 bl.py -S 200 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
 

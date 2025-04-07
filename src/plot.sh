@@ -19,8 +19,13 @@ set style data linespoints
 set datafile separator whitespace
 set xlabel "results from 20 trials. Sorted by new.mu"
 set ylabel "d"
-set ytics 0.2
+set ytics 0.1
 set yrange [-0.05:0.8]
+
+set grid linetype 0
+set grid linewidth 0.5
+set grid linecolor "grey"
+
 plot \\
   '~/tmp/$1/$1' using 1:2 title 'asIs.mu' with lines, \\
   '~/tmp/$1/$1' using 1:3:4 title 'toBe.mu ± sd' with yerrorlines
