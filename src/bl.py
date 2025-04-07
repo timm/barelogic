@@ -376,12 +376,14 @@ def eg__stats(_):
 
 def eg__rank(_):
    G  = random.gauss
-   n=32
-   for k,num in summarize(dict(
-                                b4 = [G(10,1) for _ in range(n)],
-                                now = [G(20,1) for _ in range(n)])).items():
-      print(k,num.meta.rank, num.meta.mu)
-      #print(k, num.meta.rank, num.meta.mu)
+   n=100
+   for k,num in summarize(dict( asIs  = [G(10,1) for _ in range(n)],
+                                copy1 = [G(20,1) for _ in range(n)],
+                                now1  = [G(20,1) for _ in range(n)],
+                                copy2 = [G(40,1) for _ in range(n)],
+                                now2  = [G(40,1) for _ in range(n)],
+                                ), 0.35).items():
+      showd(o(r=num.meta.rank, mu=num.meta.mu,k=k))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
