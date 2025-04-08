@@ -101,7 +101,7 @@ pretties:
 pretty:
 	mkdir -p ~/tmp/$(eg)
 	rm -f  ~/tmp/$(eg)/*
-	time $(MAKE) $(eg) | sort -n -k 2 | column -t
+	time $(MAKE) $(eg) | sort -n -k 2 | column -t | cat -n
 	bash plot.sh $(eg)
 	open ~/tmp/$(eg)/$(eg).png
 
