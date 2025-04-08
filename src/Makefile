@@ -89,29 +89,9 @@ lint: ## lint all python in this directory
 	@ps2pdf $@.ps $@; rm $@.ps
 	open $@
 
-eg?=eg24
-pretties:
-	$(MAKE) eg=eg6 pretty
-	$(MAKE) eg=eg12 pretty
-	$(MAKE) eg=eg24 pretty
-	$(MAKE) eg=eg50 pretty
-	$(MAKE) eg=eg100 pretty
-	$(MAKE) eg=eg200 pretty
+report:
+	cat ~/tmp/*.out | column -t | grep --color a
 
-pretty:
-	mkdir -p ~/tmp/$(eg)
-	rm -f  ~/tmp/$(eg)/*
-	time $(MAKE) $(eg) | sort -n -k 2 | column -t | cat -n
-	bash plot.sh $(eg)
-	open ~/tmp/$(eg)/$(eg).png
-
-MOOT=../../moot/optimize/[bchmp]*/*.csv
-
-eg6  : $(MOOT); $(foreach d,$^, (python3 bl.py -S   6 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-eg12 : $(MOOT); $(foreach d,$^, (python3 bl.py -S  12 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-eg18 : $(MOOT); $(foreach d,$^, (python3 bl.py -S  18 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-eg24 : $(MOOT); $(foreach d,$^, (python3 bl.py -S  24 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-eg50 : $(MOOT); $(foreach d,$^, (python3 bl.py -S  50 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-eg100: $(MOOT); $(foreach d,$^, (python3 bl.py -S 100 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
-eg200: $(MOOT); $(foreach d,$^, (python3 bl.py -S 200 --actLearn $d |tee  ~/tmp/$@/$(notdir $d) &); )
+acts: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d, $^, (python3 -B bl.py --acts $d | tee ~/tmp/$(notdir $d).out &); )
 

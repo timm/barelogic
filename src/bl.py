@@ -35,7 +35,7 @@ class o:
 def Num(txt=" ", at=0):
   return o(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG, 
            rank=0, # used by the stats functions, ignore otherwise
-           goal = 0 if txt[-1]=="-" else 1)
+           goal = 0 if str(txt)[-1]=="-" else 1)
 
 def Sym(txt=" ", at=0):
   return o(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
@@ -214,7 +214,7 @@ def isMerged(xy1,xy2,n=20,xCohen=0,yCohen=0):
       spread(k.y) <= (i.y.n*spread(i.y) + j.y.n*spread(j.y))/k.y.n
       ) : return k
 
-#--------- --------- --------- --------- --------- --------- ------- -------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
   return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
 
@@ -254,12 +254,12 @@ def summarize(d, eps=0, reverse=False):
       tmp[-1] = _sample(tmp[-1].vals + now.vals)
     else: 
       tmp += [ _sample(now.vals) ]
-    now.num.meta= tmp[-1].num
-    now.num.meta.rank = len(tmp) - 1
+    now.num.meta= tmp[-1].num 
+    now.num.meta.rank = chr( 97 + len(tmp) - 1 )
     out[now.num.txt] = now.num
   return out
 
-#--------- --------- --------- --------- --------- --------- ------- -------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def isNum(x): return isinstance(x,(float,int))
 
 def coerce(s):
@@ -305,7 +305,7 @@ def main():
       random.seed(the.rseed)
       fun(coerce(arg))
 
-#--------- --------- --------- --------- --------- --------- ------- -------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def eg__the(_): print(the)
 
 def eg__cols(_): 
@@ -343,23 +343,6 @@ def eg__clone(file):
   data2=clone(data,src=data.rows)
   dump(data2)
 
-def eg__actLearn(file,  repeats=20):
-  file = file or the.file
-  name = re.search(r'([^/]+)\.csv$', file).group(1)
-  data = Data(csv(file))
-  b4   = yNums(data.rows,data)
-  now  = Num()
-  t1   = time.perf_counter_ns()
-  for _ in range(repeats):
-    random.shuffle(data.rows)
-    add(ydist(actLearn(data)[0],data), now)
-  t2  = time.perf_counter_ns()
-  print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
-          rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
-          lo0=b4.lo, mu0=b4.mu, hi0=b4.hi, mu1=now.mu,sd1=now.sd,
-          ms = int((t2-t1)/repeats/1000000),
-          stop=the.Stop,name=name))
-
 def eg__stats(_):
    def c(b): return 1 if b else 0
    G  = random.gauss
@@ -384,6 +367,47 @@ def eg__rank(_):
                                 now2  = [G(40,1) for _ in range(n)],
                                 ), 0.35).items():
       showd(o(r=num.meta.rank, mu=num.meta.mu,k=k))
+
+def eg__actLearn(file,  repeats=20):
+  file = file or the.file
+  name = re.search(r'([^/]+)\.csv$', file).group(1)
+  data = Data(csv(file))
+  b4   = yNums(data.rows,data)
+  now  = Num()
+  t1   = time.perf_counter_ns()
+  for _ in range(repeats):
+    random.shuffle(data.rows)
+    add(ydist(actLearn(data)[0],data), now)
+  t2  = time.perf_counter_ns()
+  print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
+          rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
+          lo0=b4.lo, mu0=b4.mu, hi0=b4.hi, mu1=now.mu,sd1=now.sd,
+          ms = int((t2-t1)/repeats/1000000),
+          stop=the.Stop,name=name))
+
+def eg__acts(file, repeats=100):
+  file = file or the.file
+  name = re.search(r'([^/]+)\.csv$', file).group(1)
+  data = Data(csv(file))
+  rx   = dict(b4 = [ydist(row,data) for row in data.rows])
+  asIs = adds(rx["b4"])
+  for the.Stop in [200,100,50,24,12,6]: 
+    rx[the.Stop] = []
+    t1   = time.perf_counter_ns()
+    for _ in range(repeats):
+      random.shuffle(data.rows)
+      rx[the.Stop] += [ ydist(actLearn(data)[0], data) ]
+    t2  = time.perf_counter_ns()
+  report = dict(rows = len(data.rows),  
+                x    = len(data.cols.x), 
+                y    = len(data.cols.y),
+                ms   = round((t2 - t1) / repeats / 1000000))
+  order = summarize(rx, asIs.sd*0.35)
+  for k in rx:
+    v = order[k]
+    report[k] = f"{v.meta.rank} {v.mu:.2f} "
+  report["name"]=name
+  print(report)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
