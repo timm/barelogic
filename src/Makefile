@@ -89,7 +89,7 @@ lint: ## lint all python in this directory
 	@ps2pdf $@.ps $@; rm $@.ps
 	open $@
 
-report:
+acts1:
 	cat ~/tmp/*.out | column -t | grep --color a
 
 acts: ../../moot/optimize/[bchmp]*/*.csv
