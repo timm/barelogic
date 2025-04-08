@@ -391,7 +391,7 @@ def eg__acts(file, repeats=20):
   data = Data(csv(file))
   rx   = dict(b4 = [ydist(row,data) for row in data.rows])
   asIs = adds(rx["b4"])
-  for the.Stop in [200,100,50,32,24,12,6]: 
+  for the.Stop in [200,100,50,24,12,6]: 
     rx[the.Stop] = []
     t1   = time.perf_counter_ns()
     for _ in range(repeats):
