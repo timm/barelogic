@@ -97,7 +97,7 @@ fast: ../../moot/optimize/[b]*/*.csv
 	$(foreach d, $^, (python3 -B bl.py --fast $d | tee ~/tmp/$@_$(notdir $d).out &); )
 
 acts1:
-	cat ~/tmp/acts_*.out | sed "s/[{}',]//g" | sort -n -k 4 |  column -t | grep --color a
+	cat ~/tmp/acts_*.out | sort | uniq | sed "s/[{}']//g" | sort -n -k 2  | column -s, -t | grep --color a
 
 acts: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, (python3 -B bl.py --acts $d | tee ~/tmp/$@_$(notdir $d).out &); )

@@ -424,7 +424,8 @@ def experiment1(file, repeats=20, samples=[32,16,8],
     v = order[k]
     report[k] = f"{v.meta.rank} {v.mu:.2f} "
   report["name"]=name
-  print(report)
+  print("#"+str(list(report.keys())))
+  print(list(report.values()))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
