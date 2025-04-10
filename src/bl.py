@@ -366,7 +366,7 @@ def eg__rank(_):
                                 copy2 = [G(40,1) for _ in range(n)],
                                 now2  = [G(40,1) for _ in range(n)],
                                 ), 0.35).items():
-      showd(o(r=num.meta.rank, mu=num.meta.mu,k=k))
+      showd(o(r=num.meta.rank, mu=num.meta.mu, k=k))
 
 def eg__actLearn(file,  repeats=20):
   file = file or the.file
@@ -399,7 +399,7 @@ def eg__acts(file):
     random.shuffle(data.rows)
     return ydist( actLearn(data)[0], data)
   experiment1(file or the.file,
-              repeats=100, 
+              repeats=20, 
               samples=[256,128,64,32,16,8],
               fun=rx1)
 
@@ -412,15 +412,13 @@ def experiment1(file, repeats=20, samples=[32,16,8],
   t1   = time.perf_counter_ns()
   for the.Stop in samples:
     rx[the.Stop] = []
-    for _ in range(repeats): 
-      print(".",flush=True,end="")
-      rx[the.Stop] += [ fun(data) ]
-  print("")
+    for _ in range(repeats): rx[the.Stop] += [ fun(data) ]
   t2 = time.perf_counter_ns()
-  report = dict(rows = len(data.rows),  
+  report = dict(rows = len(data.rows), 
+                lo   = f"{asIs.lo:.2f}",
                 x    = len(data.cols.x), 
                 y    = len(data.cols.y),
-                ms   = round((t2 - t1) / repeats / len(samples)/ 1000000))
+                ms   = round((t2 - t1) / (repeats * len(samples) * 1000000)))
   order = summarize(rx, asIs.sd*0.35)
   for k in rx:
     v = order[k]
