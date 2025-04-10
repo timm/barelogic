@@ -385,23 +385,42 @@ def eg__actLearn(file,  repeats=20):
           ms = int((t2-t1)/repeats/1000000),
           stop=the.Stop,name=name))
 
-def eg__acts(file, repeats=20):
-  file = file or the.file
+def eg__fast(file):
+  def rx1(data):
+    random.shuffle(data.rows)
+    return ydist( actLearn(data)[0], data)
+  experiment1(file or the.file,
+              repeats=20, 
+              samples=[128,64,32,16,8],
+              fun=rx1)
+
+def eg__acts(file):
+  def rx1(data):
+    random.shuffle(data.rows)
+    return ydist( actLearn(data)[0], data)
+  experiment1(file or the.file,
+              repeats=100, 
+              samples=[256,128,64,32,16,8],
+              fun=rx1)
+
+def experiment1(file, repeats=20, samples=[32,16,8],
+                      fun=lambda data1: ydist(actLearn(data)[0],data)):
   name = re.search(r'([^/]+)\.csv$', file).group(1)
   data = Data(csv(file))
   rx   = dict(b4 = [ydist(row,data) for row in data.rows])
   asIs = adds(rx["b4"])
-  for the.Stop in [200,100,50,24,12,6]: 
+  t1   = time.perf_counter_ns()
+  for the.Stop in samples:
     rx[the.Stop] = []
-    t1   = time.perf_counter_ns()
-    for _ in range(repeats):
-      random.shuffle(data.rows)
-      rx[the.Stop] += [ ydist(actLearn(data)[0], data) ]
-    t2  = time.perf_counter_ns()
+    for _ in range(repeats): 
+      print(".",flush=True,end="")
+      rx[the.Stop] += [ fun(data) ]
+  print("")
+  t2 = time.perf_counter_ns()
   report = dict(rows = len(data.rows),  
                 x    = len(data.cols.x), 
                 y    = len(data.cols.y),
-                ms   = round((t2 - t1) / repeats / 1000000))
+                ms   = round((t2 - t1) / repeats / len(samples)/ 1000000))
   order = summarize(rx, asIs.sd*0.35)
   for k in rx:
     v = order[k]

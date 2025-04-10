@@ -89,9 +89,16 @@ lint: ## lint all python in this directory
 	@ps2pdf $@.ps $@; rm $@.ps
 	open $@
 
+fast1:
+	cat ~/tmp/fast_*.out | column -t | grep --color a
+
+#fast: ../../moot/optimize/[bchmp]*/*.csv
+fast: ../../moot/optimize/[b]*/*.csv
+	$(foreach d, $^, (python3 -B bl.py --fast $d | tee ~/tmp/$@_$(notdir $d).out &); )
+
 acts1:
-	cat ~/tmp/*.out | column -t | grep --color a
+	cat ~/tmp/acts.+.out | column -t | grep --color a
 
 acts: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d, $^, (python3 -B bl.py --acts $d | tee ~/tmp/$(notdir $d).out &); )
+	$(foreach d, $^, (python3 -B bl.py --acts $d | tee ~/tmp/$@_$(notdir $d).out &); )
 
