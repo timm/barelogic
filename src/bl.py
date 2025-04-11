@@ -6,19 +6,22 @@ OPTIONS:
 
       -a acq        xploit or xplore or adapt   = xploit  
       -b bootstraps num of bootstrap samples    = 512
-      -B bootConf   bootstrap threshold         = 0.95
+      -B BootConf   bootstrap threshold         = 0.95
       -c cliffConf  cliffs' delta threshold     = 0.197
+      -C Cohen      Cohen threshold             = 0.35
       -d decs       decimal places for printing = 3  
       -f file       training csv file           = ../test/data/auto93.csv  
       -g guess      size of guess               = 0.5  
       -G Guesses    max number of guesses       = 100  
       -k k          low frequency Bayes hack    = 1  
+      -K Kuts       max discretization zones    = 17
       -l leaf       min size of tree leaves     = 2
       -m m          low frequency Bayes hack    = 2  
       -p p          distance formula exponent   = 2  
       -r rseed      random number seed          = 1234567891  
       -s start      where to begin              = 4  
       -S Stop       where to end                = 32  
+      -t tiny       min size of leaves of tree  = 4
 """
 import re,sys,math,time,random
 
@@ -53,6 +56,11 @@ def Cols(names):
 def Data(src=[]): return adds(src, o(it=Data,n=0,rows=[],cols=None))
 
 def clone(data, src=[]): return adds(src, Data([data.cols.names]))
+
+def XY(col,lo,hi=None):
+  xy = o(it=XY,x=Num(col.txt, col.at),y=None)
+  xy.x.lo = lo
+  xy.x.hi = hi or lo
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def adds(src, i=None):
@@ -166,25 +174,10 @@ def actLearn(data):
   return best.rows
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def XY(col,lo,hi=None):
-  xy = o(it=XY,x=Num(col.txt, col.at),y=None)
-  xy.x.lo = lo
-  xy.x.hi = hi or lo
-
-def addxy(x,y, xy):
-  xy.y = xy.y if xy.y else (Num if isNum(y) else Sym)()
-  xy.x.add(x)
-  xy.y.add(y)
-
-def showxy(xy):
-  lo,hi,s = xy.x.lo, xy.x.hi, xy.x.txt
-  if lo == -BIG : return f"{s} < {hi}"
-  if hi == BIG  : return f"{s} >= {lo}"
-  if hi == lo   : return f"{s} == {lo}"
-  return f"{lo} <= {s} < {hi}"
-
-def merge(xy1,xy2):
-  def _sym(i,j):
+def merge(i,j) 
+  def _xy(): 
+    return o(it=XY, x=merge(xy1.x, xy2.x), merge(xy1.y, xy2,y))
+  def _sym():
     k   = Sym(i.txt, i.at)
     k.n = i.n + j.n
     for d in [i.has, j.has]:
@@ -193,7 +186,7 @@ def merge(xy1,xy2):
     k.mode = max(k.has, key=k.has.get)
     k.most = k.has[k.mode]
     return k
-  def _num(i,j):
+  def _num():
     k    = Num(i.txt, i.at)
     k.n  = i.n + j.n
     k.mu = (i.n*i.mu + j.n*j.mu)/(i.n + j.m)
@@ -203,16 +196,78 @@ def merge(xy1,xy2):
     k.hi = max(i.hi,j.hi)
     return k 
 
-  return o(it=XY, x=_num(xy1.x, xy2.x), y=_sym(xy1.y, xy2.y))
+  return (_sym if i.it is Sym else (_num if i.it is Num else _xy))()
 
-def isMerged(xy1,xy2,n=20,xCohen=0,yCohen=0):
-   i,j= xy1,xy2
-   k = merge(i,j)
-   if (i.x.n < n or j.x.n <= n or
-      abs(i.x.mu - j.x.mu) <= xCohen or
-      (k.y.it is Num and abs(i.y.mu - j.y.mu)) <= yCohen or
-      spread(k.y) <= (i.y.n*spread(i.y) + j.y.n*spread(j.y))/k.y.n
-      ) : return k
+#--------- --------- --------- --------- --------- --------- ------- -------
+def discretize(rows, yfun, col, n=20, yeps=0):
+  def _cut(x):
+    if col.it is Sym: return x
+    if x == col.hi : return the.Kuts - 1
+    return int(norm(x,col) * the.Kuts - 1)
+
+  cuts={}
+  for row in rows:
+    x = row[col.at]
+    if x != "?":
+      k = _cut(x)
+      cuts[k] = cuts.get(k, None) or XY(col,x)
+      add_xy(x, yfun(row), cuts[k])
+  xys = sorted(cuts.values(), key=lambda xy: xy.x.lo)
+  return  xys if col.it is Sym else merge_xys(xys, n=n, yeps=eps)
+   
+def add_xy(x,y, xy):
+  xy.y = xy.y if xy.y else (Num if isNum(y) else Sym)()
+  add(x, xy.x)
+  add(y, xy.y)
+
+def show_xy(xy):
+  lo,hi,s = xy.x.lo, xy.x.hi, xy.x.txt
+  if lo == -BIG : return f"{s} < {hi}"
+  if hi ==  BIG : return f"{s} >= {lo}"
+  if hi == lo   : return f"{s} == {lo}"
+  return f"{lo} <= {s} < {hi}"
+
+def merge_xys(xys, n=20, yeps=0):
+  def _maybeMerge(i,j):
+     k = merge(i,j)
+     if (i.x.n < n or j.x.n < n or
+        (k.y.it is Num and abs(i.y.mu - j.y.mu)) < yeps or
+         spread(k.y) <= (i.y.n*spread(i.y) + j.y.n*spread(j.y))/k.y.n):
+       return k
+  def _end(xys)
+    for n,xy in enumerate(xys[1:]): xys[n-1].x.hi = xy.x.lo
+    xys[ 0].x.lo = -BIG
+    xys[-1].x.hi =  BIG
+    return xys
+
+  now,n,last = [],1, len(xys) - 1
+  while n <= last:
+    a = xys[n]
+    if n < last:
+      if merged := _maybeMerge(a, xys[n+1])
+        a = merged
+        n += 1
+    now += [a]
+    n += 1
+  return _end(xys) if len(xys)==len(now) else merge_xys(now, n=n, yeps=yeps)
+
+#--------- --------- --------- --------- --------- --------- ------- -------
+def tree(rows0,data):
+   def yfun(row): return ydist(row,data)
+   def ys(rows) return adds(yfun(row) for row in rows)
+   def _spread(xys):
+     return sum(xy.y.n/len(rows) * spread(xy.y) for xy in xys)
+
+   def _grow(rows, yeps, lvl=0, guard=None):
+     kids=[]
+     if len(rows) > the.tiny and spread(ys(rows)) > yeps:
+       for xy in min([discretize(rows, yfun, c) for c in datas[0].cols.x],
+                     key=_spread)
+          if rows1 := _grow(select(rows,xy.x), yeps, lvl+1, guard=xy):
+             kids += [o(guard=guard, lvl=lvl, rows=rows1)]
+       if kids: return kids
+
+   return _grow(rows0, spread(adds(ys(rows0))) * the.Cohen)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
@@ -228,7 +283,7 @@ def bootstrap(vals1, vals2):
     for _ in range(the.bootstraps):
       n += delta(adds(some(yhat,k=len(yhat))), 
                  adds(some(zhat,k=len(zhat)))) > delta(y,z) 
-    return n / the.bootstraps >= (1- the.bootConf)
+    return n / the.bootstraps >= (1- the.BootConf)
 
 # Non-parametric effect size. Threshold is border between small=.11 and medium=.28 
 # from Table1 of  https://doi.org/10.3102/10769986025002101
@@ -241,7 +296,7 @@ def cliffs(vals1,vals2):
         if x < y: lt += 1 
    return abs(lt - gt)/n  < the.cliffConf # 0.197) 
 
-def summarize(d, eps=0, reverse=False):
+def vals2RankedNums(d, eps=0, reverse=False):
   def _samples():            return [_sample(d[k],k) for k in d]
   def _sample(vals,txt=" "): return o(vals=vals,num=adds(vals,Num(txt=txt)))
   def _same(b4,now):         return (abs(b4.num.mu - now.num.mu) < eps or
@@ -294,7 +349,7 @@ def show(x):
   elif it is list  : x= '['+', '.join([show(v) for v in x])+']'
   elif it is dict  : x= "{"+' '.join([f":{k} {show(v)}" 
                                    for k,v in x.items() if str(k)[0] !="_"])+"}"
-  elif it is XY    : x= showxy(x)
+  elif it is XY    : x= show_xy(x)
   return str(x)
 
 def main():
@@ -360,12 +415,12 @@ def eg__stats(_):
 def eg__rank(_):
    G  = random.gauss
    n=100
-   for k,num in summarize(dict( asIs  = [G(10,1) for _ in range(n)],
+   for k,num in vals2RankedNum(dict( asIs  = [G(10,1) for _ in range(n)],
                                 copy1 = [G(20,1) for _ in range(n)],
                                 now1  = [G(20,1) for _ in range(n)],
                                 copy2 = [G(40,1) for _ in range(n)],
                                 now2  = [G(40,1) for _ in range(n)],
-                                ), 0.35).items():
+                                ), the.Cohen).items():
       showd(o(r=num.meta.rank, mu=num.meta.mu, k=k))
 
 def eg__actLearn(file,  repeats=20):
@@ -382,7 +437,7 @@ def eg__actLearn(file,  repeats=20):
   print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
           rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
           lo0=b4.lo, mu0=b4.mu, hi0=b4.hi, mu1=now.mu,sd1=now.sd,
-          ms = int((t2-t1)/repeats/1000000),
+          ms = int((t2-t1)/repeats/10**6),
           stop=the.Stop,name=name))
 
 def eg__fast(file):
@@ -397,7 +452,7 @@ def eg__fast(file):
 def eg__acts(file):
   def rx1(data):
     random.shuffle(data.rows)
-    return ydist( actLearn(data)[0], data)
+    return [ydist(actLearn(data)[0], data)]
   experiment1(file or the.file,
               repeats=20, 
               samples=[256,128,64,32,16,8],
@@ -412,14 +467,14 @@ def experiment1(file, repeats=20, samples=[32,16,8],
   t1   = time.perf_counter_ns()
   for the.Stop in samples:
     rx[the.Stop] = []
-    for _ in range(repeats): rx[the.Stop] += [ fun(data) ]
+    for _ in range(repeats): rx[the.Stop] +=  fun(data) 
   t2 = time.perf_counter_ns()
   report = dict(rows = len(data.rows), 
                 lo   = f"{asIs.lo:.2f}",
                 x    = len(data.cols.x), 
                 y    = len(data.cols.y),
-                ms   = round((t2 - t1) / (repeats * len(samples) * 1000000)))
-  order = summarize(rx, asIs.sd*0.35)
+                ms   = round((t2 - t1) / (repeats * len(samples) * 10**6)))
+  order = vals2RankedNum(rx, asIs.sd*the.Cohen)
   for k in rx:
     v = order[k]
     report[k] = f"{v.meta.rank} {v.mu:.2f} "

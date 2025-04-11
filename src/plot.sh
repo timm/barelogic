@@ -6,6 +6,7 @@ gawk '{a+=$2; b+=$3; c+=$4; d+=$5;e+=$6;f+=$7; g+=$8;h+=$9}  \
   function n(x) {return 100-int(100*(x-b)/(a-b)) }
 END {print n(a), n(b), n(c), n(d), n(e), n(f), n(g), n(h)}' ~/tmp/all.data
 
+# returning top
 cat<<EOF> /tmp/plot.data
 8   63
 16  77
@@ -15,14 +16,15 @@ cat<<EOF> /tmp/plot.data
 256 96
 EOF
 
-cat <<EOF > /tmp/plot.data
-8   63
-16  77
-32  84
-64  89
-128 94
-256 96
-EOF
+# # return all
+# cat <<EOF > /tmp/plot.data
+# 8 56
+# 16 54 
+# 32 74 
+# 64 72 
+# 128 82 
+# 256 80 
+# EOF
 
 gnuplot <<'EOF'
 set terminal pngcairo size 1000,400 enhanced font 'Arial,10'
