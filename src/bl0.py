@@ -35,13 +35,13 @@ class o:
   __init__ = lambda i,**d: i.__dict__.update(**d)
   __repr__ = lambda i: i.__class__.__name__ + show(i.__dict__)
 
-def Num(of=" ", at=0):
-  return o(it=Num, of=of, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG, 
-           rank=0, # used by the stats functions, ignored otherwise
-           goal = 0 if str(of)[-1]=="-" else 1)
+def Num(txt=" ", at=0):
+  return o(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG, 
+           rank=0, # used by the stats functions, ignore otherwise
+           goal = 0 if str(txt)[-1]=="-" else 1)
 
-def Sym(of=" ", at=0):
-  return o(it=Sym, of=of, at=at, n=0, has={})
+def Sym(txt=" ", at=0):
+  return o(it=Sym, txt=txt, at=at, n=0, has={}, most=0, mode=None)
 
 def Cols(names):
   cols = o(it=Cols, x=[], y=[], klass=-1, all=[], names=names)
@@ -57,6 +57,11 @@ def Data(src=[]): return adds(src, o(it=Data,n=0,rows=[],cols=None))
 
 def clone(data, src=[]): return adds(src, Data([data.cols.names]))
 
+def XY(col,lo,hi=None):
+  xy = o(it=XY,x=Num(col.txt, col.at),y=None)
+  xy.x.lo = lo
+  xy.x.hi = hi or lo
+
 #--------- --------- --------- --------- --------- --------- ------- -------
 def adds(src, i=None):
   for x in src:
@@ -64,12 +69,13 @@ def adds(src, i=None):
     add(x,i)
   return i
 
-def add(v,i,  n=1): # n only used for fast sym add
-  def _sym(): 
-    i.has[v] = n  + i.has.get(v,0)
+def add(v, i):
   def _data():
-    if not i.cols: i.cols = Cols(v)  # called on first row
-    else:  i.rows += [[add( v[col.at], col) for col in i.cols.all]]
+    if i.cols: i.rows  += [[add( v[c.at], c) for c in i.cols.all]]
+    else     : i.cols   = Cols(v)
+  def _sym():
+    n = i.has[v] = 1 + i.has.get(v,0)
+    if n > i.most: i.most, i.mode = n, v
   def _num():
     i.lo  = min(v, i.lo)
     i.hi  = max(v, i.hi)
@@ -79,14 +85,16 @@ def add(v,i,  n=1): # n only used for fast sym add
     i.sd  = 0 if i.n <=2  else (max(0,i.m2)/(i.n-1))**.5
 
   if v != "?":
-    i.n += n 
+    i.n += 1
     _sym() if i.it is Sym else (_num() if i.it is Num else _data())
   return v
 
-def sub(v,i,  n=1):
+def sub(v, i):
    def _data(): [sub(v[col.at],col) for col in i.cols.all]  
    def _sym() : 
-     i.has[v] -= n
+     i.has[v] -= 1
+     i.mode = max(i.has, key=i.has.get)
+     i.most = i.has[i.mode]
    def _num():
      if i.n < 2: i.mu = i.sd = 0
      else:
@@ -96,7 +104,7 @@ def sub(v,i,  n=1):
        i.sd  = (max(0,i.m2)/(i.n-1))**.5
 
    if v != "?":
-     i.n -= n
+     i.n -= 1
      _sym() if i.it is Sym else (_num() if i.it is Num else _data())
    return v
 
@@ -105,11 +113,9 @@ def norm(v, col):
    if v=="?" or col.it is Sym: return v
    return (v - col.lo) / (col.hi - col.lo + 1/BIG)
 
-def mid(col): return col.mu if col.it is Num else max(i.has,key=i.has.get)
+def mid(col): return col.mu if col.it is Num else col.mode
 
-def spread(c): 
-  if c.it is Num: return c.sd
-  return -sum(n/c.n * math.log(n/c.n,2) for n in c.has.values() if n > 0)
+def spread(col): return col.sd if col.it is Num else ent(col.has)
 
 def ydist(row,  data):
   return (sum(abs(norm(row[c.at], c) - c.goal)**the.p for c in data.cols.y) 
@@ -118,6 +124,10 @@ def ydist(row,  data):
 def ydists(rows, data): return sorted(rows, key=lambda row: ydist(row,data))
 
 def yNums(rows,data): return adds(ydist(row,data) for row in rows)
+
+def ent(d):
+   N = sum(n for n in d.values())
+   return -sum(n/N * math.log(n/N,2) for n in d.values())
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def likes(lst, datas):
@@ -164,43 +174,83 @@ def actLearn(data):
   return best.rows
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def bestCurts
-def cuts(rowss, col):
+def merge(i,j) 
+  def _xy(): 
+    return o(it=XY, x=merge(xy1.x, xy2.x), merge(xy1.y, xy2,y))
+  def _sym():
+    k   = Sym(i.txt, i.at)
+    k.n = i.n + j.n
+    for d in [i.has, j.has]:
+      for x,v in d.items():
+        k.has[x] = k.has.get(x,0) + v
+    k.mode = max(k.has, key=k.has.get)
+    k.most = k.has[k.mode]
+    return k
+  def _num():
+    k    = Num(i.txt, i.at)
+    k.n  = i.n + j.n
+    k.mu = (i.n*i.mu + j.n*j.mu)/(i.n + j.m)
+    k.m2 = i.m2 + j.m2 + (i.n * j.n/(i.n+j.n)) * (i.mu - j.mu)^2
+    k.sd = (k.m2/(k.n - 1))^0.5
+    k.lo = min(i.lo,j.lo)
+    k.hi = max(i.hi,j.hi)
+    return k 
+
+  return (_sym if i.it is Sym else (_num if i.it is Num else _xy))()
+
+#--------- --------- --------- --------- --------- --------- ------- -------
+def discretize(rows, yfun, col, n=20, yeps=0):
   def _cut(x):
     if col.it is Sym: return x
-    if x==col.hi: x -= 1/BIG
-    return col.lo + int(norm(x,col) * the.Kuts)*(col.hi - col.lo)
+    if x == col.hi : return the.Kuts - 1
+    return int(norm(x,col) * the.Kuts - 1)
 
-  n,tmp = 0,{}
-  for y,rows in rowss.items():
-    for row in rows:
-      n = n + 1
-      x = row[col.at]
-      if x != "?":
-        k = _cut(x)
-        tmp[k] = tmp.get(k, None) or Sym(of=k, at=col.at)
-        add(y, tmp[k])
-  return col,*pastes(col,n, sorted(tmp.values(), key=lambda xy: xy.x.lo))
- 
-def pastes(col, n,cuts):
-  def _add(sym1,sym2): [add(n,sym1,x) for x,n in sym2.has.values()]
-  def _sub(sym1,sym2): [sub(n,sym1,x) for x,n in sym2.has.values()]
+  cuts={}
+  for row in rows:
+    x = row[col.at]
+    if x != "?":
+      k = _cut(x)
+      cuts[k] = cuts.get(k, None) or XY(col,x)
+      add_xy(x, yfun(row), cuts[k])
+  xys = sorted(cuts.values(), key=lambda xy: xy.x.lo)
+  return  xys if col.it is Sym else merge_xys(xys, n=n, yeps=eps)
+   
+def add_xy(x,y, xy):
+  xy.y = xy.y if xy.y else (Num if isNum(y) else Sym)()
+  add(x, xy.x)
+  add(y, xy.y)
 
-  def _sym(): return sum(cut.n/n * spread(cut) for cut in cuts), [
-                     cut.of for cut in cuts]
+def show_xy(xy):
+  lo,hi,s = xy.x.lo, xy.x.hi, xy.x.txt
+  if lo == -BIG : return f"{s} < {hi}"
+  if hi ==  BIG : return f"{s} >= {lo}"
+  if hi == lo   : return f"{s} == {lo}"
+  return f"{lo} <= {s} < {hi}"
 
-  def _num():
-    cut, xpect, left, right = None, BIG, Sym(), Sym()
-    for sym in cuts: _add(right,sym) 
-    for sym in cuts:
-      _add(left, _sub(right, sym))
-      tmp = (left.n*spread(left) + right.n*spread(right)) / n
-      if tmp < xpect:
-        xpect,cut = tmp, sym.of
-    return xpect, [cut]
+def merge_xys(xys, n=20, yeps=0):
+  def _maybeMerge(i,j):
+     k = merge(i,j)
+     if (i.x.n < n or j.x.n < n or
+        (k.y.it is Num and abs(i.y.mu - j.y.mu)) < yeps or
+         spread(k.y) <= (i.y.n*spread(i.y) + j.y.n*spread(j.y))/k.y.n):
+       return k
+  def _end(xys)
+    for n,xy in enumerate(xys[1:]): xys[n-1].x.hi = xy.x.lo
+    xys[ 0].x.lo = -BIG
+    xys[-1].x.hi =  BIG
+    return xys
 
-  return (_num if col.it is Num else _sym)()
-  
+  now,n,last = [],1, len(xys) - 1
+  while n <= last:
+    a = xys[n]
+    if n < last:
+      if merged := _maybeMerge(a, xys[n+1])
+        a = merged
+        n += 1
+    now += [a]
+    n += 1
+  return _end(xys) if len(xys)==len(now) else merge_xys(now, n=n, yeps=yeps)
+
 #--------- --------- --------- --------- --------- --------- ------- -------
 def tree(rows0,data):
    def yfun(row): return ydist(row,data)
@@ -248,7 +298,7 @@ def cliffs(vals1,vals2):
 
 def vals2RankedNums(d, eps=0, reverse=False):
   def _samples():            return [_sample(d[k],k) for k in d]
-  def _sample(vals,of=" "): return o(vals=vals,num=adds(vals,Num(of=of)))
+  def _sample(vals,txt=" "): return o(vals=vals,num=adds(vals,Num(txt=txt)))
   def _same(b4,now):         return (abs(b4.num.mu - now.num.mu) < eps or
                                     cliffs(b4.vals, now.vals) and 
                                     bootstrap(b4.vals, now.vals))
@@ -261,7 +311,7 @@ def vals2RankedNums(d, eps=0, reverse=False):
       tmp += [ _sample(now.vals) ]
     now.num.meta= tmp[-1].num 
     now.num.meta.rank = chr( 97 + len(tmp) - 1 )
-    out[now.num.of] = now.num
+    out[now.num.txt] = now.num
   return out
 
 #--------- --------- --------- --------- --------- --------- ------- -------
