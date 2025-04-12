@@ -112,6 +112,7 @@ def spread(c):
   return -sum(n/c.n * math.log(n/c.n,2) for n in c.has.values() if n > 0)
 
 def ydist(row,  data):
+  print(row, [abs(norm(row[c.at], c) - c.goal)**the.p for c in data.cols.y]) 
   return (sum(abs(norm(row[c.at], c) - c.goal)**the.p for c in data.cols.y) 
           / len(data.cols.y)) ** (1/the.p)
 
@@ -164,7 +165,6 @@ def actLearn(data):
   return best.rows
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def bestCurts
 def cuts(rowss, col):
   def _cut(x):
     if col.it is Sym: return x
@@ -204,7 +204,7 @@ def pastes(col, n,cuts):
 #--------- --------- --------- --------- --------- --------- ------- -------
 def tree(rows0,data):
    def yfun(row): return ydist(row,data)
-   def ys(rows) return adds(yfun(row) for row in rows)
+   def ys(rows): return adds(yfun(row) for row in rows)
    def _spread(xys):
      return sum(xy.y.n/len(rows) * spread(xy.y) for xy in xys)
 
@@ -212,7 +212,7 @@ def tree(rows0,data):
      kids=[]
      if len(rows) > the.tiny and spread(ys(rows)) > yeps:
        for xy in min([discretize(rows, yfun, c) for c in datas[0].cols.x],
-                     key=_spread)
+                     key=_spread):
           if rows1 := _grow(select(rows,xy.x), yeps, lvl+1, guard=xy):
              kids += [o(guard=guard, lvl=lvl, rows=rows1)]
        if kids: return kids
@@ -299,7 +299,6 @@ def show(x):
   elif it is list  : x= '['+', '.join([show(v) for v in x])+']'
   elif it is dict  : x= "{"+' '.join([f":{k} {show(v)}" 
                                    for k,v in x.items() if str(k)[0] !="_"])+"}"
-  elif it is XY    : x= show_xy(x)
   return str(x)
 
 def main():
@@ -329,6 +328,12 @@ def eg__data(file):
   [print(col) for col in data.cols.all]
   nums = adds(ydist(row,data) for row in data.rows)
   print(o(mu=nums.mu, sd=nums.sd))
+
+def eg__ydist(file):
+  data=Data(csv(file or the.file))
+  r = data.rows[1] # ydist(data.rows[1],data))
+  print(show(r),  ydist(r,data),the.p)
+  #print(sorted(round(ydist(row,data),2) for row in data.rows))
 
 def dump(d): print(len(d.rows)); [print(col) for col in d.cols.all]
 
