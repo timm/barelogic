@@ -11,8 +11,8 @@ OPTIONS:
       -C Cohen      Cohen threshold             = 0.35
       -d decs       decimal places for printing = 3  
       -f file       training csv file           = ../test/data/auto93.csv  
+      -F Few        search a few items in a list = 50
       -g guess      size of guess               = 0.5  
-      -G Guesses    max number of guesses       = 100  
       -k k          low frequency Bayes hack    = 1  
       -K Kuts       max discretization zones    = 17
       -l leaf       min size of tree leaves     = 2
@@ -112,7 +112,6 @@ def spread(c):
   return -sum(n/c.n * math.log(n/c.n,2) for n in c.has.values() if n > 0)
 
 def ydist(row,  data):
-  print(row, [abs(norm(row[c.at], c) - c.goal)**the.p for c in data.cols.y]) 
   return (sum(abs(norm(row[c.at], c) - c.goal)**the.p for c in data.cols.y) 
           / len(data.cols.y)) ** (1/the.p)
 
@@ -139,7 +138,7 @@ def like(row, data, nall=100, nh=2):
   return sum(math.log(n) for n in tmp + [prior] if n>0)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def actLearn(data):
+def actLearn(data, shuffle=True):
   def _guess(row): 
     return _acquire(n/the.Stop, like(row,best,n,2), like(row,rest,n,2))
   def _acquire(p, b,r): 
@@ -147,6 +146,7 @@ def actLearn(data):
     q = 0 if the.acq=="xploit" else (1 if the.acq=="xplore" else 1-p)
     return (b + r*q) / abs(b*q - r + 1/BIG) 
 
+  if shuffle: random.shuffle(data.rows)
   n     =  the.start
   todo  =  data.rows[n:]
   done  =  ydists(data.rows[:n], data)
@@ -155,52 +155,49 @@ def actLearn(data):
   rest  =  clone(data, done[cut:])
   while len(todo) > 2  and n < the.Stop:
     n += 1
-    top, *others = sorted(todo[:the.Guesses], key=_guess, reverse=True)
-    m = int(len(others)/2)
-    todo = others[:m] + todo[the.Guesses:] + others[m:]
-    add(top, best)
+    hi, *lo = sorted(todo[:the.Few*2], key=_guess, reverse=True)
+    todo = lo[:the.Few] + todo[the.Few*2:] + lo[the.Few:]
+    add(hi, best)
     best.rows = ydists(best.rows, data)
-    if len(best.rows) > n**0.5:
+    if len(best.rows) > n**the.guess:
       add( sub(best.rows.pop(-1), best), rest)
   return best.rows
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def cuts(rowss, col):
-  def _cut(x):
-    if col.it is Sym: return x
-    if x==col.hi: x -= 1/BIG
-    return col.lo + int(norm(x,col) * the.Kuts)*(col.hi - col.lo)
-
-  n,tmp = 0,{}
-  for y,rows in rowss.items():
-    for row in rows:
-      n = n + 1
+def cuts(rows, col,Y,Klass=Num,epsN=4, epsY=0.05)
+  def _upto(x,v): return v, f"{col.txt} <= {x}", lambda z:z=="?" or z <= x
+  def _over(x,v): return v, f"{col.txt} >  {x}", lambda z:z=="?" or z >  x
+  def _eq(x,v):   return v, f"{col.txt} == {x}", lambda z:z=="?" or z == x
+  def _sym():
+    n,d = 0,{}
+    for row in rows do
       x = row[col.at]
-      if x != "?":
-        k = _cut(x)
-        tmp[k] = tmp.get(k, None) or Sym(of=k, at=col.at)
-        add(y, tmp[k])
-  return col,*pastes(col,n, sorted(tmp.values(), key=lambda xy: xy.x.lo))
- 
-def pastes(col, n,cuts):
-  def _add(sym1,sym2): [add(n,sym1,x) for x,n in sym2.has.values()]
-  def _sub(sym1,sym2): [sub(n,sym1,x) for x,n in sym2.has.values()]
+      if x != "?"
+        n = n + 1
+        d[x] = d.get(x) or Klass()
+        add(Y(row), d[x])
+    return (sum(d[k].n/n * spread(d[k]) for k in d), 
+            [_eq(k, mid(d[k])) for k in d])
 
-  def _sym(): return sum(cut.n/n * spread(cut) for cut in cuts), [
-                     cut.of for cut in cuts]
+  def _num()
+    out,b4 = nil,nil
+    lhs, rhs = Klass(), Klass()
+    xys = [(r[col.at], add(Y(r),rhs)) for r in rows if r[col.at] != "?"]
+    xpect = spread(rhs)
+    for x,y in sorted(xys, key=lambda xy: xy[0]):
+      if epsN <= lhs.n <= len(xys) - epsN: 
+        if x != b4:
+          if abs(mid(lhs) - mid(rhs)) > epsY:
+            tmp = (lhs.n * spread(lhs) + rhs.n * spread(rhs)) / len(xys)
+            if tmp < xpect:
+              xpect, out = tmp, [upto(b4, mid(lhs)), over(b4,mid(rhs)]
+      add(sub(y, rhs),lhs)
+      b4 = x
+    if out:
+      return xpect, out
 
-  def _num():
-    cut, xpect, left, right = None, BIG, Sym(), Sym()
-    for sym in cuts: _add(right,sym) 
-    for sym in cuts:
-      _add(left, _sub(right, sym))
-      tmp = (left.n*spread(left) + right.n*spread(right)) / n
-      if tmp < xpect:
-        xpect,cut = tmp, sym.of
-    return xpect, [cut]
+  return _sym() if col.it is Sym else _num()
 
-  return (_num if col.it is Num else _sym)()
-  
 #--------- --------- --------- --------- --------- --------- ------- -------
 def tree(rows0,data):
    def yfun(row): return ydist(row,data)
@@ -386,8 +383,7 @@ def eg__actLearn(file,  repeats=20):
   now  = Num()
   t1   = time.perf_counter_ns()
   for _ in range(repeats):
-    random.shuffle(data.rows)
-    add(ydist(actLearn(data)[0],data), now)
+    add(ydist(actLearn(data, shuffle=True)[0],data), now)
   t2  = time.perf_counter_ns()
   print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
           rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
@@ -397,8 +393,7 @@ def eg__actLearn(file,  repeats=20):
 
 def eg__fast(file):
   def rx1(data):
-    random.shuffle(data.rows)
-    return ydist( actLearn(data)[0], data)
+    return ydist( actLearn(data,shuffle=True)[0], data)
   experiment1(file or the.file,
               repeats=20, 
               samples=[128,64,32,16,8],
@@ -406,15 +401,14 @@ def eg__fast(file):
 
 def eg__acts(file):
   def rx1(data):
-    random.shuffle(data.rows)
-    return [ydist(actLearn(data)[0], data)]
+    return [ydist(actLearn(dats, shuffle=True)[0], data)]
   experiment1(file or the.file,
               repeats=20, 
               samples=[256,128,64,32,16,8],
               fun=rx1)
 
 def experiment1(file, repeats=20, samples=[32,16,8],
-                      fun=lambda data1: ydist(actLearn(data)[0],data)):
+                      fun=lambda data1: ydist(actLearn(data,shuffle=True)[0],data)):
   name = re.search(r'([^/]+)\.csv$', file).group(1)
   data = Data(csv(file))
   rx   = dict(b4 = [ydist(row,data) for row in data.rows])
