@@ -12,10 +12,10 @@ OPTIONS:
       -d decs       decimal places for printing = 3  
       -f file       training csv file           = ../test/data/auto93.csv  
       -F Few        search a few items in a list = 50
-      -g guess      size of guess               = 0.5  
+      -g guess      size of guess               = 0.35  
       -k k          low frequency Bayes hack    = 1  
       -K Kuts       max discretization zones    = 17
-      -l leaf       min size of tree leaves     = 2
+      -l leaf       min size of tree leaves     = 4
       -m m          low frequency Bayes hack    = 2  
       -p p          distance formula exponent   = 2  
       -r rseed      random number seed          = 1234567891  
@@ -46,7 +46,7 @@ def Sym(of=" ", at=0):
 def Cols(names):
   cols = o(it=Cols, x=[], y=[], klass=-1, all=[], names=names)
   for n,s in enumerate(names):
-    col = (Num if s[0].isupper() else Sym)(s,n)
+    col = (Num if first(s).isupper() else Sym)(s,n)
     cols.all += [col]
     if s[-1] != "X":
       (cols.y if s[-1] in "+-!" else cols.x).append(col)
@@ -105,7 +105,8 @@ def norm(v, col):
    if v=="?" or col.it is Sym: return v
    return (v - col.lo) / (col.hi - col.lo + 1/BIG)
 
-def mid(col): return col.mu if col.it is Num else max(i.has,key=i.has.get)
+def mid(col): 
+  return col.mu if col.it is Num else max(col.has,key=col.has.get)
 
 def spread(c): 
   if c.it is Num: return c.sd
@@ -164,57 +165,60 @@ def actLearn(data, shuffle=True):
   return best.rows
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def cuts(rows, col,Y,Klass=Num,epsN=4, epsY=0.05)
-  def _upto(x,v): return v, f"{col.txt} <= {x}", lambda z:z=="?" or z <= x
-  def _over(x,v): return v, f"{col.txt} >  {x}", lambda z:z=="?" or z >  x
-  def _eq(x,v):   return v, f"{col.txt} == {x}", lambda z:z=="?" or z == x
+def cuts(rows, col,Y,Klass=Num):
+  def _v(row) : return row[col.at]
+  def _upto(x): return f"{col.txt}<= {x}", lambda z:_v(z)=="?" or _v(z)<=x
+  def _over(x): return f"{col.txt}>  {x}", lambda z:_v(z)=="?" or _v(z)>x
+  def _eq(x)  : return f"{col.txt}== {x}", lambda z:_v(z)=="?" or _v(z)==x
   def _sym():
     n,d = 0,{}
-    for row in rows do
-      x = row[col.at]
-      if x != "?"
-        n = n + 1
+    for row in rows:
+      x = _v(row) 
+      if x != "?":
         d[x] = d.get(x) or Klass()
         add(Y(row), d[x])
-    return (sum(d[k].n/n * spread(d[k]) for k in d), 
-            [_eq(k, mid(d[k])) for k in d])
+        n = n + 1
+    return o(entropy= sum(v.n/n * spread(v) for v in d.values()),
+            guards= [_eq(k) for k,v in d.items()])
 
-  def _num()
-    out,b4 = nil,nil
+  def _num():
+    out,b4 = None,None 
     lhs, rhs = Klass(), Klass()
-    xys = [(r[col.at], add(Y(r),rhs)) for r in rows if r[col.at] != "?"]
+    xys = [(_v(r), add(Y(r),rhs)) for r in rows if _v(r) != "?"]
     xpect = spread(rhs)
-    for x,y in sorted(xys, key=lambda xy: xy[0]):
-      if epsN <= lhs.n <= len(xys) - epsN: 
+    for x,y in sorted(xys, key=lambda xy: first(xy)):
+      if the.leaf <= lhs.n <= len(xys) - the.leaf: 
         if x != b4:
-          if abs(mid(lhs) - mid(rhs)) > epsY:
+          if abs(mid(lhs) - mid(rhs)) > spread(col)*the.guess:
             tmp = (lhs.n * spread(lhs) + rhs.n * spread(rhs)) / len(xys)
             if tmp < xpect:
-              xpect, out = tmp, [upto(b4, mid(lhs)), over(b4,mid(rhs)]
+              xpect, out = tmp,[_upto(b4), _over(b4)]
       add(sub(y, rhs),lhs)
       b4 = x
     if out:
-      return xpect, out
+      return o(entropy=xpect, guards=out)
 
   return _sym() if col.it is Sym else _num()
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def tree(rows0,data):
-   def yfun(row): return ydist(row,data)
-   def ys(rows): return adds(yfun(row) for row in rows)
-   def _spread(xys):
-     return sum(xy.y.n/len(rows) * spread(xy.y) for xy in xys)
+def tree(rows,data,Klass=Num,xplain="",guard=lambda _:True):
+   def Y(row): return ydist(row,data)
+   node        = clone(data,rows)
+   node.kids   = []
+   node.guard  = guard
+   node.xplain = xplain
+   if len(rows) >= the.leaf:
+     splits = sorted([cuts(rows,col,Y,Klass=Klass) for col in data.cols.x],
+                      key=lambda cut:cut.entropy)
+     for xplain,guard in splits[0]: 
+       rows1= ydists([row for row in rows if guard(row)],data)
+       if len(rows1) < len(rows):
+         node.kids += [tree(rows1,data,Klass=Klass,xplain=xplain,guard=guard)]
+   return node   
 
-   def _grow(rows, yeps, lvl=0, guard=None):
-     kids=[]
-     if len(rows) > the.tiny and spread(ys(rows)) > yeps:
-       for xy in min([discretize(rows, yfun, c) for c in datas[0].cols.x],
-                     key=_spread):
-          if rows1 := _grow(select(rows,xy.x), yeps, lvl+1, guard=xy):
-             kids += [o(guard=guard, lvl=lvl, rows=rows1)]
-       if kids: return kids
-
-   return _grow(rows0, spread(adds(ys(rows0))) * the.Cohen)
+def showTree(node,lvl=0):
+  print(f"{lvl * '|.. '}{node.xplain}[{len(node.row)}")
+  [showTree(kid,lvl+1) for kid in node.kids]
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
@@ -264,6 +268,8 @@ def vals2RankedNums(d, eps=0, reverse=False):
 #--------- --------- --------- --------- --------- --------- ------- -------
 def isNum(x): return isinstance(x,(float,int))
 
+def first(lst): return lst[0] 
+
 def coerce(s):
   try: return int(s)
   except Exception:
@@ -281,7 +287,7 @@ def csv(file):
 def cli(d):
   for k,v in d.items():
     for c,arg in enumerate(sys.argv):
-      if arg == "-"+k[0]:
+      if arg == "-"+first(k): 
         new = sys.argv[c+1] if c < len(sys.argv) - 1 else str(v)
         d[k] = coerce("False" if str(v) == "True"  else (
                       "True"  if str(v) == "False" else new))
@@ -295,7 +301,7 @@ def show(x):
   elif it is float : x= str(round(x,the.decs))
   elif it is list  : x= '['+', '.join([show(v) for v in x])+']'
   elif it is dict  : x= "{"+' '.join([f":{k} {show(v)}" 
-                                   for k,v in x.items() if str(k)[0] !="_"])+"}"
+                                   for k,v in x.items() if first(str(k)) !="_"])+"}"
   return str(x)
 
 def main():
@@ -316,12 +322,12 @@ def eg__cols(_):
 def eg__csv(file): 
   rows =list(csv(file or the.file))
   assert 3192 == sum(len(row) for row in rows)
-  for row in rows[1:]: assert type(row[0]) is int
+  for row in rows[1:]: assert type(first(row)) is int
 
 def eg__data(file):
   data=Data(csv(file or the.file))
   assert 3184 == sum(len(row) for row in data.rows)
-  for row in data.rows: assert type(row[0]) is int
+  for row in data.rows: assert type(first(row)) is int
   [print(col) for col in data.cols.all]
   nums = adds(ydist(row,data) for row in data.rows)
   print(o(mu=nums.mu, sd=nums.sd))
@@ -367,7 +373,7 @@ def eg__stats(_):
 def eg__rank(_):
    G  = random.gauss
    n=100
-   for k,num in vals2RankedNum(dict( asIs  = [G(10,1) for _ in range(n)],
+   for k,num in vals2RankedNums(dict( asIs  = [G(10,1) for _ in range(n)],
                                 copy1 = [G(20,1) for _ in range(n)],
                                 now1  = [G(20,1) for _ in range(n)],
                                 copy2 = [G(40,1) for _ in range(n)],
@@ -383,7 +389,7 @@ def eg__actLearn(file,  repeats=20):
   now  = Num()
   t1   = time.perf_counter_ns()
   for _ in range(repeats):
-    add(ydist(actLearn(data, shuffle=True)[0],data), now)
+    add(ydist(first(actLearn(data, shuffle=True)),data), now)
   t2  = time.perf_counter_ns()
   print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
           rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
@@ -393,7 +399,7 @@ def eg__actLearn(file,  repeats=20):
 
 def eg__fast(file):
   def rx1(data):
-    return ydist( actLearn(data,shuffle=True)[0], data)
+    return ydist( first(actLearn(data,shuffle=True)), data)
   experiment1(file or the.file,
               repeats=20, 
               samples=[128,64,32,16,8],
@@ -401,14 +407,14 @@ def eg__fast(file):
 
 def eg__acts(file):
   def rx1(data):
-    return [ydist(actLearn(dats, shuffle=True)[0], data)]
+    return [ydist(first(actLearn(data, shuffle=True)), data)]
   experiment1(file or the.file,
               repeats=20, 
               samples=[256,128,64,32,16,8],
               fun=rx1)
 
 def experiment1(file, repeats=20, samples=[32,16,8],
-                      fun=lambda data1: ydist(actLearn(data,shuffle=True)[0],data)):
+                      fun=lambda d: ydist(first(actLearn(d,shuffle=True)),d)):
   name = re.search(r'([^/]+)\.csv$', file).group(1)
   data = Data(csv(file))
   rx   = dict(b4 = [ydist(row,data) for row in data.rows])
@@ -423,7 +429,7 @@ def experiment1(file, repeats=20, samples=[32,16,8],
                 x    = len(data.cols.x), 
                 y    = len(data.cols.y),
                 ms   = round((t2 - t1) / (repeats * len(samples) * 10**6)))
-  order = vals2RankedNum(rx, asIs.sd*the.Cohen)
+  order = vals2RankedNums(rx, asIs.sd*the.Cohen)
   for k in rx:
     v = order[k]
     report[k] = f"{v.meta.rank} {v.mu:.2f} "
