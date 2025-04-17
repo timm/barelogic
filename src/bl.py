@@ -163,7 +163,7 @@ def actLearn(data, shuffle=True):
     best.rows = ydists(best.rows, data)
     if len(best.rows) > n**the.guess:
       add( sub(best.rows.pop(-1), best), rest)
-  return best.rows
+  return o(best=best, rest=rest)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def cuts(rows, col,Y,Klass=Num):
@@ -390,7 +390,7 @@ def eg__actLearn(file,  repeats=20):
   now  = Num()
   t1   = time.perf_counter_ns()
   for _ in range(repeats):
-    add(ydist(first(actLearn(data, shuffle=True)),data), now)
+    add(ydist(first(actLearn(data, shuffle=True).best.rows ) ,data), now)
   t2  = time.perf_counter_ns()
   print(o(win= (b4.mu - now.mu) /(b4.mu - b4.lo),
           rows=len(data.rows),x=len(data.cols.x),y=len(data.cols.y),
@@ -400,7 +400,7 @@ def eg__actLearn(file,  repeats=20):
 
 def eg__fast(file):
   def rx1(data):
-    return ydist( first(actLearn(data,shuffle=True)), data)
+    return ydist( first(actLearn(data,shuffle=True).best.rows), data)
   experiment1(file or the.file,
               repeats=20, 
               samples=[64,32,16,8],
@@ -408,14 +408,14 @@ def eg__fast(file):
 
 def eg__acts(file):
   def rx1(data):
-    return [ydist(first(actLearn(data, shuffle=True)), data)]
+    return [ydist(first(actLearn(data, shuffle=True).best.rows), data)]
   experiment1(file or the.file,
               repeats=20, 
               samples=[200,100,50,40,30,20,10],
               fun=rx1)
 
 def experiment1(file, repeats=20, samples=[32,16,8],
-                      fun=lambda d: ydist(first(actLearn(d,shuffle=True)),d)):
+                      fun=lambda d: ydist(first(actLearn(d,shuffle=True).best.rows),d)):
   name = re.search(r'([^/]+)\.csv$', file).group(1)
   data = Data(csv(file))
   rx   = dict(b4 = [ydist(row,data) for row in data.rows])
@@ -437,6 +437,14 @@ def experiment1(file, repeats=20, samples=[32,16,8],
   report["name"]=name
   print("#"+str(list(report.keys())))
   print(list(report.values()))
+
+def eg__cuts(file):
+  data = Data(csv(file or the.file))
+  models =  actLearn(data)
+  rows = [row for row in models.best.rows + models.rest.rows]
+  for col in data.cols.x:
+    print(col.txt)
+    cuts(rows, col, lambda row:ydata(row,data))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
