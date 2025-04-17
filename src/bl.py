@@ -7,6 +7,7 @@ OPTIONS:
       -a acq        xploit or xplore or adapt   = xploit  
       -b bootstraps num of bootstrap samples    = 512
       -B BootConf   bootstrap threshold         = 0.95
+      -B BootConf   bootstrap threshold         = 0.95
       -c cliffConf  cliffs' delta threshold     = 0.197
       -C Cohen      Cohen threshold             = 0.35
       -d decs       decimal places for printing = 3  
@@ -360,7 +361,7 @@ def eg__stats(_):
    def c(b): return 1 if b else 0
    G  = random.gauss
    R  = random.random
-   n  = 32
+   n  = 50
    b4 = [G(10,1) for _ in range(n)]
    d  = 0
    while d < 2:
@@ -402,7 +403,7 @@ def eg__fast(file):
     return ydist( first(actLearn(data,shuffle=True)), data)
   experiment1(file or the.file,
               repeats=20, 
-              samples=[128,64,32,16,8],
+              samples=[64,32,16,8],
               fun=rx1)
 
 def eg__acts(file):
@@ -410,7 +411,7 @@ def eg__acts(file):
     return [ydist(first(actLearn(data, shuffle=True)), data)]
   experiment1(file or the.file,
               repeats=20, 
-              samples=[256,128,64,32,16,8],
+              samples=[200,100,50,40,30,20,10],
               fun=rx1)
 
 def experiment1(file, repeats=20, samples=[32,16,8],
