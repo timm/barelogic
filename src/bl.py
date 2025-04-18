@@ -61,7 +61,7 @@ def clone(data, src=[]): return adds(src, Data([data.cols.names]))
 #--------- --------- --------- --------- --------- --------- ------- -------
 def adds(src, i=None):
   for x in src:
-    if not i: return adds(src,Num() if isNum(x) else Sym())
+    i = i or (Num() if isNum(x) else Sym())
     add(x,i)
   return i
 
@@ -168,9 +168,9 @@ def actLearn(data, shuffle=True):
 #--------- --------- --------- --------- --------- --------- ------- -------
 def cuts(rows, col,Y,Klass=Num):
   def _v(row) : return row[col.at]
-  def _upto(x): return f"{col.txt}<= {x}", lambda z:_v(z)=="?" or _v(z)<=x
-  def _over(x): return f"{col.txt}>  {x}", lambda z:_v(z)=="?" or _v(z)>x
-  def _eq(x)  : return f"{col.txt}== {x}", lambda z:_v(z)=="?" or _v(z)==x
+  def _upto(x): return f"{col.of}<= {x}", lambda z:_v(z)=="?" or _v(z)<=x
+  def _over(x): return f"{col.of}>  {x}", lambda z:_v(z)=="?" or _v(z)>x
+  def _eq(x)  : return f"{col.of}== {x}", lambda z:_v(z)=="?" or _v(z)==x
   def _sym():
     n,d = 0,{}
     for row in rows:
@@ -190,10 +190,10 @@ def cuts(rows, col,Y,Klass=Num):
     for x,y in sorted(xys, key=lambda xy: first(xy)):
       if the.leaf <= lhs.n <= len(xys) - the.leaf: 
         if x != b4:
-          if abs(mid(lhs) - mid(rhs)) > spread(col)*the.guess:
-            tmp = (lhs.n * spread(lhs) + rhs.n * spread(rhs)) / len(xys)
-            if tmp < xpect:
-              xpect, out = tmp,[_upto(b4), _over(b4)]
+          #if abs(mid(lhs) - mid(rhs)) > spread(col)*the.guess:
+          tmp = (lhs.n * spread(lhs) + rhs.n * spread(rhs)) / len(xys)
+          if tmp < xpect:
+            xpect, out = tmp,[_upto(b4), _over(b4)]
       add(sub(y, rhs),lhs)
       b4 = x
     if out:
@@ -440,11 +440,14 @@ def experiment1(file, repeats=20, samples=[32,16,8],
 
 def eg__cuts(file):
   data = Data(csv(file or the.file))
-  models =  actLearn(data)
-  rows = [row for row in models.best.rows + models.rest.rows]
+  print(yNums(data.rows,data))
+  two =  actLearn(data)
+  print(sorted([ydist(row, data) for row in two.best.rows+two.rest.rows]))
+  rows = [row for row in two.best.rows + two.rest.rows]
   for col in data.cols.x:
-    print(col.txt)
-    cuts(rows, col, lambda row:ydata(row,data))
+    print(col.of)
+    if tmp :=cuts(rows, col, lambda row:ydist(row,data)):
+       print(tmp.entropy)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
