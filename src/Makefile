@@ -102,3 +102,6 @@ acts1:
 acts: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, (python3 -B bl.py --acts $d | tee ~/tmp/$@_$(notdir $d).out &); )
 
+
+trees: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d, $^, python3 -B bl.py --cuts $d;)

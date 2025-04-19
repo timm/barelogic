@@ -13,7 +13,7 @@ OPTIONS:
       -d decs       decimal places for printing = 3  
       -f file       training csv file           = ../test/data/auto93.csv  
       -F Few        search a few items in a list = 50
-      -g guess      size of guess               = 0.35  
+      -g guess      size of guess               = 0.5  
       -k k          low frequency Bayes hack    = 1  
       -K Kuts       max discretization zones    = 17
       -l leaf       min size of tree leaves     = 2
@@ -65,41 +65,32 @@ def adds(src, i=None):
     add(x,i)
   return i
 
-def add(v,i,  n=1): # n only used for fast sym add
+def sub(v,i,  n=1): return add(v,i,n=n,flip=-1)
+
+def add(v,i,  n=1,flip=1): # n only used for fast sym add
   def _sym(): 
-    i.has[v] = n  + i.has.get(v,0)
-  def _data():
+    i.has[v] = flip * n  + i.has.get(v,0)
+  def _data(): 
     if not i.cols: i.cols = Cols(v)  # called on first row
-    else:  i.rows += [[add( v[col.at], col) for col in i.cols.all]]
+    elif flip < 0:# row subtraction managed elsewhere; e.g. see eg_addSub  
+       [sub(v[col.at],col,n) for col in i.cols.all]  
+    else:
+       i.rows += [[add( v[col.at], col,n) for col in i.cols.all]]
   def _num():
     i.lo  = min(v, i.lo)
     i.hi  = max(v, i.hi)
-    d     = v - i.mu
-    i.mu += d / i.n
-    i.m2 += d * (v -   i.mu)
-    i.sd  = 0 if i.n <=2  else (max(0,i.m2)/(i.n-1))**.5
+    if flip < 0 and i.n < 2: 
+      i.mu = i.sd = 0
+    else:
+      d     = v - i.mu
+      i.mu += flip * (d / i.n)
+      i.m2 += flip * (d * (v -   i.mu))
+      i.sd  = 0 if i.n <=2  else (max(0,i.m2)/(i.n-1))**.5
 
   if v != "?":
-    i.n += n 
+    i.n += flip * n 
     _sym() if i.it is Sym else (_num() if i.it is Num else _data())
   return v
-
-def sub(v,i,  n=1):
-   def _data(): [sub(v[col.at],col) for col in i.cols.all]  
-   def _sym() : 
-     i.has[v] -= n
-   def _num():
-     if i.n < 2: i.mu = i.sd = 0
-     else:
-       d     = v - i.mu
-       i.mu -= d / i.n
-       i.m2 -= d * (v - i.mu)
-       i.sd  = (max(0,i.m2)/(i.n-1))**.5
-
-   if v != "?":
-     i.n -= n
-     _sym() if i.it is Sym else (_num() if i.it is Num else _data())
-   return v
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def norm(v, col):
@@ -161,16 +152,16 @@ def actLearn(data, shuffle=True):
     todo = lo[:the.Few] + todo[the.Few*2:] + lo[the.Few:]
     add(hi, best)
     best.rows = ydists(best.rows, data)
-    if len(best.rows) > n**the.guess:
+    if len(best.rows) >= round(n**the.guess):
       add( sub(best.rows.pop(-1), best), rest)
   return o(best=best, rest=rest)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def cuts(rows, col,Y,Klass=Num):
   def _v(row) : return row[col.at]
-  def _upto(x): return f"{col.of}<= {x}", lambda z:_v(z)=="?" or _v(z)<=x
-  def _over(x): return f"{col.of}>  {x}", lambda z:_v(z)=="?" or _v(z)>x
-  def _eq(x)  : return f"{col.of}== {x}", lambda z:_v(z)=="?" or _v(z)==x
+  def _upto(x): return f"{col.of} <= {x} ", lambda z:_v(z)=="?" or _v(z)<=x
+  def _over(x): return f"{col.of} >  {x} ", lambda z:_v(z)=="?" or _v(z)>x
+  def _eq(x)  : return f"{col.of} == {x} ", lambda z:_v(z)=="?" or _v(z)==x
   def _sym():
     n,d = 0,{}
     for row in rows:
@@ -220,9 +211,15 @@ def tree(rows,data,Klass=Num,xplain="",guard=lambda _:True):
            node.kids += [tree(rows1,data,Klass=Klass,xplain=xplain,guard=guard)]
    return node   
 
-def showTree(node,lvl=0):
-  print(f"{lvl * '|.. '}{node.xplain} [{len(node.rows)}] ",show(node.ys))
-  [showTree(kid,lvl+1) for kid in node.kids]
+def nodes(node,lvl=0, key=None):
+  yield lvl,node
+  for kid in (sorted(node.kids, key=key) if key else node.kids):
+    for node1 in nodes(kid, lvl+1, key=key):
+      yield node1
+
+def showTree(tree, key=lambda z:z.ys):
+  for lvl, node in nodes(tree,key=key):
+    print(f"{lvl * '|  '}{node.xplain}[{len(node.rows)}]",show(node.ys))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
@@ -385,7 +382,7 @@ def eg__rank(_):
                                 ), the.Cohen).items():
       showd(o(r=num.meta.rank, mu=num.meta.mu, k=k))
 
-def eg__actLearn(file,  repeats=20):
+def eg__actLearn(file,  repeats=30):
   file = file or the.file
   name = re.search(r'([^/]+)\.csv$', file).group(1)
   data = Data(csv(file))
@@ -405,7 +402,7 @@ def eg__fast(file):
   def rx1(data):
     return ydist( first(actLearn(data,shuffle=True).best.rows), data)
   experiment1(file or the.file,
-              repeats=20, 
+              repeats=30, 
               samples=[64,32,16,8],
               fun=rx1)
 
@@ -413,11 +410,11 @@ def eg__acts(file):
   def rx1(data):
     return [ydist(first(actLearn(data, shuffle=True).best.rows), data)]
   experiment1(file or the.file,
-              repeats=20, 
-              samples=[200,100,50,40,30,20,10],
+              repeats=30, 
+              samples=[200,100,50,24,12,6],
               fun=rx1)
 
-def experiment1(file, repeats=20, samples=[32,16,8],
+def experiment1(file, repeats=30, samples=[32,16,8],
                       fun=lambda d: ydist(first(actLearn(d,shuffle=True).best.rows),d)):
   name = re.search(r'([^/]+)\.csv$', file).group(1)
   data = Data(csv(file))
@@ -445,6 +442,8 @@ def eg__cuts(file):
   data = Data(csv(file or the.file))
   print("b4",yNums(data.rows,data))
   two =  actLearn(data)
+  print(len(two.best.rows))
+  print(len(two.rest.rows))
   print("now",yNums(two.best.rows,data))
   showTree(tree([row for row in two.best.rows + two.rest.rows],data))
 
