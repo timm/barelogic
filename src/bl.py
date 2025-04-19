@@ -16,7 +16,7 @@ OPTIONS:
       -g guess      size of guess               = 0.35  
       -k k          low frequency Bayes hack    = 1  
       -K Kuts       max discretization zones    = 17
-      -l leaf       min size of tree leaves     = 4
+      -l leaf       min size of tree leaves     = 2
       -m m          low frequency Bayes hack    = 2  
       -p p          distance formula exponent   = 2  
       -r rseed      random number seed          = 1234567891  
@@ -190,10 +190,10 @@ def cuts(rows, col,Y,Klass=Num):
     for x,y in sorted(xys, key=lambda xy: first(xy)):
       if the.leaf <= lhs.n <= len(xys) - the.leaf: 
         if x != b4:
-          #if abs(mid(lhs) - mid(rhs)) > spread(col)*the.guess:
-          tmp = (lhs.n * spread(lhs) + rhs.n * spread(rhs)) / len(xys)
-          if tmp < xpect:
-            xpect, out = tmp,[_upto(b4), _over(b4)]
+            #if abs(mid(lhs) - mid(rhs)) > spread(col)*0.2:
+            tmp = (lhs.n * spread(lhs) + rhs.n * spread(rhs)) / len(xys)
+            if tmp < xpect:
+              xpect, out = tmp,[_upto(b4), _over(b4)]
       add(sub(y, rhs),lhs)
       b4 = x
     if out:
@@ -205,20 +205,23 @@ def cuts(rows, col,Y,Klass=Num):
 def tree(rows,data,Klass=Num,xplain="",guard=lambda _:True):
    def Y(row): return ydist(row,data)
    node        = clone(data,rows)
+   node.ys     = yNums(rows,data).mu
    node.kids   = []
    node.guard  = guard
    node.xplain = xplain
    if len(rows) >= the.leaf:
-     splits = sorted([cuts(rows,col,Y,Klass=Klass) for col in data.cols.x],
-                      key=lambda cut:cut.entropy)
-     for xplain,guard in splits[0]: 
-       rows1= ydists([row for row in rows if guard(row)],data)
-       if len(rows1) < len(rows):
-         node.kids += [tree(rows1,data,Klass=Klass,xplain=xplain,guard=guard)]
+     splits=[]
+     for col in data.cols.x:
+       if tmp := cuts(rows,col,Y,Klass=Klass): splits += [tmp]
+     if splits:
+       for xplain,guard in sorted(splits, key=lambda cut:cut.entropy)[0].guards:
+         rows1= [row for row in rows if guard(row)]
+         if the.leaf <= len(rows1) < len(rows):
+           node.kids += [tree(rows1,data,Klass=Klass,xplain=xplain,guard=guard)]
    return node   
 
 def showTree(node,lvl=0):
-  print(f"{lvl * '|.. '}{node.xplain}[{len(node.row)}")
+  print(f"{lvl * '|.. '}{node.xplain} [{len(node.rows)}] ",show(node.ys))
   [showTree(kid,lvl+1) for kid in node.kids]
 
 #--------- --------- --------- --------- --------- --------- ------- -------
@@ -440,14 +443,10 @@ def experiment1(file, repeats=20, samples=[32,16,8],
 
 def eg__cuts(file):
   data = Data(csv(file or the.file))
-  print(yNums(data.rows,data))
+  print("b4",yNums(data.rows,data))
   two =  actLearn(data)
-  print(sorted([ydist(row, data) for row in two.best.rows+two.rest.rows]))
-  rows = [row for row in two.best.rows + two.rest.rows]
-  for col in data.cols.x:
-    print(col.of)
-    if tmp :=cuts(rows, col, lambda row:ydist(row,data)):
-       print(tmp.entropy)
+  print("now",yNums(two.best.rows,data))
+  showTree(tree([row for row in two.best.rows + two.rest.rows],data))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
