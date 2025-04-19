@@ -106,4 +106,4 @@ cuts: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, python3 -B bl.py --cuts $d;)
 
 rules: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d, $^, python3 -B bl.py -l 2 --rules $d | column -t;)
+	$(foreach d, $^, python3 -B bl.py -l 5 --rules $d | column -t;)
