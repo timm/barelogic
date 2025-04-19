@@ -154,7 +154,7 @@ def actLearn(data, shuffle=True):
     best.rows = ydists(best.rows, data)
     if len(best.rows) >= round(n**the.guess):
       add( sub(best.rows.pop(-1), best), rest)
-  return o(best=best, rest=rest)
+  return o(best=best, rest=rest, todo=todo)
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 def cuts(rows, col,Y,Klass=Num):
@@ -221,6 +221,13 @@ def showTree(tree, key=lambda z:z.ys):
   for lvl, node in nodes(tree,key=key):
     print(f"{lvl * '|  '}{node.xplain}[{len(node.rows)}]",show(node.ys))
 
+def isMost(node, row, lvl=0):
+  if not node.kids: return node
+  if node.kids:
+    most = sorted(node.kids, key=lambda k: k.ys)[0]
+    if most.guard(row): 
+      return isMost(most,row,lvl+1)
+    
 #--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
   return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
@@ -440,12 +447,27 @@ def experiment1(file, repeats=30, samples=[32,16,8],
 
 def eg__cuts(file):
   data = Data(csv(file or the.file))
-  print("b4",yNums(data.rows,data))
-  two =  actLearn(data)
-  print(len(two.best.rows))
-  print(len(two.rest.rows))
-  print("now",yNums(two.best.rows,data))
-  showTree(tree([row for row in two.best.rows + two.rest.rows],data))
+  model  = actLearn(data)
+  b4  = yNums(data.rows,data)
+  now = yNums(model.best.rows,data)
+  nodes = tree(model.best.rows + model.rest.rows,data)
+  showd(o(mu1=b4.mu, mu2=now.mu,  sd1=b4.sd, sd2=now.sd))
+  showTree(nodes)
+
+def eg__rules(file):
+  data  = Data(csv(file or the.file))
+  model = actLearn(data)
+  b4    = yNums(data.rows, data)
+  now   = yNums(model.best.rows, data)
+  nodes = tree(model.best.rows + model.rest.rows,data)
+  todo  = yNums(model.todo, data)
+  after = yNums([row for row in model.todo if isMost(nodes,row)],data)
+  print(re.sub(".*/", "", file or the.file))
+  print(o(txt1="b4", txt2="now",  txt3="todo",  txt4="after"))
+  print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=after.mu))
+  print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=after.lo))
+  print(o(sd1=b4.sd, sd2=now.sd,  sd3=todo.sd,  sd4=after.sd))
+  print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
