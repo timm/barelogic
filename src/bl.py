@@ -1,3 +1,7 @@
+# todo: 
+# 1.change guards to lt, "gt". have col name in thre explictedyl
+# 2. return nest from rile
+
 """
 bl.py : barelogic, XAI for active learning + multi-objective optimization
 (c) 2025, Tim Menzies <timm@ieee.org>, MIT License  
