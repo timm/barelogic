@@ -1,0 +1,392 @@
+billing10k.csv
+o{:txt1         "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1          0.518  :mu2   0.423  :mu3   0.518   :mu4   0.474}
+o{:lo1          0.342  :lo2   0.406  :lo3   0.342   :lo4   0.406}
+o{:hi1          0.816  :hi2   0.467  :hi3   0.816   :hi4   0.582}
+o{:sd1          0.07   :sd2   0.025  :sd3   0.07    :sd4   0.054}
+o{:n1           10000  :n2    5      :n3    9968    :n4    88381}
+FFM-125-25-0.50-SAT-1.csv
+o{:txt1                    "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                     0.525  :mu2   0.328  :mu3   0.526   :mu4   0.431}
+o{:lo1                     0.252  :lo2   0.305  :lo3   0.252   :lo4   0.305}
+o{:hi1                     0.775  :hi2   0.416  :hi3   0.775   :hi4   0.624}
+o{:sd1                     0.094  :sd2   0.049  :sd3   0.093   :sd4   0.095}
+o{:n1                      10000  :n2    5      :n3    9968    :n4    78883}
+FFM-250-50-0.50-SAT-1.csv
+o{:txt1                    "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                     0.515  :mu2   0.399  :mu3   0.515   :mu4   0.49}
+o{:lo1                     0.341  :lo2   0.381  :lo3   0.341   :lo4   0.381}
+o{:hi1                     0.816  :hi2   0.42   :hi3   0.816   :hi4   0.583}
+o{:sd1                     0.068  :sd2   0.014  :sd3   0.068   :sd4   0.047}
+o{:n1                      10000  :n2    5      :n3    9968    :n4    65679}
+FM-500-100-1.00-SAT-1.csv
+o{:txt1                    "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                     0.528  :mu2   0.321  :mu3   0.529   :mu4   0.446}
+o{:lo1                     0.283  :lo2   0.305  :lo3   0.283   :lo4   0.305}
+o{:hi1                     0.816  :hi2   0.333  :hi3   0.816   :hi4   0.579}
+o{:sd1                     0.092  :sd2   0.01   :sd3   0.092   :sd4   0.072}
+o{:n1                      10000  :n2    5      :n3    9968    :n4    75680}
+Scrum100k.csv
+o{:txt1        "b4"    :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1         0.535   :mu2   0.413  :mu3   0.535   :mu4   0.481}
+o{:lo1         0.308   :lo2   0.391  :lo3   0.308   :lo4   0.391}
+o{:hi1         0.807   :hi2   0.423  :hi3   0.807   :hi4   0.583}
+o{:sd1         0.071   :sd2   0.013  :sd3   0.071   :sd4   0.046}
+o{:n1          100000  :n2    5      :n3    99968   :n4    848842}
+Scrum10k.csv
+o{:txt1       "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1        0.521  :mu2   0.35   :mu3   0.521   :mu4   0.435}
+o{:lo1        0.277  :lo2   0.305  :lo3   0.277   :lo4   0.305}
+o{:hi1        0.815  :hi2   0.374  :hi3   0.815   :hi4   0.582}
+o{:sd1        0.083  :sd2   0.026  :sd3   0.083   :sd4   0.069}
+o{:n1         10000  :n2    5      :n3    9968    :n4    94125}
+Scrum1k.csv
+o{:txt1      "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1       0.513  :mu2   0.332  :mu3   0.517   :mu4   0.408}
+o{:lo1       0.271  :lo2   0.282  :lo3   0.271   :lo4   0.282}
+o{:hi1       0.781  :hi2   0.385  :hi3   0.781   :hi4   0.642}
+o{:sd1       0.087  :sd2   0.039  :sd3   0.085   :sd4   0.074}
+o{:n1        1000   :n2    5      :n3    968     :n4    23666}
+Apache_AllMeasurements.csv
+o{:txt1                     "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                      0.326  :mu2   0.04   :mu3   0.353   :mu4   0.172}
+o{:lo1                      0.0    :lo2   0.0    :lo3   0.033   :lo4   0.0}
+o{:hi1                      1.0    :hi2   0.167  :hi3   1.0     :hi4   0.75}
+o{:sd1                      0.265  :sd2   0.071  :sd3   0.267   :sd4   0.218}
+o{:n1                       192    :n2    5      :n3    160     :n4    1796}
+HSMGP_num.csv
+o{:txt1        "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1         0.121  :mu2   0.003  :mu3   0.122   :mu4   0.042}
+o{:lo1         0.0    :lo2   0.001  :lo3   0.0     :lo4   0.001}
+o{:hi1         1.0    :hi2   0.006  :hi3   1.0     :hi4   0.511}
+o{:sd1         0.192  :sd2   0.002  :sd3   0.192   :sd4   0.066}
+o{:n1          3456   :n2    5      :n3    3424    :n4    35172}
+rs-6d-c3_obj1.csv
+o{:txt1            "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1             0.277  :mu2   0.001  :mu3   0.278   :mu4   0.227}
+o{:lo1             0.0    :lo2   0.0    :lo3   0.0     :lo4   0.0}
+o{:hi1             1.0    :hi2   0.003  :hi3   1.0     :hi4   0.897}
+o{:sd1             0.274  :sd2   0.001  :sd3   0.275   :sd4   0.269}
+o{:n1              3840   :n2    5      :n3    3808    :n4    33338}
+rs-6d-c3_obj2.csv
+o{:txt1            "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1             0.07   :mu2   0.001  :mu3   0.069   :mu4   0.133}
+o{:lo1             0.0    :lo2   0.0    :lo3   0.0     :lo4   0.0}
+o{:hi1             1.0    :hi2   0.002  :hi3   1.0     :hi4   0.933}
+o{:sd1             0.189  :sd2   0.001  :sd3   0.187   :sd4   0.304}
+o{:n1              3840   :n2    5      :n3    3808    :n4    30456}
+sol-6d-c2-obj1.csv
+o{:txt1             "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1              0.229  :mu2   0.015  :mu3   0.23    :mu4   0.226}
+o{:lo1              0.0    :lo2   0.014  :lo3   0.0     :lo4   0.014}
+o{:hi1              1.0    :hi2   0.016  :hi3   1.0     :hi4   0.553}
+o{:sd1              0.196  :sd2   0.001  :sd3   0.196   :sd4   0.182}
+o{:n1               2866   :n2    5      :n3    2834    :n4    18388}
+SQL_AllMeasurements.csv
+o{:txt1                  "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                   0.464  :mu2   0.181  :mu3   0.464   :mu4   0.361}
+o{:lo1                   0.0    :lo2   0.131  :lo3   0.0     :lo4   0.131}
+o{:hi1                   1.0    :hi2   0.321  :hi3   1.0     :hi4   0.854}
+o{:sd1                   0.185  :sd2   0.08   :sd3   0.185   :sd4   0.144}
+o{:n1                    4653   :n2    5      :n3    4621    :n4    83432}
+SS-A.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.253  :mu2   0.138  :mu3   0.245   :mu4   0.223}
+o{:lo1    0.001  :lo2   0.028  :lo3   0.001   :lo4   0.028}
+o{:hi1    1.0    :hi2   0.41   :hi3   0.981   :hi4   1.0}
+o{:sd1    0.189  :sd2   0.155  :sd3   0.178   :sd4   0.198}
+o{:n1     1343   :n2    5      :n3    1311    :n4    8887}
+SS-B.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.556  :mu2   0.118  :mu3   0.578   :mu4   0.611}
+o{:lo1    0.001  :lo2   0.001  :lo3   0.129   :lo4   0.001}
+o{:hi1    0.955  :hi2   0.297  :hi3   0.955   :hi4   0.955}
+o{:sd1    0.194  :sd2   0.112  :sd3   0.18    :sd4   0.213}
+o{:n1     206    :n2    5      :n3    174     :n4    1449}
+SS-C.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.32   :mu2   0.155  :mu3   0.314   :mu4   0.326}
+o{:lo1    0.0    :lo2   0.082  :lo3   0.0     :lo4   0.082}
+o{:hi1    0.998  :hi2   0.251  :hi3   0.998   :hi4   0.96}
+o{:sd1    0.228  :sd2   0.086  :sd3   0.222   :sd4   0.251}
+o{:n1     1512   :n2    5      :n3    1480    :n4    8774}
+SS-D.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.545  :mu2   0.397  :mu3   0.55    :mu4   0.57}
+o{:lo1    0.316  :lo2   0.316  :lo3   0.32    :lo4   0.316}
+o{:hi1    0.857  :hi2   0.444  :hi3   0.857   :hi4   0.699}
+o{:sd1    0.099  :sd2   0.049  :sd3   0.1     :sd4   0.085}
+o{:n1     196    :n2    5      :n3    164     :n4    966}
+SS-E.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.413  :mu2   0.283  :mu3   0.411   :mu4   0.483}
+o{:lo1    0.123  :lo2   0.277  :lo3   0.123   :lo4   0.277}
+o{:hi1    0.843  :hi2   0.292  :hi3   0.709   :hi4   0.843}
+o{:sd1    0.149  :sd2   0.006  :sd3   0.147   :sd4   0.17}
+o{:n1     756    :n2    5      :n3    724     :n4    4260}
+SS-F.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.561  :mu2   0.497  :mu3   0.558   :mu4   0.551}
+o{:lo1    0.348  :lo2   0.448  :lo3   0.348   :lo4   0.448}
+o{:hi1    0.877  :hi2   0.655  :hi3   0.877   :hi4   0.724}
+o{:sd1    0.1    :sd2   0.089  :sd3   0.102   :sd4   0.08}
+o{:n1     196    :n2    5      :n3    164     :n4    1076}
+SS-G.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.566  :mu2   0.46   :mu3   0.563   :mu4   0.573}
+o{:lo1    0.334  :lo2   0.431  :lo3   0.334   :lo4   0.431}
+o{:hi1    0.928  :hi2   0.503  :hi3   0.928   :hi4   0.729}
+o{:sd1    0.104  :sd2   0.028  :sd3   0.106   :sd4   0.078}
+o{:n1     196    :n2    5      :n3    164     :n4    964}
+SS-H.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.707  :mu2   0.322  :mu3   0.712   :mu4   0.726}
+o{:lo1    0.226  :lo2   0.226  :lo3   0.226   :lo4   0.226}
+o{:hi1    0.971  :hi2   0.62   :hi3   0.971   :hi4   0.969}
+o{:sd1    0.177  :sd2   0.171  :sd3   0.161   :sd4   0.196}
+o{:n1     259    :n2    5      :n3    227     :n4    1592}
+SS-I.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.395  :mu2   0.19   :mu3   0.395   :mu4   0.404}
+o{:lo1    0.0    :lo2   0.016  :lo3   0.0     :lo4   0.016}
+o{:hi1    0.862  :hi2   0.235  :hi3   0.862   :hi4   0.855}
+o{:sd1    0.152  :sd2   0.097  :sd3   0.151   :sd4   0.145}
+o{:n1     1080   :n2    5      :n3    1048    :n4    7700}
+SS-J.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.524  :mu2   0.073  :mu3   0.526   :mu4   0.443}
+o{:lo1    0.025  :lo2   0.048  :lo3   0.025   :lo4   0.048}
+o{:hi1    0.996  :hi2   0.112  :hi3   0.996   :hi4   0.705}
+o{:sd1    0.21   :sd2   0.024  :sd3   0.21    :sd4   0.212}
+o{:n1     3840   :n2    5      :n3    3808    :n4    24266}
+SS-K.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.517  :mu2   0.154  :mu3   0.518   :mu4   0.56}
+o{:lo1    0.014  :lo2   0.048  :lo3   0.014   :lo4   0.048}
+o{:hi1    0.897  :hi2   0.207  :hi3   0.897   :hi4   0.797}
+o{:sd1    0.161  :sd2   0.062  :sd3   0.16    :sd4   0.168}
+o{:n1     2880   :n2    5      :n3    2848    :n4    18752}
+SS-L.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.63   :mu2   0.339  :mu3   0.631   :mu4   0.609}
+o{:lo1    0.156  :lo2   0.207  :lo3   0.156   :lo4   0.207}
+o{:hi1    0.875  :hi2   0.445  :hi3   0.875   :hi4   0.834}
+o{:sd1    0.168  :sd2   0.119  :sd3   0.169   :sd4   0.155}
+o{:n1     1023   :n2    5      :n3    991     :n4    7910}
+SS-M.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.311  :mu2   0.023  :mu3   0.32    :mu4   0.081}
+o{:lo1    0.002  :lo2   0.002  :lo3   0.002   :lo4   0.002}
+o{:hi1    0.997  :hi2   0.1    :hi3   0.997   :hi4   0.922}
+o{:sd1    0.353  :sd2   0.043  :sd3   0.355   :sd4   0.144}
+o{:n1     864    :n2    5      :n3    832     :n4    13235}
+SS-N.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.254  :mu2   0.187  :mu3   0.254   :mu4   0.242}
+o{:lo1    0.0    :lo2   0.159  :lo3   0.0     :lo4   0.159}
+o{:hi1    0.767  :hi2   0.22   :hi3   0.767   :hi4   0.325}
+o{:sd1    0.061  :sd2   0.022  :sd3   0.061   :sd4   0.044}
+o{:n1     53662  :n2    5      :n3    53630   :n4    357401}
+SS-O.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.39   :mu2   0.148  :mu3   0.394   :mu4   0.333}
+o{:lo1    0.121  :lo2   0.121  :lo3   0.129   :lo4   0.121}
+o{:hi1    0.932  :hi2   0.208  :hi3   0.932   :hi4   0.784}
+o{:sd1    0.129  :sd2   0.036  :sd3   0.126   :sd4   0.176}
+o{:n1     972    :n2    5      :n3    940     :n4    7081}
+SS-P.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.63   :mu2   0.21   :mu3   0.636   :mu4   0.531}
+o{:lo1    0.156  :lo2   0.158  :lo3   0.156   :lo4   0.158}
+o{:hi1    0.875  :hi2   0.351  :hi3   0.875   :hi4   0.834}
+o{:sd1    0.168  :sd2   0.079  :sd3   0.164   :sd4   0.211}
+o{:n1     1023   :n2    5      :n3    991     :n4    7975}
+SS-Q.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.406  :mu2   0.058  :mu3   0.409   :mu4   0.173}
+o{:lo1    0.043  :lo2   0.051  :lo3   0.043   :lo4   0.051}
+o{:hi1    0.811  :hi2   0.077  :hi3   0.811   :hi4   0.793}
+o{:sd1    0.208  :sd2   0.011  :sd3   0.207   :sd4   0.153}
+o{:n1     2736   :n2    5      :n3    2704    :n4    64542}
+SS-R.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.412  :mu2   0.261  :mu3   0.413   :mu4   0.286}
+o{:lo1    0.118  :lo2   0.26   :lo3   0.118   :lo4   0.26}
+o{:hi1    0.707  :hi2   0.264  :hi3   0.707   :hi4   0.585}
+o{:sd1    0.152  :sd2   0.002  :sd3   0.152   :sd4   0.059}
+o{:n1     3008   :n2    5      :n3    2976    :n4    88022}
+SS-S.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.239  :mu2   0.055  :mu3   0.237   :mu4   0.282}
+o{:lo1    0.003  :lo2   0.027  :lo3   0.003   :lo4   0.027}
+o{:hi1    0.708  :hi2   0.114  :hi3   0.708   :hi4   0.668}
+o{:sd1    0.198  :sd2   0.036  :sd3   0.197   :sd4   0.258}
+o{:n1     3840   :n2    5      :n3    3808    :n4    28524}
+SS-T.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.286  :mu2   0.042  :mu3   0.287   :mu4   0.261}
+o{:lo1    0.03   :lo2   0.039  :lo3   0.03    :lo4   0.039}
+o{:hi1    0.733  :hi2   0.046  :hi3   0.733   :hi4   0.705}
+o{:sd1    0.209  :sd2   0.002  :sd3   0.209   :sd4   0.193}
+o{:n1     5184   :n2    5      :n3    5152    :n4    49243}
+SS-U.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.461  :mu2   0.242  :mu3   0.462   :mu4   0.289}
+o{:lo1    0.23   :lo2   0.24   :lo3   0.23    :lo4   0.24}
+o{:hi1    0.711  :hi2   0.243  :hi3   0.711   :hi4   0.652}
+o{:sd1    0.153  :sd2   0.001  :sd3   0.152   :sd4   0.089}
+o{:n1     4608   :n2    5      :n3    4576    :n4    115713}
+SS-V.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.552  :mu2   0.028  :mu3   0.553   :mu4   0.254}
+o{:lo1    0.0    :lo2   0.022  :lo3   0.0     :lo4   0.022}
+o{:hi1    0.997  :hi2   0.034  :hi3   0.997   :hi4   0.971}
+o{:sd1    0.216  :sd2   0.005  :sd3   0.215   :sd4   0.233}
+o{:n1     6840   :n2    5      :n3    6808    :n4    98451}
+SS-W.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.518  :mu2   0.314  :mu3   0.518   :mu4   0.47}
+o{:lo1    0.089  :lo2   0.294  :lo3   0.089   :lo4   0.294}
+o{:hi1    0.903  :hi2   0.338  :hi3   0.903   :hi4   0.627}
+o{:sd1    0.107  :sd2   0.02   :sd3   0.107   :sd4   0.101}
+o{:n1     65536  :n2    5      :n3    65504   :n4    497458}
+SS-X.csv
+o{:txt1   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1    0.577  :mu2   0.21   :mu3   0.577   :mu4   0.347}
+o{:lo1    0.002  :lo2   0.205  :lo3   0.002   :lo4   0.205}
+o{:hi1    0.997  :hi2   0.215  :hi3   0.997   :hi4   0.851}
+o{:sd1    0.174  :sd2   0.004  :sd3   0.173   :sd4   0.158}
+o{:n1     86058  :n2    5      :n3    86026   :n4    1925411}
+wc-6d-c1-obj1.csv
+o{:txt1            "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1             0.292  :mu2   0.11   :mu3   0.291   :mu4   0.293}
+o{:lo1             0.0    :lo2   0.006  :lo3   0.0     :lo4   0.006}
+o{:hi1             1.0    :hi2   0.258  :hi3   1.0     :hi4   0.919}
+o{:sd1             0.212  :sd2   0.095  :sd3   0.211   :sd4   0.194}
+o{:n1              2880   :n2    5      :n3    2848    :n4    19710}
+wc+rs-3d-c4-obj1.csv
+o{:txt1               "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                0.266  :mu2   0.058  :mu3   0.253   :mu4   0.29}
+o{:lo1                0.0    :lo2   0.01   :lo3   0.0     :lo4   0.01}
+o{:hi1                1.0    :hi2   0.111  :hi3   1.0     :hi4   0.798}
+o{:sd1                0.195  :sd2   0.043  :sd3   0.183   :sd4   0.167}
+o{:n1                 196    :n2    5      :n3    164     :n4    985}
+wc+sol-3d-c4-obj1.csv
+o{:txt1                "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                 0.263  :mu2   0.081  :mu3   0.262   :mu4   0.288}
+o{:lo1                 0.0    :lo2   0.012  :lo3   0.0     :lo4   0.012}
+o{:hi1                 1.0    :hi2   0.257  :hi3   1.0     :hi4   0.752}
+o{:sd1                 0.194  :sd2   0.101  :sd3   0.192   :sd4   0.146}
+o{:n1                  196    :n2    5      :n3    164     :n4    1132}
+wc+wc-3d-c4-obj1.csv
+o{:txt1               "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                0.269  :mu2   0.038  :mu3   0.263   :mu4   0.262}
+o{:lo1                0.0    :lo2   0.012  :lo3   0.0     :lo4   0.012}
+o{:hi1                1.0    :hi2   0.085  :hi3   1.0     :hi4   0.776}
+o{:sd1                0.182  :sd2   0.032  :sd3   0.18    :sd4   0.168}
+o{:n1                 196    :n2    5      :n3    164     :n4    1052}
+X264_AllMeasurements.csv
+o{:txt1                   "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                    0.377  :mu2   0.009  :mu3   0.384   :mu4   0.216}
+o{:lo1                    0.0    :lo2   0.003  :lo3   0.0     :lo4   0.003}
+o{:hi1                    1.0    :hi2   0.031  :hi3   1.0     :hi4   0.858}
+o{:sd1                    0.281  :sd2   0.012  :sd3   0.28    :sd4   0.193}
+o{:n1                     1152   :n2    5      :n3    1120    :n4    7601}
+healthCloseIsses12mths0001-hard.csv
+o{:txt1                              "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                               0.589  :mu2   0.449  :mu3   0.589   :mu4   0.6}
+o{:lo1                               0.163  :lo2   0.282  :lo3   0.163   :lo4   0.282}
+o{:hi1                               0.903  :hi2   0.696  :hi3   0.903   :hi4   0.757}
+o{:sd1                               0.155  :sd2   0.151  :sd3   0.155   :sd4   0.121}
+o{:n1                                10000  :n2    5      :n3    9968    :n4    60025}
+healthCloseIsses12mths0011-easy.csv
+o{:txt1                              "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1                               0.665  :mu2   0.0    :mu3   0.665   :mu4   0.428}
+o{:lo1                               0.0    :lo2   0.0    :lo3   0.0     :lo4   0.0}
+o{:hi1                               0.985  :hi2   0.0    :hi3   0.985   :hi4   0.879}
+o{:sd1                               0.35   :sd2   0.0    :sd3   0.349   :sd4   0.404}
+o{:n1                                10000  :n2    5      :n3    9968    :n4    144932}
+auto93.csv
+o{:txt1     "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1      0.556  :mu2   0.367  :mu3   0.558   :mu4   0.565}
+o{:lo1      0.167  :lo2   0.277  :lo3   0.167   :lo4   0.277}
+o{:hi1      0.927  :hi2   0.47   :hi3   0.927   :hi4   0.918}
+o{:sd1      0.162  :sd2   0.07   :sd3   0.161   :sd4   0.146}
+o{:n1       398    :n2    5      :n3    366     :n4    3434}
+Wine_quality.csv
+o{:txt1           "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1            0.423  :mu2   0.297  :mu3   0.424   :mu4   0.396}
+o{:lo1            0.152  :lo2   0.185  :lo3   0.152   :lo4   0.185}
+o{:hi1            0.825  :hi2   0.447  :hi3   0.825   :hi4   0.556}
+o{:sd1            0.088  :sd2   0.095  :sd3   0.087   :sd4   0.077}
+o{:n1             1599   :n2    5      :n3    1567    :n4    10670}
+coc1000.csv
+o{:txt1      "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1       0.456  :mu2   0.283  :mu3   0.455   :mu4   0.534}
+o{:lo1       0.131  :lo2   0.175  :lo3   0.131   :lo4   0.175}
+o{:hi1       0.775  :hi2   0.364  :hi3   0.775   :hi4   0.692}
+o{:sd1       0.11   :sd2   0.077  :sd3   0.11    :sd4   0.114}
+o{:n1        1000   :n2    5      :n3    968     :n4    6534}
+nasa93dem.csv
+o{:txt1        "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1         0.484  :mu2   0.421  :mu3   0.487   :mu4   0.476}
+o{:lo1         0.375  :lo2   0.412  :lo3   0.375   :lo4   0.412}
+o{:hi1         0.76   :hi2   0.43   :hi3   0.687   :hi4   0.76}
+o{:sd1         0.045  :sd2   0.007  :sd3   0.036   :sd4   0.03}
+o{:n1          93     :n2    5      :n3    61      :n4    614}
+pom3a.csv
+o{:txt1    "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1     0.338  :mu2   0.122  :mu3   0.338   :mu4   0.297}
+o{:lo1     0.011  :lo2   0.011  :lo3   0.013   :lo4   0.011}
+o{:hi1     0.721  :hi2   0.198  :hi3   0.721   :hi4   0.546}
+o{:sd1     0.107  :sd2   0.068  :sd3   0.107   :sd4   0.111}
+o{:n1      20000  :n2    5      :n3    19968   :n4    159244}
+pom3b.csv
+o{:txt1    "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1     0.339  :mu2   0.077  :mu3   0.339   :mu4   0.342}
+o{:lo1     0.005  :lo2   0.026  :lo3   0.005   :lo4   0.026}
+o{:hi1     0.705  :hi2   0.135  :hi3   0.705   :hi4   0.575}
+o{:sd1     0.111  :sd2   0.04   :sd3   0.111   :sd4   0.09}
+o{:n1      20000  :n2    5      :n3    19968   :n4    118880}
+pom3c.csv
+o{:txt1    "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1     0.463  :mu2   0.254  :mu3   0.463   :mu4   0.444}
+o{:lo1     0.091  :lo2   0.136  :lo3   0.091   :lo4   0.136}
+o{:hi1     0.778  :hi2   0.317  :hi3   0.778   :hi4   0.724}
+o{:sd1     0.092  :sd2   0.07   :sd3   0.092   :sd4   0.136}
+o{:n1      20000  :n2    5      :n3    19968   :n4    166370}
+pom3d.csv
+o{:txt1    "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1     0.332  :mu2   0.151  :mu3   0.333   :mu4   0.321}
+o{:lo1     0.038  :lo2   0.1    :lo3   0.038   :lo4   0.1}
+o{:hi1     0.765  :hi2   0.233  :hi3   0.765   :hi4   0.562}
+o{:sd1     0.145  :sd2   0.055  :sd3   0.146   :sd4   0.126}
+o{:n1      500    :n2    5      :n3    468     :n4    2941}
+xomo_flight.csv
+o{:txt1          "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1           0.255  :mu2   0.091  :mu3   0.255   :mu4   0.252}
+o{:lo1           0.0    :lo2   0.051  :lo3   0.0     :lo4   0.051}
+o{:hi1           0.967  :hi2   0.113  :hi3   0.967   :hi4   0.451}
+o{:sd1           0.11   :sd2   0.024  :sd3   0.11    :sd4   0.099}
+o{:n1            10000  :n2    5      :n3    9968    :n4    79482}
+xomo_ground.csv
+o{:txt1          "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1           0.269  :mu2   0.093  :mu3   0.269   :mu4   0.244}
+o{:lo1           0.007  :lo2   0.072  :lo3   0.007   :lo4   0.072}
+o{:hi1           0.821  :hi2   0.145  :hi3   0.821   :hi4   0.41}
+o{:sd1           0.094  :sd2   0.03   :sd3   0.094   :sd4   0.093}
+o{:n1            10000  :n2    5      :n3    9968    :n4    58704}
+xomo_osp.csv
+o{:txt1       "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1        0.235  :mu2   0.07   :mu3   0.235   :mu4   0.239}
+o{:lo1        0.013  :lo2   0.057  :lo3   0.013   :lo4   0.057}
+o{:hi1        0.774  :hi2   0.083  :hi3   0.774   :hi4   0.428}
+o{:sd1        0.087  :sd2   0.013  :sd3   0.087   :sd4   0.103}
+o{:n1         10000  :n2    5      :n3    9968    :n4    58749}
+xomo_osp2.csv
+o{:txt1        "b4"   :txt2  "now"  :txt3  "todo"  :txt4  "after"}
+o{:mu1         0.374  :mu2   0.191  :mu3   0.375   :mu4   0.341}
+o{:lo1         0.07   :lo2   0.107  :lo3   0.07    :lo4   0.107}
+o{:hi1         0.83   :hi2   0.309  :hi3   0.83    :hi4   0.582}
+o{:sd1         0.121  :sd2   0.075  :sd3   0.121   :sd4   0.104}
+o{:n1          10000  :n2    5      :n3    9968    :n4    67079}
