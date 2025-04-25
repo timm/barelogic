@@ -225,12 +225,11 @@ def showTree(tree, key=lambda z:z.ys):
   for lvl, node in nodes(tree,key=key):
     print(f"{lvl * '|  '}{node.xplain}[{len(node.rows)}]",show(node.ys))
 
-def isMost(node, row, lvl=0):
-  if not node.kids: return node
-  if node.kids:
-    most = sorted(node.kids, key=lambda k: k.ys)[0]
-    if most.guard(row): 
-      return isMost(most,row,lvl+1)
+def leaf(node, row):
+  for kid in node.kids or []:
+    if kid.guard(row): 
+      return leaf(kid,row)
+  return node
     
 #--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
