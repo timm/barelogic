@@ -36,13 +36,13 @@ class o:
   __init__ = lambda i,**d: i.__dict__.update(**d)
   __repr__ = lambda i: i.__class__.__name__ + show(i.__dict__)
 
-def Num(of=" ", at=0):
-  return o(it=Num, of=of, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG, 
+def Num(txt=" ", at=0):
+  return o(it=Num, txt=txt, at=at, n=0, mu=0, sd=0, m2=0, hi=-BIG, lo=BIG, 
            rank=0, # used by the stats functions, ignored otherwise
-           goal = 0 if str(of)[-1]=="-" else 1)
+           goal = 0 if str(txt)[-1]=="-" else 1)
 
-def Sym(of=" ", at=0):
-  return o(it=Sym, of=of, at=at, n=0, has={})
+def Sym(txt=" ", at=0):
+  return o(it=Sym, txt=txt, at=at, n=0, has={})
 
 def Cols(names):
   cols = o(it=Cols, x=[], y=[], klass=-1, all=[], names=names)
@@ -147,9 +147,9 @@ def actLearn(data, shuffle=True):
   best  =  clone(data, done[:cut])
   rest  =  clone(data, done[cut:])
   while len(todo) > 2  and n < the.Stop:
-    n += 1
+    n      += 1
     hi, *lo = sorted(todo[:the.Few*2], key=_guess, reverse=True)
-    todo = lo[:the.Few] + todo[the.Few*2:] + lo[the.Few:]
+    todo    = lo[:the.Few] + todo[the.Few*2:] + lo[the.Few:]
     add(hi, best)
     best.rows = ydists(best.rows, data)
     if len(best.rows) >= round(n**the.guess):
@@ -159,9 +159,9 @@ def actLearn(data, shuffle=True):
 #--------- --------- --------- --------- --------- --------- ------- -------
 def cuts(rows, col,Y,Klass=Num):
   def _v(row) : return row[col.at]
-  def _upto(x): return f"{col.of} <= {x} ", lambda z:_v(z)=="?" or _v(z)<=x
-  def _over(x): return f"{col.of} >  {x} ", lambda z:_v(z)=="?" or _v(z)>x
-  def _eq(x)  : return f"{col.of} == {x} ", lambda z:_v(z)=="?" or _v(z)==x
+  def _upto(x): return f"{col.txt} <= {x} ", lambda z:_v(z)=="?" or _v(z)<=x
+  def _over(x): return f"{col.txt} >  {x} ", lambda z:_v(z)=="?" or _v(z)>x
+  def _eq(x)  : return f"{col.txt} == {x} ", lambda z:_v(z)=="?" or _v(z)==x
   def _sym():
     n,d = 0,{}
     for row in rows:
@@ -181,10 +181,9 @@ def cuts(rows, col,Y,Klass=Num):
     for x,y in sorted(xys, key=lambda xy: first(xy)):
       if the.leaf <= lhs.n <= len(xys) - the.leaf: 
         if x != b4:
-            #if abs(mid(lhs) - mid(rhs)) > spread(col)*0.2:
-            tmp = (lhs.n * spread(lhs) + rhs.n * spread(rhs)) / len(xys)
-            if tmp < xpect:
-              xpect, out = tmp,[_upto(b4), _over(b4)]
+          tmp = (lhs.n * spread(lhs) + rhs.n * spread(rhs)) / len(xys)
+          if tmp < xpect:
+            xpect, out = tmp,[_upto(b4), _over(b4)]
       add(sub(y, rhs),lhs)
       b4 = x
     if out:
@@ -257,20 +256,18 @@ def cliffs(vals1,vals2):
 
 def vals2RankedNums(d, eps=0, reverse=False):
   def _samples():            return [_sample(d[k],k) for k in d]
-  def _sample(vals,of=" "): return o(vals=vals,num=adds(vals,Num(of=of)))
+  def _sample(vals,txt=" "): return o(vals=vals, num=adds(vals,Num(txt=txt)))
   def _same(b4,now):         return (abs(b4.num.mu - now.num.mu) < eps or
                                     cliffs(b4.vals, now.vals) and 
                                     bootstrap(b4.vals, now.vals))
-
-  out,tmp = {},[]
+  tmp,out = [],{}
   for now in sorted(_samples(), key=lambda z:z.num.mu, reverse=reverse):
     if tmp and _same(tmp[-1], now): 
       tmp[-1] = _sample(tmp[-1].vals + now.vals)
     else: 
       tmp += [ _sample(now.vals) ]
-    now.num.meta= tmp[-1].num 
-    now.num.meta.rank = chr( 97 + len(tmp) - 1 )
-    out[now.num.of] = now.num
+    now.num.rank = chr(96+len(tmp))
+    out[now.num.txt] = now.num 
   return out
 
 #--------- --------- --------- --------- --------- --------- ------- -------
@@ -309,7 +306,7 @@ def show(x):
   elif it is float : x= str(round(x,the.decs))
   elif it is list  : x= '['+', '.join([show(v) for v in x])+']'
   elif it is dict  : x= "{"+' '.join([f":{k} {show(v)}" 
-                                   for k,v in x.items() if first(str(k)) !="_"])+"}"
+                          for k,v in x.items() if first(str(k)) !="_"])+"}"
   return str(x)
 
 def main():
@@ -372,22 +369,22 @@ def eg__stats(_):
    b4 = [G(10,1) for _ in range(n)]
    d  = 0
    while d < 2:
-     now=[x+d*R() for x in b4]
-     b1=cliffs(b4,now)
-     b2=bootstrap(b4,now)
+     now = [x+d*R() for x in b4]
+     b1  = cliffs(b4,now)
+     b2  = bootstrap(b4,now)
      showd(o(d=d,cliffs=c(b1), boot=c(b2), agree=c(b1==b2)))
-     d+= 0.1
+     d  += 0.1
 
 def eg__rank(_):
    G  = random.gauss
    n=100
-   for k,num in vals2RankedNums(dict( asIs  = [G(10,1) for _ in range(n)],
-                                copy1 = [G(20,1) for _ in range(n)],
-                                now1  = [G(20,1) for _ in range(n)],
-                                copy2 = [G(40,1) for _ in range(n)],
-                                now2  = [G(40,1) for _ in range(n)],
-                                ), the.Cohen).items():
-      showd(o(r=num.meta.rank, mu=num.meta.mu, k=k))
+   d=dict(asIs  = [G(10,1) for _ in range(n)],
+          copy1 = [G(20,1) for _ in range(n)],
+          now1  = [G(20,1) for _ in range(n)],
+          copy2 = [G(40,1) for _ in range(n)],
+          now2  = [G(40,1) for _ in range(n)])
+   for k,num in vals2RankedNums(d,the.Cohen).items():
+      showd(o(what=num.txt, rank=num.rank, num=num.mu))
 
 def eg__actLearn(file,  repeats=30):
   file = file or the.file
@@ -421,8 +418,9 @@ def eg__acts(file):
               samples=[200,100,50,24,12,6],
               fun=rx1)
 
-def experiment1(file, repeats=30, samples=[32,16,8],
-                      fun=lambda d: ydist(first(actLearn(d,shuffle=True).best.rows),d)):
+def experiment1(file, 
+                repeats=30, samples=[32,16,8],
+                fun=lambda d: ydist(first(actLearn(d,shuffle=True).best.rows),d)):
   name = re.search(r'([^/]+)\.csv$', file).group(1)
   data = Data(csv(file))
   rx   = dict(b4 = [ydist(row,data) for row in data.rows])
@@ -440,7 +438,7 @@ def experiment1(file, repeats=30, samples=[32,16,8],
   order = vals2RankedNums(rx, asIs.sd*the.Cohen)
   for k in rx:
     v = order[k]
-    report[k] = f"{v.meta.rank} {v.mu:.2f} "
+    report[k] = f"{v.rank} {v.mu:.2f} "
   report["name"]=name
   print("#"+str(list(report.keys())))
   print(list(report.values()))
