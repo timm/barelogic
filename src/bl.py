@@ -224,12 +224,20 @@ def showTree(tree, key=lambda z:z.ys):
   for lvl, node in nodes(tree,key=key):
     print(f"{lvl * '|  '}{node.xplain}[{len(node.rows)}]",show(node.ys))
 
+<<<<<<< HEAD
 def isMost(node, row, lvl=0):
   if not node.kids: return node
   if node.kids:
     most = sorted(node.kids, key=lambda k: k.ys)[0]
     if most.decision(row): 
       return isMost(most,row,lvl+1)
+=======
+def leaf(node, row):
+  for kid in node.kids or []:
+    if kid.guard(row): 
+      return leaf(kid,row)
+  return node
+>>>>>>> c4a1f35774b51c12c56b7e9fc4c9d27b26e1a237
     
 #--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
@@ -463,11 +471,12 @@ def eg__rules(file):
   now   = yNums(model.best.rows, data)
   nodes = tree(model.best.rows + model.rest.rows,data)
   todo  = yNums(model.todo, data)
-  after = yNums([row for row in model.todo if isMost(nodes,row)],data)
+  after = yNums([row2 for row1 in model.todo for row2 in leaf(nodes,row1).rows],data)
   print(re.sub(".*/", "", file or the.file))
   print(o(txt1="b4", txt2="now",  txt3="todo",  txt4="after"))
   print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=after.mu))
   print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=after.lo))
+  print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=after.hi))
   print(o(sd1=b4.sd, sd2=now.sd,  sd3=todo.sd,  sd4=after.sd))
   print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
 
