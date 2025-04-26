@@ -163,9 +163,9 @@ def actLearn(data, shuffle=True):
 #--------- --------- --------- --------- --------- --------- ------- -------
 def cuts(rows, col,Y,Klass=Num):
   def _v(row) : return row[col.at]
-  def _upto(x): return f"{col.txt} <= {x:.3g} ", lambda z:_v(z)=="?" or _v(z)<=x
-  def _over(x): return f"{col.txt} >  {x:.3g} ", lambda z:_v(z)=="?" or _v(z)>x
-  def _eq(x)  : return f"{col.txt} == {x:.3g} ", lambda z:_v(z)=="?" or _v(z)==x
+  def _upto(x): return f"{col.txt} <= {x} ", lambda z:_v(z)=="?" or _v(z)<=x
+  def _over(x): return f"{col.txt} >  {x} ", lambda z:_v(z)=="?" or _v(z)>x
+  def _eq(x)  : return f"{col.txt} == {x} ", lambda z:_v(z)=="?" or _v(z)==x
   def _sym():
     n,d = 0,{}
     for row in rows:
@@ -224,20 +224,11 @@ def showTree(tree, key=lambda z:z.ys):
   for lvl, node in nodes(tree,key=key):
     print(f"{lvl * '|  '}{node.xplain}[{len(node.rows)}]",show(node.ys))
 
-<<<<<<< HEAD
-def isMost(node, row, lvl=0):
-  if not node.kids: return node
-  if node.kids:
-    most = sorted(node.kids, key=lambda k: k.ys)[0]
-    if most.decision(row): 
-      return isMost(most,row,lvl+1)
-=======
 def leaf(node, row):
   for kid in node.kids or []:
-    if kid.guard(row): 
+    if kid.decision(row): 
       return leaf(kid,row)
-  return node
->>>>>>> c4a1f35774b51c12c56b7e9fc4c9d27b26e1a237
+  return node 
     
 #--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
