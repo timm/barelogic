@@ -163,9 +163,9 @@ def actLearn(data, shuffle=True):
 #--------- --------- --------- --------- --------- --------- ------- -------
 def cuts(rows, col,Y,Klass=Num):
   def _v(row) : return row[col.at]
-  def _upto(x): return f"{col.txt} <= {x} ", lambda z:_v(z)=="?" or _v(z)<=x
-  def _over(x): return f"{col.txt} >  {x} ", lambda z:_v(z)=="?" or _v(z)>x
-  def _eq(x)  : return f"{col.txt} == {x} ", lambda z:_v(z)=="?" or _v(z)==x
+  def _upto(x): return f"{col.txt} <= {x:.3g} ", lambda z:_v(z)=="?" or _v(z)<=x
+  def _over(x): return f"{col.txt} >  {x:.3g} ", lambda z:_v(z)=="?" or _v(z)>x
+  def _eq(x)  : return f"{col.txt} == {x:.3g} ", lambda z:_v(z)=="?" or _v(z)==x
   def _sym():
     n,d = 0,{}
     for row in rows:
@@ -175,7 +175,7 @@ def cuts(rows, col,Y,Klass=Num):
         add(Y(row), d[x])
         n = n + 1
     return o(entropy= sum(v.n/n * spread(v) for v in d.values()),
-            guards= [_eq(k) for k,v in d.items()])
+            decisions= [_eq(k) for k,v in d.items()])
 
   def _num():
     out,b4 = None,None 
@@ -191,27 +191,27 @@ def cuts(rows, col,Y,Klass=Num):
       add(sub(y, rhs),lhs)
       b4 = x
     if out:
-      return o(entropy=xpect, guards=out)
+      return o(entropy=xpect, decisions=out)
 
   return _sym() if col.it is Sym else _num()
 
 #--------- --------- --------- --------- --------- --------- ------- -------
-def tree(rows,data,Klass=Num,xplain="",guard=lambda _:True):
+def tree(rows,data,Klass=Num,xplain="",decision=lambda _:True):
    def Y(row): return ydist(row,data)
    node        = clone(data,rows)
    node.ys     = yNums(rows,data).mu
    node.kids   = []
-   node.guard  = guard
+   node.decision  = decision
    node.xplain = xplain
    if len(rows) >= the.leaf:
      splits=[]
      for col in data.cols.x:
        if tmp := cuts(rows,col,Y,Klass=Klass): splits += [tmp]
      if splits:
-       for xplain,guard in sorted(splits, key=lambda cut:cut.entropy)[0].guards:
-         rows1= [row for row in rows if guard(row)]
+       for xplain,decision in sorted(splits, key=lambda cut:cut.entropy)[0].decisions:
+         rows1= [row for row in rows if decision(row)]
          if the.leaf <= len(rows1) < len(rows):
-           node.kids += [tree(rows1,data,Klass=Klass,xplain=xplain,guard=guard)]
+           node.kids += [tree(rows1,data,Klass=Klass,xplain=xplain,decision=decision)]
    return node   
 
 def nodes(node,lvl=0, key=None):
@@ -228,7 +228,7 @@ def isMost(node, row, lvl=0):
   if not node.kids: return node
   if node.kids:
     most = sorted(node.kids, key=lambda k: k.ys)[0]
-    if most.guard(row): 
+    if most.decision(row): 
       return isMost(most,row,lvl+1)
     
 #--------- --------- --------- --------- --------- --------- ------- -------
