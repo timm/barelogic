@@ -462,13 +462,16 @@ def eg__rules(file):
   now   = yNums(model.best.rows, data)
   nodes = tree(model.best.rows + model.rest.rows,data)
   todo  = yNums(model.todo, data)
+  guess = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)
+  mid = len(guess)//5
+  
+    
   after = yNums([row2 for row1 in model.todo for row2 in leaf(nodes,row1).rows],data)
   print(re.sub(".*/", "", file or the.file))
   print(o(txt1="b4", txt2="now",  txt3="todo",  txt4="after"))
-  print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=after.mu))
-  print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=after.lo))
-  print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=after.hi))
-  print(o(sd1=b4.sd, sd2=now.sd,  sd3=todo.sd,  sd4=after.sd))
+  print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=ydist(guess[ten*5][1],data)))
+  print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=ydist(guess[0][1],data)))
+  print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=ydist(guess[-1][1],data)))
   print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
