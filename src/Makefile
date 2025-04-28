@@ -109,19 +109,19 @@ rules: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, python3 -B bl.py -l 5 --rules $d | column -t;)
 
 afters: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d, $^, (python3 -B bl.py -l 5 -S 200 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 5 -S 100 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 5 -S 50 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 5 -S 40 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 5 -S 30 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 5 -S 20 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 200 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 100 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 50 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 40 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 30 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 20 --after $d &);)
 
 aftersAll:
 	$(MAKE) afters | tee ~/tmp/$@.out
 	$(foreach d,200 100 50 40 30 20,\
 	   gawk '$$4==$d {x[NR]=$$2} END {n=int(0.1*asort(x)); print $d, x[n], x[3*n], x[5*n], x[7*n],x[9*n]}' ~/tmp/$@.out ;)
 
-
+#l=2
 # 200 21 73 92  98 100
 # 100 64 86 98 100 100
 #  50 69 89 95  98 100
@@ -129,3 +129,31 @@ aftersAll:
 #  30 65 84 93  98 100
 #  20 61 81 88  97 100
 
+# ▶ py bl.py -l 2 -S 30 --after ../../moot/optimize/process/nasa93dem.csv
+# o{:win 97 :samples 30 :mu1 0.54 :mu2 0.525 :lo1 0.387 :lo2 0.391 :file "nasa93dem.csv"}
+
+
+# py bl.py -l 2 --cuts ../../moot/optimize/process/nasa93dem.csv
+# o{:mu1 0.54 :mu2 0.437 :sd1 0.051 :sd2 0.019}
+# ▶ py bl.py -l 2 -S 30 --cuts ../../moot/optimize/process/nasa93dem.csv
+# o{:mu1 0.54 :mu2 0.46 :sd1 0.051 :sd2 0.043}
+# [30] 0.531
+# |  rely == l [2] 0.438
+# |  rely == h [10] 0.52
+# |  |  data == h [2] 0.481
+# |  |  data == n [6] 0.532
+# |  |  |  pmat == l [3] 0.504
+# |  |  |  |  cplx == vh [2] 0.506
+# |  |  |  pmat == n [2] 0.569
+# |  rely == n [14] 0.536
+# |  |  data == n [5] 0.521
+# |  |  |  pmat == l [2] 0.527
+# |  |  |  pmat == n [2] 0.54
+# |  |  data == l [7] 0.541
+# |  |  |  pcap == h [5] 0.54
+# |  |  |  |  cplx == n [3] 0.526
+# |  |  |  |  cplx == h [2] 0.562
+# |  |  |  pcap == vh [2] 0.543
+# |  rely == vh [4] 0.587
+# |  |  pmat == h [2] 0.561
+# |  |  pmat == l [2] 0.613
