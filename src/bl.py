@@ -418,7 +418,7 @@ def eg__acts(file):
     return [ydist(first(actLearn(data, shuffle=True).best.rows), data)]
   experiment1(file or the.file,
               repeats=30, 
-              samples=[200,100,50,24,12,6],
+              samples=[200,100,50,40,30,20,16,8],
               fun=rx1)
 
 def experiment1(file, 
@@ -457,22 +457,39 @@ def eg__cuts(file):
 
 def eg__rules(file):
   data  = Data(csv(file or the.file))
-  model = actLearn(data)
   b4    = yNums(data.rows, data)
+  model = actLearn(data)
   now   = yNums(model.best.rows, data)
   nodes = tree(model.best.rows + model.rest.rows,data)
   todo  = yNums(model.todo, data)
   guess = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)
   mid = len(guess)//5
-  
-    
   after = yNums([row2 for row1 in model.todo for row2 in leaf(nodes,row1).rows],data)
   print(re.sub(".*/", "", file or the.file))
   print(o(txt1="b4", txt2="now",  txt3="todo",  txt4="after"))
-  print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=ydist(guess[ten*5][1],data)))
+  print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=ydist(guess[mid][1],data)))
   print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=ydist(guess[0][1],data)))
   print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=ydist(guess[-1][1],data)))
   print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
+
+def eg__after(file,repeats=30):
+  data  = Data(csv(file or the.file))
+  b4    = yNums(data.rows, data)
+  after = Num()
+  for _ in range(repeats):
+    model = actLearn(data,shuffle=True)
+    nodes = tree(model.best.rows + model.rest.rows,data)
+    guess = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)[0][1]
+    add(ydist(guess,data),after)
+  win = 1 - (after.lo - b4.lo)/(b4.mu - b4.lo)
+  print(o(win=round(100*win), samples=the.Stop, mu1=b4.mu,mu2=after.mu, lo1=b4.lo, lo2=after.lo,file=re.sub(".*/", "", file or the.file)))
+  # mid = len(guess)//5
+  # after = yNums([row2 for row1 in model.todo for row2 in leaf(nodes,row1).rows],data)
+  # print(o(txt1="b4", txt2="now",  txt3="todo",  txt4="after"))
+  # print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=ydist(guess[mid][1],data)))
+  # print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=ydist(guess[0][1],data)))
+  # print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=ydist(guess[-1][1],data)))
+  # print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
