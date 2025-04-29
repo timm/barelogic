@@ -109,25 +109,27 @@ rules: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, python3 -B bl.py -l 5 --rules $d | column -t;)
 
 afters: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d, $^, (python3 -B bl.py -l 2 -S 200 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 2 -S 100 --after $d &);)
+	#$(foreach d, $^, (python3 -B bl.py -l 2 -S 200 --after $d &);)
+	#$(foreach d, $^, (python3 -B bl.py -l 2 -S 100 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 50 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 40 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 30 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 20 --after $d &);)
 
 aftersAll:
-	$(MAKE) afters | tee ~/tmp/$@.out
+	#$(MAKE) afters | tee ~/tmp/$@.out
 	$(foreach d,200 100 50 40 30 20,\
 	   gawk '$$4==$d {x[NR]=$$2} END {n=int(0.1*asort(x)); print $d, x[n], x[3*n], x[5*n], x[7*n],x[9*n]}' ~/tmp/$@.out ;)
 
 #l=2
-# 200 21 73 92  98 100
-# 100 64 86 98 100 100
-#  50 69 89 95  98 100
-#  40 57 87 93  99 100
-#  30 65 84 93  98 100
-#  20 61 81 88  97 100
+# S   10 30 50  70 90 <== percentile
+# === == == ==  == ==
+# 200 21 78 93  98 100
+# 100 72 89 97 100 100
+#  50 66 93 97 100 100
+#  40 65 85 97 100 100
+#  30 65 83 93 100 100
+#  20 70 89 97 100 100
 
 # ▶ py bl.py -l 2 -S 30 --after ../../moot/optimize/process/nasa93dem.csv
 # o{:win 97 :samples 30 :mu1 0.54 :mu2 0.525 :lo1 0.387 :lo2 0.391 :file "nasa93dem.csv"}

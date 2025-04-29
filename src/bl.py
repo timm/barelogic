@@ -146,7 +146,8 @@ def actLearn(data, shuffle=True):
   if shuffle: random.shuffle(data.rows)
   n     =  the.start
   todo  =  data.rows[n:]
-  done  =  ydists(data.rows[:n], data)
+  br    = clone(data, data.rows[:n])
+  done  =  ydists(data.rows[:n], br)
   cut   =  round(n**the.guess)
   best  =  clone(data, done[:cut])
   rest  =  clone(data, done[cut:])
@@ -155,7 +156,8 @@ def actLearn(data, shuffle=True):
     hi, *lo = sorted(todo[:the.Few*2], key=_guess, reverse=True)
     todo    = lo[:the.Few] + todo[the.Few*2:] + lo[the.Few:]
     add(hi, best)
-    best.rows = ydists(best.rows, data)
+    add(hi, br)
+    best.rows = ydists(best.rows, br)
     if len(best.rows) >= round(n**the.guess):
       add( sub(best.rows.pop(-1), best), rest)
   return o(best=best, rest=rest, todo=todo)
