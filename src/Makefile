@@ -89,21 +89,14 @@ lint: ## lint all python in this directory
 	@ps2pdf $@.ps $@; rm $@.ps
 	open $@
 
-fast1:
-	cat ~/tmp/fast_*.out | column -t | grep --color a
-
-#fast: ../../moot/optimize/[bchmp]*/*.csv
-fast: ../../moot/optimize/[b]*/*.csv
-	$(foreach d, $^, (python3 -B bl.py --fast $d | tee ~/tmp/$@_$(notdir $d).out &); )
-
 acts1:
 	cat ~/tmp/acts_*.out | sort | uniq | sed "s/[{}']//g" | sort -n -k 2  | column -s, -t | grep --color a
 
 acts: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, (python3 -B bl.py --acts $d | tee ~/tmp/$@_$(notdir $d).out &); )
 
-cuts: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d, $^, python3 -B bl.py --cuts $d;)
+trees: ../../moot/optimize/[bchmp]*/*.csv
+	$(foreach d, $^, python3 -B bl.py --tree $d;)
 
 rules: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, python3 -B bl.py -l 5 --rules $d | column -t;)
@@ -121,6 +114,11 @@ aftersAll:
 	$(foreach d,200 100 50 40 30 20,\
 	   gawk '$$4==$d {x[NR]=$$2} END {n=int(0.1*asort(x)); print $d, x[n], x[3*n], x[5*n], x[7*n],x[9*n]}' ~/tmp/$@.out ;)
 
+stats: ../../moot/optimize/[bchmp]*/*.csv
+	echo "     x      y   rows"
+	echo "------ ------ ------"
+	{ $(foreach d, $^, gawk -F, -f stats.awk $d;) } | sort -n
+
 #l=2
 # S   10 30 50  70 90 <== percentile
 # === == == ==  == ==
@@ -135,9 +133,9 @@ aftersAll:
 # o{:win 97 :samples 30 :mu1 0.54 :mu2 0.525 :lo1 0.387 :lo2 0.391 :file "nasa93dem.csv"}
 
 
-# py bl.py -l 2 --cuts ../../moot/optimize/process/nasa93dem.csv
+# py bl.py -l 2 --tree ../../moot/optimize/process/nasa93dem.csv
 # o{:mu1 0.54 :mu2 0.437 :sd1 0.051 :sd2 0.019}
-# ▶ py bl.py -l 2 -S 30 --cuts ../../moot/optimize/process/nasa93dem.csv
+# ▶ py bl.py -l 2 -S 30 --tree ../../moot/optimize/process/nasa93dem.csv
 # o{:mu1 0.54 :mu2 0.46 :sd1 0.051 :sd2 0.043}
 # [30] 0.531
 # |  rely == l [2] 0.438

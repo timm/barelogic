@@ -223,8 +223,14 @@ def nodes(node,lvl=0, key=None):
       yield node1
 
 def showTree(tree, key=lambda z:z.ys):
+  stats = yNums(tree.rows,tree)
+  win = lambda x: 100-int(100*(x-stats.lo)/(stats.mu - stats.lo))
+  print(f"{'d2h':>4} {'win':>4} {'n':>4}  ")
+  print(f"{'----':>4} {'----':>4} {'----':>4}  ")
   for lvl, node in nodes(tree,key=key):
-    print(f"{lvl * '|  '}{node.xplain}[{len(node.rows)}]",show(node.ys))
+    leafp = len(node.kids)==0
+    post= ";" if leafp else ""
+    print(f"{node.ys:4.2f} {win(node.ys):4} {len(node.rows):4}    {(lvl-1) * '|  '}{node.xplain}" + post)
 
 def leaf(node, row):
   for kid in node.kids or []:
@@ -415,6 +421,14 @@ def eg__fast(file):
               samples=[64,32,16,8],
               fun=rx1)
 
+def eg__quick(file):
+  def rx1(data):
+    return [ydist(first(actLearn(data, shuffle=True).best.rows), data)]
+  experiment1(file or the.file,
+              repeats=10, 
+              samples=[40,20,16,8],
+              fun=rx1)
+
 def eg__acts(file):
   def rx1(data):
     return [ydist(first(actLearn(data, shuffle=True).best.rows), data)]
@@ -448,12 +462,15 @@ def experiment1(file,
   print("#"+str(list(report.keys())))
   print(list(report.values()))
 
-def eg__cuts(file):
+def fname(f): return re.sub(".*/", "", f)
+
+def eg__tree(file):
   data = Data(csv(file or the.file))
   model  = actLearn(data)
   b4  = yNums(data.rows,data)
   now = yNums(model.best.rows,data)
   nodes = tree(model.best.rows + model.rest.rows,data)
+  print("\n"+fname(file or the.file))
   showd(o(mu1=b4.mu, mu2=now.mu,  sd1=b4.sd, sd2=now.sd))
   showTree(nodes)
 
@@ -467,7 +484,7 @@ def eg__rules(file):
   guess = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)
   mid = len(guess)//5
   after = yNums([row2 for row1 in model.todo for row2 in leaf(nodes,row1).rows],data)
-  print(re.sub(".*/", "", file or the.file))
+  print(fname(file or the.file))
   print(o(txt1="b4", txt2="now",  txt3="todo",  txt4="after"))
   print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=ydist(guess[mid][1],data)))
   print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=ydist(guess[0][1],data)))
