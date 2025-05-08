@@ -102,15 +102,14 @@ rules: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, python3 -B bl.py -l 5 --rules $d | column -t;)
 
 afters: ../../moot/optimize/[bchmp]*/*.csv
-	#$(foreach d, $^, (python3 -B bl.py -l 2 -S 200 --after $d &);)
-	#$(foreach d, $^, (python3 -B bl.py -l 2 -S 100 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 50 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 40 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 30 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 20 --after $d &);)
 
 aftersReport:
-	#$(MAKE) afters | tee ~/tmp/$@.out
+	mkdir -p ~/tmp
+	$(MAKE) afters | tee ~/tmp/$@.out
 	$(foreach d,200 100 50 40 30 20,\
 	   gawk '$$4==$d {x[NR]=$$2} END {n=int(0.1*asort(x)); print $d, x[n], x[3*n], x[5*n], x[7*n],x[9*n]}' ~/tmp/$@.out ;)
 
