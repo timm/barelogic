@@ -89,7 +89,7 @@ lint: ## lint all python in this directory
 	@ps2pdf $@.ps $@; rm $@.ps
 	open $@
 
-acts1:
+actsReport:
 	cat ~/tmp/acts_*.out | sort | uniq | sed "s/[{}']//g" | sort -n -k 2  | column -s, -t | grep --color a
 
 acts: ../../moot/optimize/[bchmp]*/*.csv
@@ -109,7 +109,7 @@ afters: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 30 --after $d &);)
 	$(foreach d, $^, (python3 -B bl.py -l 2 -S 20 --after $d &);)
 
-aftersAll:
+aftersReport:
 	#$(MAKE) afters | tee ~/tmp/$@.out
 	$(foreach d,200 100 50 40 30 20,\
 	   gawk '$$4==$d {x[NR]=$$2} END {n=int(0.1*asort(x)); print $d, x[n], x[3*n], x[5*n], x[7*n],x[9*n]}' ~/tmp/$@.out ;)
