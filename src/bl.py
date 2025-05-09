@@ -500,7 +500,8 @@ def eg__after(file,repeats=30):
     nodes = tree(model.best.rows + model.rest.rows,data)
     guess = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)[0][1]
     add(ydist(guess,data),after)
-  win = 1 - (after.lo - b4.lo)/(b4.mu - b4.lo)
+  #win = 1 - (after.lo - b4.lo)/(b4.mu - b4.lo)
+  win = 1 - (after.mu - b4.lo)/(b4.mu - b4.lo)
   print(o(win=round(100*win), samples=the.Stop, mu1=b4.mu,mu2=after.mu, lo1=b4.lo, lo2=after.lo,file=re.sub(".*/", "", file or the.file)))
   # mid = len(guess)//5
   # after = yNums([row2 for row1 in model.todo for row2 in leaf(nodes,row1).rows],data)

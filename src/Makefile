@@ -102,15 +102,17 @@ rules: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, python3 -B bl.py -l 5 --rules $d | column -t;)
 
 afters: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d, $^, (python3 -B bl.py -l 2 -S 50 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 2 -S 40 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 2 -S 30 --after $d &);)
-	$(foreach d, $^, (python3 -B bl.py -l 2 -S 20 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 256 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 128 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 64 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 32 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 16 --after $d &);)
+	$(foreach d, $^, (python3 -B bl.py -l 2 -S 8 --after $d &);)
 
 aftersReport:
 	mkdir -p ~/tmp
 	$(MAKE) afters | tee ~/tmp/$@.out
-	$(foreach d,200 100 50 40 30 20,\
+	$(foreach d,256 128 64 32 16 8,
 	   gawk '$$4==$d {x[NR]=$$2} END {n=int(0.1*asort(x)); print $d, x[n], x[3*n], x[5*n], x[7*n],x[9*n]}' ~/tmp/$@.out ;)
 
 stats: ../../moot/optimize/[bchmp]*/*.csv
