@@ -112,7 +112,7 @@ afters: ../../moot/optimize/[bchmp]*/*.csv
 aftersReport:
 	mkdir -p ~/tmp
 	$(MAKE) afters | tee ~/tmp/$@.out
-	$(foreach d,256 128 64 32 16 8,
+	$(foreach d,256 128 64 32 16 8, \
 	   gawk '$$4==$d {x[NR]=$$2} END {n=int(0.1*asort(x)); print $d, x[n], x[3*n], x[5*n], x[7*n],x[9*n]}' ~/tmp/$@.out ;)
 
 stats: ../../moot/optimize/[bchmp]*/*.csv
