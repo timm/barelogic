@@ -493,23 +493,30 @@ def eg__rules(file):
 
 def eg__after(file,repeats=30):
   data  = Data(csv(file or the.file))
-  b4    = yNums(data.rows, data)
-  after = Num()
-  for _ in range(repeats):
-    model = actLearn(data,shuffle=True)
-    nodes = tree(model.best.rows + model.rest.rows,data)
-    guess = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)[0][1]
-    add(ydist(guess,data),after)
-  #win = 1 - (after.lo - b4.lo)/(b4.mu - b4.lo)
-  win = 1 - (after.mu - b4.lo)/(b4.mu - b4.lo)
-  print(o(win=round(100*win), samples=the.Stop, mu1=b4.mu,mu2=after.mu, lo1=b4.lo, lo2=after.lo,file=re.sub(".*/", "", file or the.file)))
-  # mid = len(guess)//5
-  # after = yNums([row2 for row1 in model.todo for row2 in leaf(nodes,row1).rows],data)
-  # print(o(txt1="b4", txt2="now",  txt3="todo",  txt4="after"))
-  # print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=ydist(guess[mid][1],data)))
-  # print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=ydist(guess[0][1],data)))
-  # print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=ydist(guess[-1][1],data)))
-  # print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
+  b4    = yNums(data.rows, data) 
+  overall= {j:Num() for j in [256,128,64,32,16,8]}
+  for Stop in overall:
+    the.Stop = Stop
+    after = {j:Num() for j in [15,10,5,2]}
+    learnt = Num()
+    rand =Num()
+    for _ in range(repeats):
+      model = actLearn(data,shuffle=True)
+      nodes = tree(model.best.rows + model.rest.rows,data)
+      add(ydist(model.best.rows[0],data), learnt)
+      guesses = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)
+      for k in after:
+        smart = min([(ydist(guess,data),guess) for _,guess in guesses[:k]], 
+                    key=first)[1]
+        dumb = min([(ydist(row,data),row) for row in random.choices(model.todo,k=20)],
+                   key=first)[1]
+        add(ydist(smart,data),after[k])
+        add(ydist(dumb,data),rand)
+    def win(x): return str(round(100*(1 - (x - b4.lo)/(b4.mu - b4.lo))))
+    print(the.Stop, win(learnt.mu), 
+          " ".join([win(after[k].mu) for k in after]), 
+          win(rand.mu),
+          fname(file or the.file))
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"

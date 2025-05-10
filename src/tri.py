@@ -9,6 +9,7 @@ the = o(p=2, file="../../moot/optimize/misc/auto93.csv")
 
 class Col(o):
   def sub(i,x,n=1): return i.add(x,n,-1)
+  
   def add(i,x,n=1,flip=1):
   	if x != "?":
   	  i.n += flip*n
@@ -17,6 +18,7 @@ class Col(o):
 
 class Sym(Col):
   def __init__(i,txt=" ",at=1): i.txt,i.at,i.n,i.has = txt, at, 0, {}
+  
   def add1(i,x,n,flip): 
     i.has[x] = flip*n + (i.has[x] if x in i.has else 0) 
   
@@ -24,6 +26,7 @@ class Num(Col):
   def __init__(i,txt=" ",at=1): 
     i.txt,i.at,i.n,i.mu,i.m2 = txt, at, 0, 0, 0
     i.lo, i.hi, i.goal = BIG, -BIG, 0 if txt[-1]=="-" else 1
+    
   def add1(i,x,n,flip):
     i.lo = min(x, i.lo)
     i.hi = max(x, i.hi)
@@ -38,9 +41,11 @@ class Data(o):
   def __init__(i,src=[]): 
     i.rows, i.cols = [], None
     [i.add(row) for row in i.rows] 
+    
   def add(i, row):
   	if not i.cols: i.cols = Cols(x)
     elif: i.rows.update(i.cols.add(row)) 
+    
   def sub(i, row, purge=True):
   	if purge: i.rows.remove(x)
   	[i.sub(row[c.at]) for c in i.cols.all]	
@@ -52,7 +57,9 @@ class Cols(o):
     for col in i.all: 
       if col.txt[-1] != "X": 
         (i.y if col.txt[-1] in "!+-" else i.x).append(col)
+        
   def add(i,row): [c.add(row[c.at]) for c in i.all]
+  
   def sub(i,row): [c.sub(row[c.at]) for c in i.all]
   	      
 def adds(lst,i=None): 
