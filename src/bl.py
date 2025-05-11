@@ -491,13 +491,15 @@ def eg__rules(file):
   print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=ydist(guess[-1][1],data)))
   print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
 
-def eg__after(file,repeats=30):
+def eg__afterDumb(file) : eg__after(file,repeats=30, smart=False)
+
+def eg__after(file,repeats=30, smart=True):
   data  = Data(csv(file or the.file))
   b4    = yNums(data.rows, data) 
   overall= {j:Num() for j in [256,128,64,32,16,8]}
   for Stop in overall:
     the.Stop = Stop
-    after = {j:Num() for j in [15,10,5,2]}
+    after = {j:Num() for j in [20,15,10,5,3,1]}
     learnt = Num()
     rand =Num()
     for _ in range(repeats):
@@ -506,17 +508,19 @@ def eg__after(file,repeats=30):
       add(ydist(model.best.rows[0],data), learnt)
       guesses = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)
       for k in after:
-        smart = min([(ydist(guess,data),guess) for _,guess in guesses[:k]], 
-                    key=first)[1]
-        dumb = min([(ydist(row,data),row) for row in random.choices(model.todo,k=20)],
+        if smart:
+              smart = min([(ydist(guess,data),guess) for _,guess in guesses[:k]], 
+                           key=first)[1]
+              add(ydist(smart,data),after[k]) 
+        else:
+              dumb = min([(ydist(row,data),row) for row in random.choices(model.todo,k=k)],
                    key=first)[1]
-        add(ydist(smart,data),after[k])
-        add(ydist(dumb,data),rand)
+              add(ydist(dumb,data),after[k]) 
     def win(x): return str(round(100*(1 - (x - b4.lo)/(b4.mu - b4.lo))))
     print(the.Stop, win(learnt.mu), 
           " ".join([win(after[k].mu) for k in after]), 
-          win(rand.mu),
-          fname(file or the.file))
+          1, 
+          fname(file or the.file), "smart" if smart else "dumb")
 
 #--------- --------- --------- --------- --------- --------- ------- -------
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"

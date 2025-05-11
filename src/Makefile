@@ -101,13 +101,16 @@ trees: ../../moot/optimize/[bchmp]*/*.csv
 rules: ../../moot/optimize/[bchmp]*/*.csv
 	$(foreach d, $^, python3 -B bl.py -l 5 --rules $d | column -t;)
 
-afters: ../../moot/optimize/[bchmp]*/*.csv
-	$(foreach d, $^, (python3 -B bl.py -l 2  --after $d &);)
-
-aftersReport:
+after: ../../moot/optimize/[bchmp]*/*.csv
 	mkdir -p ~/tmp
-	$(MAKE) afters | tee ~/tmp/$@.out
-	
+	{ $(foreach d, $^, (python3 -B bl.py -l 2  --after $d &);) } | tee  ~/tmp/$@.out
+	bash after.sh ~/tmp/$@.out
+
+afterDumb: ../../moot/optimize/[bchmp]*/*.csv
+	mkdir -p ~/tmp
+	{ $(foreach d, $^, (python3 -B bl.py -l 2  --afterDumb $d &);) } | tee  ~/tmp/$@.out
+	bash after.sh ~/tmp/$@.out
+
 stats: ../../moot/optimize/[bchmp]*/*.csv
 	echo "     x      y   rows"
 	echo "------ ------ ------"

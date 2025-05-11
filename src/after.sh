@@ -1,27 +1,28 @@
-sort -n ~/tmp/aftersReport.out |
+cat $1 |
+sort -n |
 gawk '
 BEGIN { 
-   x[3]=15
-   x[4]=10
-   x[5]=5
-   x[6]=2
+   x[3]=20
+   x[4]=15
+   x[5]=10
+   x[6]=5
+   x[7]=3
+   x[8]=1
  }
  END{ report(b4) }
 $1 != b4 {
 	report(b4)
              split("", base,"")
 	     split("", a,"")
-	     split("", R,"")
 	     b4=$1}
 {
   base[NR] = $2
   for(k in x) a[x[k]][NR]= $k
-  R[NR] = $7
 }
 function report(x){
   if (NR==1) return
-  print("mu",x,mu(base), mu(a[15]), mu(a[10]), mu(a[5]), mu(a[2]),mu(R))
-  print("sd",x,sd(base), sd(a[15]), sd(a[10]), sd(a[5]), sd(a[2]),sd(R))
+  print("mu",x,mu(base), mu(a[20]), mu(a[15]), mu(a[10]), mu(a[5]),mu(a[3]),mu(a[1]))
+  print("sd",x,sd(base), sd(a[20]), sd(a[15]), sd(a[10]), sd(a[5]),sd(a[3]),sd(a[1]))
 }
 
 function sd(a) {
