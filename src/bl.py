@@ -116,7 +116,7 @@ def ydists(rows, data): return sorted(rows, key=lambda row: ydist(row,data))
 
 def yNums(rows,data): return adds(ydist(row,data) for row in rows)
 
-#--------- --------- --------- --------- --------- --------- ------- -------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def likes(lst, datas):
   n = sum(data.n for data in datas)
   return max(datas, key=lambda data: like(lst, data, n, len(datas)))
@@ -177,7 +177,8 @@ def cuts(rows, col,Y,Klass=Num):
         add(Y(row), d[x])
         n = n + 1
     return o(entropy= sum(v.n/n * spread(v) for v in d.values()),
-            decisions= [_eq(k) for k,v in d.items()])
+            decisions= [_eq(k) for k,v in d.items()],
+            colSplit=col)
 
   def _num():
     out,b4 = None,None 
@@ -193,7 +194,7 @@ def cuts(rows, col,Y,Klass=Num):
       add(sub(y, rhs),lhs)
       b4 = x
     if out:
-      return o(entropy=xpect, decisions=out)
+      return o(entropy=xpect, decisions=out, colSplit=col)
 
   return _sym() if col.it is Sym else _num()
 
@@ -202,17 +203,23 @@ def tree(rows,data,Klass=Num,xplain="",decision=lambda _:True):
    def Y(row): return ydist(row,data)
    node        = clone(data,rows)
    node.ys     = yNums(rows,data).mu
+   node.impurity = yNums(rows,data).sd
    node.kids   = []
    node.decision  = decision
    node.xplain = xplain
+   node.colSplit = o(txt="")
    if len(rows) >= the.leaf:
      splits=[]
      for col in data.cols.x:
-       if tmp := cuts(rows,col,Y,Klass=Klass): splits += [tmp]
+       if tmp := cuts(rows,col,Y,Klass=Klass): 
+        splits += [tmp]
      if splits:
-       for xplain,decision in sorted(splits, key=lambda cut:cut.entropy)[0].decisions:
+       best_split = sorted(splits, key=lambda cut:cut.entropy)[0]
+       for xplain,decision in best_split.decisions:
          rows1= [row for row in rows if decision(row)]
          if the.leaf <= len(rows1) < len(rows):
+           node.impurity = best_split.entropy
+           node.colSplit = best_split.colSplit
            node.kids += [tree(rows1,data,Klass=Klass,xplain=xplain,decision=decision)]
    return node   
 
@@ -225,20 +232,36 @@ def nodes(node,lvl=0, key=None):
 def showTree(tree, key=lambda z:z.ys):
   stats = yNums(tree.rows,tree)
   win = lambda x: 100-int(100*(x-stats.lo)/(stats.mu - stats.lo))
-  print(f"{'d2h':>4} {'win':>4} {'n':>4}  ")
-  print(f"{'----':>4} {'----':>4} {'----':>4}  ")
+  print(f"{'d2h':>4} {'win':>4} {'n':>4}  {'Impurity':>5}")
+  print(f"{'----':>4} {'----':>4} {'----':>4}  {'----':>5}")
   for lvl, node in nodes(tree,key=key):
     leafp = len(node.kids)==0
     post= ";" if leafp else ""
-    print(f"{node.ys:4.2f} {win(node.ys):4} {len(node.rows):4}    {(lvl-1) * '|  '}{node.xplain}" + post)
+    print(f"{node.ys:4.2f} {win(node.ys):4} {len(node.rows):4} {node.impurity:5.2f}   {(lvl-1) * '|  '}{node.xplain}" + post)
 
 def leaf(node, row):
   for kid in node.kids or []:
     if kid.decision(row): 
       return leaf(kid,row)
   return node 
+
+def treeMDI(node, lvl=0):
+  if not node.kids: return 0
+  kidMDIs = 0
+  for kid in node.kids:
+    kidMDIs += treeMDI(kid, lvl+1)
+  w = sum(kid.n for kid in node.kids)
+  return kidMDIs + sum( (kid.n/w) * kid.impurity for kid in node.kids )
     
-#--------- --------- --------- --------- --------- --------- ------- -------
+def treeFeatureImportance(tree, importance = {}):
+  imp = importance or {j.txt:0 for j in tree.cols.x}
+  for _, node in nodes(tree):
+    if len(node.kids)>0:
+      w = sum(kid.n for kid in node.kids)
+      imp[node.colSplit.txt] += sum( (kid.n/w) * kid.impurity for kid in node.kids )
+  return imp
+
+#--------- --------- --------- --------- --------- --------- ------- -------
 def delta(i,j): 
   return abs(i.mu - j.mu) / ((i.sd**2/i.n + j.sd**2/j.n)**.5 + 1/BIG)
 
@@ -281,7 +304,7 @@ def vals2RankedNums(d, eps=0, reverse=False):
     out[now.num.txt] = now.num 
   return out
 
-#--------- --------- --------- --------- --------- --------- ------- -------
+#--------- --------- --------- --------- --------- --------- ------- -------
 def isNum(x): return isinstance(x,(float,int))
 
 def first(lst): return lst[0] 
@@ -328,7 +351,25 @@ def main():
       random.seed(the.rseed)
       fun(coerce(arg))
 
-#--------- --------- --------- --------- --------- --------- ------- -------
+#--------- --------- --------- --------- --------- --------- ------- -------
+def kpp(i, k, rows=None):
+    def D(x, y):
+      key = tuple(sorted((id(x), id(y))))
+      if key not in mem: mem[key] = i.xdist(x,y)
+      return mem[key]
+     
+    row, *rows = random.shuffle(rows or i.rows)[:the.some]
+    out, mem = [row], {}
+    for _ in range(1, k):
+      dists = [min(D(x, y)**2 for y in out) for x in rows]
+      r     = random.random() * sum(dists)
+      for j, d in enumerate(dists):
+        r -= d
+        if r <= 0:
+          out.append(rows.pop(j))
+          break
+    return out, mem
+#--------- --------- --------- --------- --------- --------- ------- -------
 def eg__the(_): print(the)
 
 def eg__cols(_): 
@@ -491,26 +532,39 @@ def eg__rules(file):
   print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=ydist(guess[-1][1],data)))
   print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
 
-def eg__after(file,repeats=30):
+def eg__afterDumb(file) : eg__after(file,repeats=30, smart=False)
+
+def eg__after(file,repeats=30, smart=True):
   data  = Data(csv(file or the.file))
-  b4    = yNums(data.rows, data)
-  after = Num()
-  for _ in range(repeats):
-    model = actLearn(data,shuffle=True)
-    nodes = tree(model.best.rows + model.rest.rows,data)
-    guess = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)[0][1]
-    add(ydist(guess,data),after)
-  win = 1 - (after.lo - b4.lo)/(b4.mu - b4.lo)
-  print(o(win=round(100*win), samples=the.Stop, mu1=b4.mu,mu2=after.mu, lo1=b4.lo, lo2=after.lo,file=re.sub(".*/", "", file or the.file)))
-  # mid = len(guess)//5
-  # after = yNums([row2 for row1 in model.todo for row2 in leaf(nodes,row1).rows],data)
-  # print(o(txt1="b4", txt2="now",  txt3="todo",  txt4="after"))
-  # print(o(mu1=b4.mu, mu2=now.mu,  mu3=todo.mu,  mu4=ydist(guess[mid][1],data)))
-  # print(o(lo1=b4.lo, lo2=now.lo,  lo3=todo.lo,  lo4=ydist(guess[0][1],data)))
-  # print(o(hi1=b4.hi, hi2=now.hi,  hi3=todo.hi,  hi4=ydist(guess[-1][1],data)))
-  # print(o(n1=b4.n,   n2=now.n,    n3=todo.n,    n4=after.n))
+  b4    = yNums(data.rows, data) 
+  overall= {j:Num() for j in [256,128,64,32,16,8]}
+  for Stop in overall:
+    the.Stop = Stop
+    after = {j:Num() for j in [20,15,10,5,3,1]}
+    learnt = Num()
+    rand =Num()
+    for _ in range(repeats):
+      model = actLearn(data,shuffle=True)
+      nodes = tree(model.best.rows + model.rest.rows,data)
+      add(ydist(model.best.rows[0],data), learnt)
+      guesses = sorted([(leaf(nodes,row).ys,row) for row in model.todo],key=first)
+      for k in after:
+        if smart:
+              smart = min([(ydist(guess,data),guess) for _,guess in guesses[:k]], 
+                           key=first)[1]
+              add(ydist(smart,data),after[k]) 
+        else:
+              dumb = min([(ydist(row,data),row) for row in random.choices(model.todo,k=k)],
+                   key=first)[1]
+              add(ydist(dumb,data),after[k]) 
+    def win(x): return str(round(100*(1 - (x - b4.lo)/(b4.mu - b4.lo))))
+    print(the.Stop, win(learnt.mu), 
+          " ".join([win(after[k].mu) for k in after]), 
+          1, 
+          fname(file or the.file), "smart" if smart else "dumb")
 
 #--------- --------- --------- --------- --------- --------- ------- -------
+
 regx = r"-\w+\s*(\w+).*=\s*(\S+)"
 the  = o(**{m[1]:coerce(m[2]) for m in re.finditer(regx,__doc__)})
 random.seed(the.rseed)
