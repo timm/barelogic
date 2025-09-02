@@ -11,6 +11,10 @@
 </p>
 
 
+> Note: baelogic is not jistorical. for the most recent, shorter, better stats tests,
+see http://github.com/timm/ezr. and contact timm@ieee.org for notes on the latest
+version.
+
 Why BareLogic? Why reinvent a minimal version of useful AI tools?
 
 Well, lets ask 
