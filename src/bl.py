@@ -1,3 +1,8 @@
+#Note: barelogic is now historical. for the most recent, shorter, better stats tests,
+#see http://github.com/timm/ezr. and contact timm@ieee.org for notes on the latest
+#version.
+
+
 # todo: 
 # 1.change guards to lt, "gt". have col name in thre explictedyl
 # 2. return nest from rile

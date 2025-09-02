@@ -1,3 +1,7 @@
+> Note: barelogic is now historical. for the most recent, shorter, better stats tests,
+see http://github.com/timm/ezr. and contact timm@ieee.org for notes on the latest
+version.
+
 <h1> Bare Logic </h1>
 <h3>Think Fast. Learn Smart. Stay Wild. <br>(Case studies in simpler AI,  elegance, and the wisdom of reduction).</h3>
 <p>
@@ -10,10 +14,6 @@
 <a href="http://github.com/timm/barelogic/issues"><img alt="issues" src="https://img.shields.io/badge/issues-track-red?logo=github&style=flat-square"></a>
 </p>
 
-
-> Note: baelogic is not jistorical. for the most recent, shorter, better stats tests,
-see http://github.com/timm/ezr. and contact timm@ieee.org for notes on the latest
-version.
 
 Why BareLogic? Why reinvent a minimal version of useful AI tools?
 
